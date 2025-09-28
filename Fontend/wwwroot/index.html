@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Battery Swap System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-battery-full"></i>
+                <span>EV Swap</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">Trang chủ</a></li>
+                <li><a href="#stations" class="nav-link">Tìm trạm</a></li>
+                <li><a href="#packages" class="nav-link">Gói thuê</a></li>
+                <li><a href="#support" class="nav-link">Hỗ trợ</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <button class="btn btn-outline" onclick="showLoginModal()">Đăng nhập</button>
+                <button class="btn btn-primary" onclick="showRegisterModal()">Đăng ký</button>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Hệ thống đổi pin xe điện thông minh</h1>
+                <p>Giải pháp tiện lợi và nhanh chóng cho việc sạc pin xe điện của bạn</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary btn-large" onclick="scrollToSection('stations')">
+                        <i class="fas fa-search"></i>
+                        Tìm trạm gần nhất
+                    </button>
+                    <button class="btn btn-outline btn-large" onclick="scrollToSection('packages')">
+                        <i class="fas fa-box"></i>
+                        Xem gói thuê
+                    </button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="battery-animation">
+                    <i class="fas fa-battery-full"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Tại sao chọn chúng tôi?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Nhanh chóng</h3>
+                    <p>Đổi pin chỉ trong 3 phút, tiết kiệm thời gian quý báu của bạn</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3>Tiện lợi</h3>
+                    <p>Mạng lưới trạm rộng khắp, dễ dàng tìm trạm gần nhất</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>An toàn</h3>
+                    <p>Pin được kiểm tra chất lượng và bảo hành đầy đủ</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Thông minh</h3>
+                    <p>Ứng dụng thông minh với AI dự báo nhu cầu</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Station Search Section -->
+    <section id="stations" class="station-search">
+        <div class="container">
+            <h2 class="section-title">Tìm trạm đổi pin</h2>
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="locationInput" placeholder="Nhập địa chỉ hoặc vị trí hiện tại">
+                    <button class="btn btn-primary" onclick="searchStations()">Tìm kiếm</button>
+                </div>
+            </div>
+            <div class="station-filters">
+                <button class="filter-btn active" data-filter="all">Tất cả</button>
+                <button class="filter-btn" data-filter="available">Có sẵn</button>
+                <button class="filter-btn" data-filter="charging">Đang sạc</button>
+                <button class="filter-btn" data-filter="maintenance">Bảo trì</button>
+            </div>
+            <div class="stations-grid" id="stationsGrid">
+                <!-- Stations will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Packages Section -->
+    <section id="packages" class="packages">
+        <div class="container">
+            <h2 class="section-title">Gói thuê pin</h2>
+            <div class="packages-grid">
+                <div class="package-card">
+                    <div class="package-header">
+                        <h3>Gói cơ bản</h3>
+                        <div class="price">50,000đ<span>/lần</span></div>
+                    </div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check"></i> Đổi pin không giới hạn</li>
+                        <li><i class="fas fa-check"></i> Hỗ trợ 24/7</li>
+                        <li><i class="fas fa-check"></i> Bảo hành pin</li>
+                    </ul>
+                    <button class="btn btn-outline">Chọn gói</button>
+                </div>
+                <div class="package-card featured">
+                    <div class="package-badge">Phổ biến</div>
+                    <div class="package-header">
+                        <h3>Gói tháng</h3>
+                        <div class="price">800,000đ<span>/tháng</span></div>
+                    </div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check"></i> Đổi pin không giới hạn</li>
+                        <li><i class="fas fa-check"></i> Ưu tiên đặt chỗ</li>
+                        <li><i class="fas fa-check"></i> Hỗ trợ 24/7</li>
+                        <li><i class="fas fa-check"></i> Bảo hành pin</li>
+                        <li><i class="fas fa-check"></i> Giảm giá 20%</li>
+                    </ul>
+                    <button class="btn btn-primary">Chọn gói</button>
+                </div>
+                <div class="package-card">
+                    <div class="package-header">
+                        <h3>Gói năm</h3>
+                        <div class="price">8,000,000đ<span>/năm</span></div>
+                    </div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check"></i> Đổi pin không giới hạn</li>
+                        <li><i class="fas fa-check"></i> Ưu tiên đặt chỗ</li>
+                        <li><i class="fas fa-check"></i> Hỗ trợ 24/7</li>
+                        <li><i class="fas fa-check"></i> Bảo hành pin</li>
+                        <li><i class="fas fa-check"></i> Giảm giá 30%</li>
+                        <li><i class="fas fa-check"></i> Pin cao cấp</li>
+                    </ul>
+                    <button class="btn btn-outline">Chọn gói</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Đăng nhập</h2>
+                <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            </div>
+            <form class="modal-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Mật khẩu</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <div class="form-options">
+                    <label class="checkbox">
+                        <input type="checkbox">
+                        <span>Ghi nhớ đăng nhập</span>
+                    </label>
+                    <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Đăng nhập</button>
+                <div class="form-footer">
+                    <p>Chưa có tài khoản? <a href="#" onclick="switchModal('loginModal', 'registerModal')">Đăng ký ngay</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Đăng ký</h2>
+                <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            </div>
+            <form class="modal-form">
+                <div class="form-group">
+                    <label for="registerName">Họ và tên</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPhone">Số điện thoại</label>
+                    <input type="tel" id="registerPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Mật khẩu</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerVehicle">Thông tin xe</label>
+                    <input type="text" id="registerVehicle" placeholder="VIN, loại pin" required>
+                </div>
+                <div class="form-options">
+                    <label class="checkbox">
+                        <input type="checkbox" required>
+                        <span>Tôi đồng ý với <a href="#">điều khoản sử dụng</a></span>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Đăng ký</button>
+                <div class="form-footer">
+                    <p>Đã có tài khoản? <a href="#" onclick="switchModal('registerModal', 'loginModal')">Đăng nhập</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>EV Swap</h3>
+
+                    <ul id="payment"></ul>
+
+                    <p>Hệ thống đổi pin xe điện thông minh</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Dịch vụ</h4>
+                    <ul>
+                        <li><a href="#">Tìm trạm</a></li>
+                        <li><a href="#">Gói thuê</a></li>
+                        <li><a href="#">Hỗ trợ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Liên hệ</h4>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> 1900-1234</li>
+                        <li><i class="fas fa-envelope"></i> support@evswap.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> TP.HCM, Việt Nam</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 EV Swap. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script>
+        // gọi API PaymentService qua gateway hoặc trực tiếp
+        fetch("http://localhost:5000/gateway/payment")
+            .then(res => res.json())
+            .then(data => {
+                let list = document.getElementById("payment");
+
+                list.innerHTML = "";
+                data.forEach(p => {
+                    let li = document.createElement("li");
+                    li.textContent = `Id: ${p.id}, Amount: ${p.amount}, DriverName: ${p.driverName}`;
+                    list.appendChild(li);
+                });
+            })
+            .catch(err => console.error("Lỗi:", err));
+    </script>
+</body>
+</html>

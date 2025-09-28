@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - EV Battery Swap System</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-battery-full"></i>
+                <span>EV Swap Admin</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-section="stations">
+                    <i class="fas fa-charging-station"></i>
+                    <span>Quản lý trạm</span>
+                </li>
+                <li class="nav-item" data-section="users">
+                    <i class="fas fa-users"></i>
+                    <span>Quản lý người dùng</span>
+                </li>
+                <li class="nav-item" data-section="packages">
+                    <i class="fas fa-box"></i>
+                    <span>Gói thuê</span>
+                </li>
+                <li class="nav-item" data-section="batteries">
+                    <i class="fas fa-battery-full"></i>
+                    <span>Quản lý pin</span>
+                </li>
+                <li class="nav-item" data-section="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo</span>
+                </li>
+                <li class="nav-item" data-section="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt</span>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">Dashboard</h1>
+            </div>
+            <div class="top-bar-right">
+                <div class="notifications">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <img src="https://via.placeholder.com/40" alt="Admin" class="user-avatar">
+                        <span class="user-name">Admin User</span>
+                    </div>
+                    <div class="user-dropdown">
+                        <button class="dropdown-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#"><i class="fas fa-user"></i> Hồ sơ</a>
+                            <a href="#"><i class="fas fa-cog"></i> Cài đặt</a>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="dashboard-grid">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-charging-station"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>25</h3>
+                            <p>Tổng số trạm</p>
+                            <span class="stat-change positive">+2 tháng này</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>1,247</h3>
+                            <p>Người dùng hoạt động</p>
+                            <span class="stat-change positive">+15% so với tháng trước</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-battery-full"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>3,456</h3>
+                            <p>Lượt đổi pin hôm nay</p>
+                            <span class="stat-change positive">+8% so với hôm qua</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>₫2.4M</h3>
+                            <p>Doanh thu hôm nay</p>
+                            <span class="stat-change positive">+12% so với hôm qua</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Lượt đổi pin theo thời gian</h3>
+                            <div class="chart-controls">
+                                <select class="chart-period">
+                                    <option value="7">7 ngày</option>
+                                    <option value="30" selected>30 ngày</option>
+                                    <option value="90">90 ngày</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="swapsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Trạng thái trạm</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="stationsStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="activity-section">
+                    <div class="section-header">
+                        <h3>Hoạt động gần đây</h3>
+                        <button class="btn btn-outline">Xem tất cả</button>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon success">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p><strong>Trạm Quận 1</strong> đã hoàn thành bảo trì</p>
+                                <span class="activity-time">2 phút trước</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p><strong>Trạm Quận 3</strong> cần thay thế pin</p>
+                                <span class="activity-time">15 phút trước</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon info">
+                                <i class="fas fa-info"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p><strong>Người dùng mới</strong> đăng ký gói tháng</p>
+                                <span class="activity-time">1 giờ trước</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stations Management Section -->
+        <section id="stations" class="content-section">
+            <div class="section-header">
+                <h2>Quản lý trạm</h2>
+                <button class="btn btn-primary" onclick="showAddStationModal()">
+                    <i class="fas fa-plus"></i> Thêm trạm mới
+                </button>
+            </div>
+            
+            <div class="stations-table-container">
+                <div class="table-filters">
+                    <div class="filter-group">
+                        <label>Trạng thái:</label>
+                        <select id="stationStatusFilter">
+                            <option value="all">Tất cả</option>
+                            <option value="active">Hoạt động</option>
+                            <option value="maintenance">Bảo trì</option>
+                            <option value="offline">Offline</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Tìm kiếm:</label>
+                        <input type="text" id="stationSearch" placeholder="Tên trạm, địa chỉ...">
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="stations-table">
+                        <thead>
+                            <tr>
+                                <th>Tên trạm</th>
+                                <th>Địa chỉ</th>
+                                <th>Trạng thái</th>
+                                <th>Pin có sẵn</th>
+                                <th>Đang sạc</th>
+                                <th>Bảo trì</th>
+                                <th>Đánh giá</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stationsTableBody">
+                            <!-- Stations data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Users Management Section -->
+        <section id="users" class="content-section">
+            <div class="section-header">
+                <h2>Quản lý người dùng</h2>
+                <div class="header-actions">
+                    <button class="btn btn-outline">
+                        <i class="fas fa-download"></i> Xuất Excel
+                    </button>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Thêm người dùng
+                    </button>
+                </div>
+            </div>
+            
+            <div class="users-stats">
+                <div class="user-stat-card">
+                    <h4>Tổng người dùng</h4>
+                    <p class="stat-number">1,247</p>
+                </div>
+                <div class="user-stat-card">
+                    <h4>Người dùng mới</h4>
+                    <p class="stat-number">45</p>
+                </div>
+                <div class="user-stat-card">
+                    <h4>Gói tháng</h4>
+                    <p class="stat-number">892</p>
+                </div>
+                <div class="user-stat-card">
+                    <h4>Gói năm</h4>
+                    <p class="stat-number">156</p>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Gói thuê</th>
+                            <th>Lượt đổi</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Users data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Packages Management Section -->
+        <section id="packages" class="content-section">
+            <div class="section-header">
+                <h2>Quản lý gói thuê</h2>
+                <button class="btn btn-primary" onclick="showAddPackageModal()">
+                    <i class="fas fa-plus"></i> Tạo gói mới
+                </button>
+            </div>
+            
+            <div class="packages-grid">
+                <div class="package-card">
+                    <div class="package-header">
+                        <h3>Gói cơ bản</h3>
+                        <div class="package-price">50,000đ/lần</div>
+                    </div>
+                    <div class="package-stats">
+                        <div class="stat">
+                            <span class="label">Người dùng:</span>
+                            <span class="value">199</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">Doanh thu:</span>
+                            <span class="value">₫9.95M</span>
+                        </div>
+                    </div>
+                    <div class="package-actions">
+                        <button class="btn btn-outline">Chỉnh sửa</button>
+                        <button class="btn btn-danger">Xóa</button>
+                    </div>
+                </div>
+                
+                <div class="package-card featured">
+                    <div class="package-badge">Phổ biến</div>
+                    <div class="package-header">
+                        <h3>Gói tháng</h3>
+                        <div class="package-price">800,000đ/tháng</div>
+                    </div>
+                    <div class="package-stats">
+                        <div class="stat">
+                            <span class="label">Người dùng:</span>
+                            <span class="value">892</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">Doanh thu:</span>
+                            <span class="value">₫713.6M</span>
+                        </div>
+                    </div>
+                    <div class="package-actions">
+                        <button class="btn btn-outline">Chỉnh sửa</button>
+                        <button class="btn btn-danger">Xóa</button>
+                    </div>
+                </div>
+                
+                <div class="package-card">
+                    <div class="package-header">
+                        <h3>Gói năm</h3>
+                        <div class="package-price">8,000,000đ/năm</div>
+                    </div>
+                    <div class="package-stats">
+                        <div class="stat">
+                            <span class="label">Người dùng:</span>
+                            <span class="value">156</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">Doanh thu:</span>
+                            <span class="value">₫1.25B</span>
+                        </div>
+                    </div>
+                    <div class="package-actions">
+                        <button class="btn btn-outline">Chỉnh sửa</button>
+                        <button class="btn btn-danger">Xóa</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Batteries Management Section -->
+        <section id="batteries" class="content-section">
+            <div class="section-header">
+                <h2>Quản lý pin</h2>
+                <div class="header-actions">
+                    <button class="btn btn-outline">
+                        <i class="fas fa-sync"></i> Đồng bộ dữ liệu
+                    </button>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Thêm pin mới
+                    </button>
+                </div>
+            </div>
+            
+            <div class="batteries-overview">
+                <div class="overview-card">
+                    <h4>Tổng quan pin</h4>
+                    <div class="overview-stats">
+                        <div class="overview-stat">
+                            <span class="label">Tổng số pin:</span>
+                            <span class="value">2,450</span>
+                        </div>
+                        <div class="overview-stat">
+                            <span class="label">Đang sử dụng:</span>
+                            <span class="value">1,234</span>
+                        </div>
+                        <div class="overview-stat">
+                            <span class="label">Đang sạc:</span>
+                            <span class="value">567</span>
+                        </div>
+                        <div class="overview-stat">
+                            <span class="label">Bảo trì:</span>
+                            <span class="value">89</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="battery-health-chart">
+                    <h4>Tình trạng sức khỏe pin (SoH)</h4>
+                    <canvas id="batteryHealthChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="batteries-table-container">
+                <div class="table-filters">
+                    <div class="filter-group">
+                        <label>Trạng thái:</label>
+                        <select id="batteryStatusFilter">
+                            <option value="all">Tất cả</option>
+                            <option value="available">Có sẵn</option>
+                            <option value="charging">Đang sạc</option>
+                            <option value="maintenance">Bảo trì</option>
+                            <option value="faulty">Lỗi</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Dung lượng:</label>
+                        <select id="batteryCapacityFilter">
+                            <option value="all">Tất cả</option>
+                            <option value="50kwh">50kWh</option>
+                            <option value="75kwh">75kWh</option>
+                            <option value="100kwh">100kWh</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="batteries-table">
+                        <thead>
+                            <tr>
+                                <th>ID Pin</th>
+                                <th>Trạm</th>
+                                <th>Dung lượng</th>
+                                <th>SoH</th>
+                                <th>Trạng thái</th>
+                                <th>Lần sạc</th>
+                                <th>Ngày tạo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batteriesTableBody">
+                            <!-- Batteries data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="content-section">
+            <div class="section-header">
+                <h2>Báo cáo & Thống kê</h2>
+                <div class="header-actions">
+                    <button class="btn btn-outline">
+                        <i class="fas fa-download"></i> Xuất PDF
+                    </button>
+                    <button class="btn btn-outline">
+                        <i class="fas fa-file-excel"></i> Xuất Excel
+                    </button>
+                </div>
+            </div>
+            
+            <div class="reports-filters">
+                <div class="filter-group">
+                    <label>Thời gian:</label>
+                    <select id="reportPeriod">
+                        <option value="today">Hôm nay</option>
+                        <option value="week">Tuần này</option>
+                        <option value="month" selected>Tháng này</option>
+                        <option value="quarter">Quý này</option>
+                        <option value="year">Năm này</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Từ ngày:</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="filter-group">
+                    <label>Đến ngày:</label>
+                    <input type="date" id="endDate">
+                </div>
+                <button class="btn btn-primary" onclick="generateReport()">
+                    <i class="fas fa-chart-line"></i> Tạo báo cáo
+                </button>
+            </div>
+            
+            <div class="reports-grid">
+                <div class="report-card">
+                    <h4>Doanh thu</h4>
+                    <div class="report-chart">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="report-card">
+                    <h4>Lượt đổi pin</h4>
+                    <div class="report-chart">
+                        <canvas id="swapsReportChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="report-card">
+                    <h4>Giờ cao điểm</h4>
+                    <div class="report-chart">
+                        <canvas id="peakHoursChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="report-card">
+                    <h4>Dự báo nhu cầu (AI)</h4>
+                    <div class="ai-prediction">
+                        <div class="prediction-item">
+                            <span class="prediction-label">Dự báo tuần tới:</span>
+                            <span class="prediction-value">+15%</span>
+                        </div>
+                        <div class="prediction-item">
+                            <span class="prediction-label">Trạm cần mở rộng:</span>
+                            <span class="prediction-value">Quận 7, Quận 9</span>
+                        </div>
+                        <div class="prediction-item">
+                            <span class="prediction-label">Khuyến nghị:</span>
+                            <span class="prediction-value">Tăng 20% pin tại trạm trung tâm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="content-section">
+            <div class="section-header">
+                <h2>Cài đặt hệ thống</h2>
+            </div>
+            
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h4>Cài đặt chung</h4>
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label>Tên hệ thống:</label>
+                            <input type="text" value="EV Battery Swap System">
+                        </div>
+                        <div class="form-group">
+                            <label>Email hỗ trợ:</label>
+                            <input type="email" value="support@evswap.vn">
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại:</label>
+                            <input type="tel" value="1900-1234">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Lưu cài đặt</button>
+                    </form>
+                </div>
+                
+                <div class="settings-card">
+                    <h4>Cài đặt thông báo</h4>
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" checked>
+                                <span>Thông báo trạm offline</span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" checked>
+                                <span>Thông báo pin cần bảo trì</span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox">
+                                <span>Thông báo doanh thu hàng ngày</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Lưu cài đặt</button>
+                    </form>
+                </div>
+                
+                <div class="settings-card">
+                    <h4>Bảo mật</h4>
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label>Mật khẩu hiện tại:</label>
+                            <input type="password">
+                        </div>
+                        <div class="form-group">
+                            <label>Mật khẩu mới:</label>
+                            <input type="password">
+                        </div>
+                        <div class="form-group">
+                            <label>Xác nhận mật khẩu:</label>
+                            <input type="password">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Đổi mật khẩu</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add Station Modal -->
+    <div id="addStationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Thêm trạm mới</h2>
+                <span class="close" onclick="closeModal('addStationModal')">&times;</span>
+            </div>
+            <form class="modal-form">
+                <div class="form-group">
+                    <label for="stationName">Tên trạm:</label>
+                    <input type="text" id="stationName" required>
+                </div>
+                <div class="form-group">
+                    <label for="stationAddress">Địa chỉ:</label>
+                    <input type="text" id="stationAddress" required>
+                </div>
+                <div class="form-group">
+                    <label for="stationPhone">Số điện thoại:</label>
+                    <input type="tel" id="stationPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="stationCapacity">Số lượng pin tối đa:</label>
+                    <input type="number" id="stationCapacity" required>
+                </div>
+                <div class="form-group">
+                    <label for="stationManager">Người quản lý:</label>
+                    <input type="text" id="stationManager" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addStationModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm trạm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Package Modal -->
+    <div id="addPackageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Tạo gói thuê mới</h2>
+                <span class="close" onclick="closeModal('addPackageModal')">&times;</span>
+            </div>
+            <form class="modal-form">
+                <div class="form-group">
+                    <label for="packageName">Tên gói:</label>
+                    <input type="text" id="packageName" required>
+                </div>
+                <div class="form-group">
+                    <label for="packagePrice">Giá:</label>
+                    <input type="number" id="packagePrice" required>
+                </div>
+                <div class="form-group">
+                    <label for="packageType">Loại gói:</label>
+                    <select id="packageType" required>
+                        <option value="per_swap">Theo lượt</option>
+                        <option value="monthly">Hàng tháng</option>
+                        <option value="yearly">Hàng năm</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="packageFeatures">Tính năng:</label>
+                    <textarea id="packageFeatures" rows="4"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addPackageModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Tạo gói</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

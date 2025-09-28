@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - EV Battery Swap System</title>
+    <link rel="stylesheet" href="css/staff.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <i class="fas fa-battery-full"></i>
+                <span>EV Swap Staff</span>
+            </div>
+            <div class="station-info">
+                <span class="station-name">Trạm Quận 1</span>
+                <span class="station-status status-active">Hoạt động</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="notifications">
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">2</span>
+                </button>
+            </div>
+            <div class="user-info">
+                <img src="https://via.placeholder.com/40" alt="Staff" class="user-avatar">
+                <span class="user-name">Nguyễn Văn A</span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Overview -->
+        <section class="dashboard-overview">
+            <div class="overview-cards">
+                <div class="overview-card">
+                    <div class="card-icon">
+                        <i class="fas fa-battery-full"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Pin có sẵn</h3>
+                        <p class="card-number">15</p>
+                        <span class="card-change positive">+2 so với hôm qua</span>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">
+                        <i class="fas fa-charging-station"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Đang sạc</h3>
+                        <p class="card-number">8</p>
+                        <span class="card-change">3 sẽ hoàn thành trong 30 phút</span>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Bảo trì</h3>
+                        <p class="card-number">2</p>
+                        <span class="card-change">Cần kiểm tra</span>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div-content>
+                        <h3>Lượt đổi hôm nay</h3>
+                        <p class="card-number">24</p>
+                        <span class="card-change positive">+3 so với hôm qua</span>
+                    </div-content>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="quick-actions">
+            <h2>Thao tác nhanh</h2>
+            <div class="actions-grid">
+                <button class="action-btn" onclick="showSwapModal()">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Xử lý đổi pin</span>
+                </button>
+                <button class="action-btn" onclick="showPaymentModal()">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Thanh toán</span>
+                </button>
+                <button class="action-btn" onclick="showBatteryCheckModal()">
+                    <i class="fas fa-search"></i>
+                    <span>Kiểm tra pin</span>
+                </button>
+                <button class="action-btn" onclick="showMaintenanceModal()">
+                    <i class="fas fa-wrench"></i>
+                    <span>Bảo trì</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Battery Inventory -->
+        <section class="battery-inventory">
+            <div class="section-header">
+                <h2>Quản lý kho pin</h2>
+                <div class="inventory-filters">
+                    <select id="batteryFilter">
+                        <option value="all">Tất cả</option>
+                        <option value="available">Có sẵn</option>
+                        <option value="charging">Đang sạc</option>
+                        <option value="maintenance">Bảo trì</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="inventory-grid">
+                <div class="battery-card available">
+                    <div class="battery-header">
+                        <h4>BAT-001</h4>
+                        <span class="battery-status">Có sẵn</span>
+                    </div>
+                    <div class="battery-info">
+                        <div class="info-item">
+                            <span class="label">Dung lượng:</span>
+                            <span class="value">75kWh</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">SoH:</span>
+                            <span class="value">95%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Lần sạc:</span>
+                            <span class="value">150</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Ngày tạo:</span>
+                            <span class="value">15/01/2024</span>
+                        </div>
+                    </div>
+                    <div class="battery-actions">
+                        <button class="btn btn-outline btn-sm" onclick="viewBatteryDetails('BAT-001')">
+                            <i class="fas fa-eye"></i> Chi tiết
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="useBattery('BAT-001')">
+                            <i class="fas fa-check"></i> Sử dụng
+                        </button>
+                    </div>
+                </div>
+
+                <div class="battery-card charging">
+                    <div class="battery-header">
+                        <h4>BAT-002</h4>
+                        <span class="battery-status">Đang sạc</span>
+                    </div>
+                    <div class="battery-info">
+                        <div class="info-item">
+                            <span class="label">Dung lượng:</span>
+                            <span class="value">50kWh</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">SoH:</span>
+                            <span class="value">78%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Tiến độ sạc:</span>
+                            <span class="value">65%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Thời gian còn lại:</span>
+                            <span class="value">25 phút</span>
+                        </div>
+                    </div>
+                    <div class="battery-actions">
+                        <button class="btn btn-outline btn-sm" onclick="viewBatteryDetails('BAT-002')">
+                            <i class="fas fa-eye"></i> Chi tiết
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="stopCharging('BAT-002')">
+                            <i class="fas fa-pause"></i> Dừng sạc
+                        </button>
+                    </div>
+                </div>
+
+                <div class="battery-card maintenance">
+                    <div class="battery-header">
+                        <h4>BAT-003</h4>
+                        <span class="battery-status">Bảo trì</span>
+                    </div>
+                    <div class="battery-info">
+                        <div class="info-item">
+                            <span class="label">Dung lượng:</span>
+                            <span class="value">100kWh</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">SoH:</span>
+                            <span class="value">45%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Lỗi:</span>
+                            <span class="value">Cell 3, Cell 7</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Ngày bảo trì:</span>
+                            <span class="value">20/01/2024</span>
+                        </div>
+                    </div>
+                    <div class="battery-actions">
+                        <button class="btn btn-outline btn-sm" onclick="viewBatteryDetails('BAT-003')">
+                            <i class="fas fa-eye"></i> Chi tiết
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="completeMaintenance('BAT-003')">
+                            <i class="fas fa-check"></i> Hoàn thành
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Transactions -->
+        <section class="recent-transactions">
+            <div class="section-header">
+                <h2>Giao dịch gần đây</h2>
+                <button class="btn btn-outline" onclick="viewAllTransactions()">
+                    <i class="fas fa-list"></i> Xem tất cả
+                </button>
+            </div>
+            
+            <div class="transactions-list">
+                <div class="transaction-item">
+                    <div class="transaction-icon success">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="transaction-content">
+                        <h4>Đổi pin thành công</h4>
+                        <p>Khách hàng: Nguyễn Văn A</p>
+                        <p>Pin: BAT-001 → BAT-005</p>
+                        <span class="transaction-time">10 phút trước</span>
+                    </div>
+                    <div class="transaction-amount">
+                        <span class="amount">50,000đ</span>
+                    </div>
+                </div>
+
+                <div class="transaction-item">
+                    <div class="transaction-icon info">
+                        <i class="fas fa-info"></i>
+                    </div>
+                    <div class="transaction-content">
+                        <h4>Thanh toán gói tháng</h4>
+                        <p>Khách hàng: Trần Thị B</p>
+                        <p>Gói: Tháng - 800,000đ</p>
+                        <span class="transaction-time">25 phút trước</span>
+                    </div>
+                    <div class="transaction-amount">
+                        <span class="amount">800,000đ</span>
+                    </div>
+                </div>
+
+                <div class="transaction-item">
+                    <div class="transaction-icon warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="transaction-content">
+                        <h4>Pin lỗi được trả về</h4>
+                        <p>Khách hàng: Lê Văn C</p>
+                        <p>Pin: BAT-003 - Cần bảo trì</p>
+                        <span class="transaction-time">1 giờ trước</span>
+                    </div>
+                    <div class="transaction-amount">
+                        <span class="amount">-</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Station Status -->
+        <section class="station-status">
+            <h2>Trạng thái trạm</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-icon">
+                        <i class="fas fa-power-off"></i>
+                    </div>
+                    <div class="status-content">
+                        <h4>Nguồn điện</h4>
+                        <p class="status-value">Bình thường</p>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-icon">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                    <div class="status-content">
+                        <h4>Kết nối mạng</h4>
+                        <p class="status-value">Tốt</p>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-icon">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="status-content">
+                        <h4>Nhiệt độ</h4>
+                        <p class="status-value">25°C</p>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="status-content">
+                        <h4>Bảo mật</h4>
+                        <p class="status-value">Hoạt động</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Swap Modal -->
+    <div id="swapModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Xử lý đổi pin</h2>
+                <span class="close" onclick="closeModal('swapModal')">&times;</span>
+            </div>
+            <form class="modal-form">
+                <div class="form-group">
+                    <label for="customerPhone">Số điện thoại khách hàng:</label>
+                    <input type="tel" id="customerPhone" placeholder="0901234567" required>
+                </div>
+                <div class="form-group">
+                    <label for="oldBattery">Pin cũ:</label>
+                    <select id="oldBattery" required>
+                        <option value="">Chọn pin cũ</option>
+                        <option value="BAT-001">BAT-001 (75kWh)</option>
+                        <option value="BAT-002">BAT-002 (50kWh)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="newBattery">Pin mới:</label>
+                    <select id="newBattery" required>
+                        <option value="">Chọn pin mới</option>
+                        <option value="BAT-004">BAT-004 (75kWh) - 95% SoH</option>
+                        <option value="BAT-005">BAT-005 (50kWh) - 92% SoH</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod">Phương thức thanh toán:</label>
+                    <select id="paymentMethod" required>
+                        <option value="cash">Tiền mặt</option>
+                        <option value="card">Thẻ</option>
+                        <option value="mobile">Ví điện tử</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('swapModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Xác nhận đổi pin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Thanh toán</h2>
+                <span class="close" onclick="closeModal('paymentModal')">&times;</span>
+            </div>
+            <form class="modal-form">
+                <div class="form-group">
+                    <label for="paymentCustomerPhone">Số điện thoại khách hàng:</label>
+                    <input type="tel" id="paymentCustomerPhone" placeholder="0901234567" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentAmount">Số tiền:</label>
+                    <input type="number" id="paymentAmount" placeholder="50000" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentType">Loại thanh toán:</label>
+                    <select id="paymentType" required>
+                        <option value="per_swap">Theo lượt đổi</option>
+                        <option value="monthly">Gói tháng</option>
+                        <option value="yearly">Gói năm</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('paymentModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Xác nhận thanh toán</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Battery Check Modal -->
+    <div id="batteryCheckModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Kiểm tra pin</h2>
+                <span class="close" onclick="closeModal('batteryCheckModal')">&times;</span>
+            </div>
+            <form class="modal-form">
+                <div class="form-group">
+                    <label for="batteryId">ID Pin:</label>
+                    <input type="text" id="batteryId" placeholder="BAT-001" required>
+                </div>
+                <div class="form-group">
+                    <label for="batteryCondition">Tình trạng pin:</label>
+                    <select id="batteryCondition" required>
+                        <option value="good">Tốt</option>
+                        <option value="fair">Khá</option>
+                        <option value="poor">Kém</option>
+                        <option value="faulty">Lỗi</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="batteryNotes">Ghi chú:</label>
+                    <textarea id="batteryNotes" rows="3" placeholder="Mô tả tình trạng pin..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('batteryCheckModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu kết quả kiểm tra</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Maintenance Modal -->
+    <div id="maintenanceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Bảo trì pin</h2>
+                <span class="close" onclick="closeModal('maintenanceModal')">&times;</span>
+            </div>
+            <form class="modal-form">
+                <div class="form-group">
+                    <label for="maintenanceBatteryId">ID Pin:</label>
+                    <input type="text" id="maintenanceBatteryId" placeholder="BAT-001" required>
+                </div>
+                <div class="form-group">
+                    <label for="maintenanceType">Loại bảo trì:</label>
+                    <select id="maintenanceType" required>
+                        <option value="routine">Bảo trì định kỳ</option>
+                        <option value="repair">Sửa chữa</option>
+                        <option value="replacement">Thay thế</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="maintenanceDescription">Mô tả công việc:</label>
+                    <textarea id="maintenanceDescription" rows="3" placeholder="Mô tả công việc bảo trì..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="maintenanceDuration">Thời gian dự kiến (phút):</label>
+                    <input type="number" id="maintenanceDuration" placeholder="60" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('maintenanceModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Bắt đầu bảo trì</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/staff.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+@DriverPaymentService_HostAddress = http://localhost:5289
+
+GET {{DriverPaymentService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
