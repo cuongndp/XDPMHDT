@@ -251,7 +251,7 @@
                 <div class="footer-section">
                     <h3>EV Swap</h3>
 
-                    <ul id="payment"></ul>
+
 
                     <p>Hệ thống đổi pin xe điện thông minh</p>
                     <div class="social-links">
@@ -282,19 +282,22 @@
             </div>
         </div>
     </footer>
-
+    <ul id="payment"></ul>
+    <h1>sdgdfgdf</h1>
     <script src="js/script.js"></script>
     <script>
         // gọi API PaymentService qua gateway hoặc trực tiếp
         fetch("http://localhost:5000/gateway/payment")
             .then(res => res.json())
             .then(data => {
+                console.log("API trả về:", data); // để check
                 let list = document.getElementById("payment");
+
 
                 list.innerHTML = "";
                 data.forEach(p => {
                     let li = document.createElement("li");
-                    li.textContent = `Id: ${p.id}, Amount: ${p.amount}, DriverName: ${p.driverName}`;
+                    li.textContent = `Id: ${p.idUser}, Chi phí: ${p.chiPhi}, Ngày đổi pin: ${p.ngayDoiPin}`;
                     list.appendChild(li);
                 });
             })

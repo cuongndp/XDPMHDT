@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DriverPaymentService.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DriverPaymentService.Controllers
@@ -7,17 +8,17 @@ namespace DriverPaymentService.Controllers
     [ApiController]
     public class PaymentController : ControllerBase
     {
-        [HttpGet]
-        public IActionResult GetPayments()
+        public readonly PaymentServiceDbContext _context;
+        public PaymentController(PaymentServiceDbContext context)
         {
-            var list = new List<DriverPayment>
-            {
-                new DriverPayment { Id = 1, DriverName = "Nguyen Van A", Amount = 1000 },
-                new DriverPayment { Id = 2, DriverName = "Tran Van B", Amount = 2000 },
-                new DriverPayment { Id = 3, DriverName = "Le Van C", Amount = 1500 }
-            };
-
-            return Ok(list);
+            _context = context;
         }
+        [HttpGet]
+        public IActionResult GetUsers()
+        {
+            var users = _context.HoaDons.ToList();
+            return Ok(users);
+        }
+
     }
 }
