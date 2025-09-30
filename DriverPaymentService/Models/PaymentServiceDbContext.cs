@@ -81,6 +81,9 @@ public partial class PaymentServiceDbContext : DbContext
             entity.Property(e => e.Email)
                 .HasMaxLength(150)
                 .HasColumnName("email");
+            entity.Property(e => e.GioiTinh)
+                .HasMaxLength(10)
+                .HasColumnName("gioi_tinh");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");

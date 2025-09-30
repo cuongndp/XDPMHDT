@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fontend", "Fontend\Fontend.csproj", "{B585BFAD-7078-454E-8DB9-E616A3FAA29C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DriverServices", "DriverServices\DriverServices.csproj", "{950D365F-0006-442D-A4CF-3879CDD33B5E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{B585BFAD-7078-454E-8DB9-E616A3FAA29C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B585BFAD-7078-454E-8DB9-E616A3FAA29C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B585BFAD-7078-454E-8DB9-E616A3FAA29C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{950D365F-0006-442D-A4CF-3879CDD33B5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{950D365F-0006-442D-A4CF-3879CDD33B5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{950D365F-0006-442D-A4CF-3879CDD33B5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{950D365F-0006-442D-A4CF-3879CDD33B5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

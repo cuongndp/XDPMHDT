@@ -476,6 +476,381 @@ body {
     overflow-y: auto;
 }
 
+/* Form Row Layout */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* Enhanced Form Styles */
+.form-group {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: #fff;
+    color: #374151;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+
+.form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: none;
+}
+
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.section-title i {
+    color: #2563eb;
+    font-size: 20px;
+}
+
+/* Enhanced Modal Styles */
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.login-modal {
+    max-width: 450px;
+}
+
+.register-modal {
+    max-width: 600px;
+}
+
+.modal-header {
+    text-align: center;
+    padding: 40px 30px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    position: relative;
+}
+
+.modal-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 24px;
+}
+
+.modal-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.modal-subtitle {
+    font-size: 16px;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.modal-form {
+    padding: 30px;
+}
+
+/* Enhanced Checkbox */
+.checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.checkbox input[type="checkbox"]:checked + .checkmark {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.checkbox input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.checkbox-text {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.checkbox-text a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.checkbox-text a:hover {
+    text-decoration: underline;
+}
+
+/* Password Strength Indicator */
+.password-strength {
+    margin-top: 8px;
+}
+
+.strength-bar {
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.strength-fill {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.strength-fill.weak {
+    width: 33%;
+    background: #ef4444;
+}
+
+.strength-fill.medium {
+    width: 66%;
+    background: #f59e0b;
+}
+
+.strength-fill.strong {
+    width: 100%;
+    background: #10b981;
+}
+
+.strength-text {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+
+
+/* Form Options */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.forgot-password {
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.3s ease;
+}
+
+.forgot-password:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* Form Footer */
+.form-footer {
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.form-footer p {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.form-footer a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Animations */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+    }
+    
+    .modal-header {
+        padding: 30px 20px 15px;
+    }
+    
+    .modal-form {
+        padding: 20px;
+    }
+    
+    .form-section {
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .form-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+}
+
+/* User Info Styles */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.user-role {
+    font-size: 12px;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.user-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-small {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+/* Alert Styles - có thể sử dụng khi cần */
+
+/* Modal Body for Terms and Privacy */
+.modal-body {
+    padding: 30px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.modal-body h3 {
+    color: #1e293b;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.modal-body p {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+/* Profile Info Styles - có thể sử dụng khi cần */
+
 .modal-content {
     background-color: white;
     margin: 5% auto;
@@ -782,6 +1157,25 @@ body {
     .filter-btn {
         white-space: nowrap;
     }
+    
+    /* Form responsive */
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    
+    .user-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .user-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    /* Alert responsive - có thể sử dụng khi cần */
 }
 
 @media (max-width: 480px) {

@@ -173,28 +173,42 @@
 
     <!-- Login Modal -->
     <div id="loginModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content login-modal">
             <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
                 <h2>Đăng nhập</h2>
+                <p class="modal-subtitle">Chào mừng bạn quay trở lại!</p>
                 <span class="close" onclick="closeModal('loginModal')">&times;</span>
             </div>
-            <form class="modal-form">
+            <form class="modal-form" id="loginForm">
                 <div class="form-group">
-                    <label for="loginEmail">Email</label>
-                    <input type="email" id="loginEmail" required>
+                    <label for="loginEmail">Email hoặc số điện thoại *</label>
+                    <input type="text" id="loginEmail" name="loginIdentifier" required placeholder="Nhập email hoặc số điện thoại">
                 </div>
+                
                 <div class="form-group">
-                    <label for="loginPassword">Mật khẩu</label>
-                    <input type="password" id="loginPassword" required>
+                    <label for="loginPassword">Mật khẩu *</label>
+                    <input type="password" id="loginPassword" name="password" required placeholder="Nhập mật khẩu">
                 </div>
+                
                 <div class="form-options">
                     <label class="checkbox">
-                        <input type="checkbox">
-                        <span>Ghi nhớ đăng nhập</span>
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        <span class="checkbox-text">Ghi nhớ đăng nhập</span>
                     </label>
-                    <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                    <a href="#" class="forgot-password" onclick="showForgotPassword()">
+                        <i class="fas fa-question-circle"></i>
+                        Quên mật khẩu?
+                    </a>
                 </div>
-                <button type="submit" class="btn btn-primary btn-full">Đăng nhập</button>
+                
+                <button type="submit" class="btn btn-primary btn-full">
+                    Đăng nhập
+                </button>
+                
                 <div class="form-footer">
                     <p>Chưa có tài khoản? <a href="#" onclick="switchModal('loginModal', 'registerModal')">Đăng ký ngay</a></p>
                 </div>
@@ -204,43 +218,161 @@
 
     <!-- Register Modal -->
     <div id="registerModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content register-modal">
             <div class="modal-header">
-                <h2>Đăng ký</h2>
+                <div class="modal-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h2>Đăng ký tài khoản</h2>
+                <p class="modal-subtitle">Tạo tài khoản mới để sử dụng dịch vụ</p>
                 <span class="close" onclick="closeModal('registerModal')">&times;</span>
             </div>
-            <form class="modal-form">
-                <div class="form-group">
-                    <label for="registerName">Họ và tên</label>
-                    <input type="text" id="registerName" required>
+            <form class="modal-form" id="register">
+                <!-- Thông tin cá nhân -->
+                
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user"></i>
+                        Thông tin cá nhân
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="registerName">Họ và tên *</label>
+                            <input type="text" id="registerName" name="name" required placeholder="Nhập họ và tên">
+                        </div>
+                        <div class="form-group">
+                            <label for="registerAge">Tuổi *</label>
+                            <input type="number" id="registerAge" name="age" min="18" max="100" required placeholder="Nhập tuổi">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerGender">Giới tính *</label>
+                        <select id="registerGender" name="gioitinh" required>
+                            <option value="">Chọn giới tính</option>
+                            <option value="male">Nam</option>
+                            <option value="female">Nữ</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="registerEmail">Email</label>
-                    <input type="email" id="registerEmail" required>
+                
+                <!-- Thông tin liên hệ -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-address-book"></i>
+                        Thông tin liên hệ
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="registerEmail">Email *</label>
+                        <input type="email" id="registerEmail" name="email" required placeholder="example@email.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerPhone">Số điện thoại *</label>
+                        <input type="tel" id="registerPhone" name="sodienthoai" pattern="[0-9]{10,11}" placeholder="0123456789" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="registerPhone">Số điện thoại</label>
-                    <input type="tel" id="registerPhone" required>
+                
+                <!-- Bảo mật -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-shield-alt"></i>
+                        Bảo mật
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="registerPassword">Mật khẩu *</label>
+                            <input type="password" id="registerPassword" name="password" minlength="6" required placeholder="Tối thiểu 6 ký tự">
+                        </div>
+                        <div class="form-group">
+                            <label for="registerConfirmPassword">Xác nhận mật khẩu *</label>
+                            <input type="password" id="registerConfirmPassword" name="confirmpassword" minlength="6" required placeholder="Nhập lại mật khẩu">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="registerPassword">Mật khẩu</label>
-                    <input type="password" id="registerPassword" required>
-                </div>
-                <div class="form-group">
-                    <label for="registerVehicle">Thông tin xe</label>
-                    <input type="text" id="registerVehicle" placeholder="VIN, loại pin" required>
-                </div>
-                <div class="form-options">
-                    <label class="checkbox">
-                        <input type="checkbox" required>
-                        <span>Tôi đồng ý với <a href="#">điều khoản sử dụng</a></span>
-                    </label>
-                </div>
-                <button type="submit" class="btn btn-primary btn-full">Đăng ký</button>
+                <div id="message" style="display:none;text-align:center"></div>
+                
+                <button type="submit" class="btn btn-primary btn-full" >
+                    Đăng ký tài khoản
+                </button>
+                
                 <div class="form-footer">
-                    <p>Đã có tài khoản? <a href="#" onclick="switchModal('registerModal', 'loginModal')">Đăng nhập</a></p>
+                    <p>Đã có tài khoản? <a href="#" onclick="switchModal('registerModal', 'loginModal')">Đăng nhập ngay</a></p>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Quên mật khẩu</h2>
+                <span class="close" onclick="closeModal('forgotPasswordModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="forgotPasswordForm">
+                <div class="form-group">
+                    <label for="forgotEmail">Email đăng ký *</label>
+                    <input type="email" id="forgotEmail" name="email" required placeholder="Nhập email đã đăng ký">
+                </div>
+                <div class="form-group">
+                    <label for="forgotPhone">Số điện thoại *</label>
+                    <input type="tel" id="forgotPhone" name="phone" pattern="[0-9]{10,11}" placeholder="0123456789" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Gửi mã xác thực</button>
+                <div class="form-footer">
+                    <p>Nhớ mật khẩu? <a href="#" onclick="switchModal('forgotPasswordModal', 'loginModal')">Đăng nhập ngay</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Terms and Privacy Modals -->
+    <div id="termsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Điều khoản sử dụng</h2>
+                <span class="close" onclick="closeModal('termsModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h3>1. Điều khoản chung</h3>
+                <p>Bằng việc sử dụng dịch vụ EV Swap, bạn đồng ý tuân thủ các điều khoản và điều kiện sau đây.</p>
+                
+                <h3>2. Quyền và nghĩa vụ của người dùng</h3>
+                <p>Người dùng có quyền sử dụng dịch vụ đổi pin theo quy định và có nghĩa vụ thanh toán đầy đủ các khoản phí dịch vụ.</p>
+                
+                <h3>3. Bảo mật thông tin</h3>
+                <p>Chúng tôi cam kết bảo mật thông tin cá nhân của người dùng theo quy định pháp luật.</p>
+                
+                <h3>4. Liên hệ</h3>
+                <p>Mọi thắc mắc vui lòng liên hệ: support@evswap.vn</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="privacyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Chính sách bảo mật</h2>
+                <span class="close" onclick="closeModal('privacyModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h3>1. Thu thập thông tin</h3>
+                <p>Chúng tôi thu thập thông tin cá nhân cần thiết để cung cấp dịch vụ đổi pin xe điện.</p>
+                
+                <h3>2. Sử dụng thông tin</h3>
+                <p>Thông tin được sử dụng để xác thực danh tính, cung cấp dịch vụ và cải thiện trải nghiệm người dùng.</p>
+                
+                <h3>3. Bảo vệ thông tin</h3>
+                <p>Chúng tôi áp dụng các biện pháp bảo mật tiên tiến để bảo vệ thông tin cá nhân của bạn.</p>
+                
+                <h3>4. Chia sẻ thông tin</h3>
+                <p>Chúng tôi không chia sẻ thông tin cá nhân với bên thứ ba mà không có sự đồng ý của bạn.</p>
+            </div>
         </div>
     </div>
 
@@ -283,7 +415,6 @@
         </div>
     </footer>
     <ul id="payment"></ul>
-    <h1>sdgdfgdf</h1>
     <script src="js/script.js"></script>
     <script>
         // gọi API PaymentService qua gateway hoặc trực tiếp

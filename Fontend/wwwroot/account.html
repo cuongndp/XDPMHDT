@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý tài khoản - EV Swap</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/account.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-battery-full"></i>
+                <span>EV Swap</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Trang chủ</a></li>
+                <li><a href="index.html#stations" class="nav-link">Tìm trạm</a></li>
+                <li><a href="index.html#packages" class="nav-link">Gói thuê</a></li>
+                <li><a href="index.html#support" class="nav-link">Hỗ trợ</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <div class="user-info">
+                    <div class="user-details">
+                        <span class="user-name">Xin chào, Nguyễn Văn A</span>
+                        <span class="user-role">Khách hàng</span>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn btn-outline btn-small" onclick="showUserProfile()">
+                            <i class="fas fa-user"></i> Hồ sơ
+                        </button>
+                        <button class="btn btn-outline btn-small" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Account Management Section -->
+    <section class="account-section">
+        <div class="container">
+            <div class="account-header">
+                <h1>Quản lý tài khoản</h1>
+                <p>Quản lý thông tin cá nhân và phương tiện của bạn</p>
+            </div>
+
+            <div class="account-content">
+                <!-- Personal Info Card -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-user"></i> Thông tin cá nhân</h2>
+                        <button class="btn btn-outline btn-small" onclick="editPersonalInfo()">
+                            <i class="fas fa-edit"></i> Chỉnh sửa
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Họ và tên</label>
+                                <span>Nguyễn Văn A</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Email</label>
+                                <span>nguyenvana@example.com</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Số điện thoại</label>
+                                <span>0123456789</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Tuổi</label>
+                                <span>25 tuổi</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicles Card -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-car"></i> Phương tiện của tôi</h2>
+                        <button class="btn btn-primary btn-small" id="addVehicleBtn" onclick="showAddVehicleModal()" style="display: none;">
+                            <i class="fas fa-plus"></i> Thêm xe
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div class="vehicles-list" id="vehiclesList">
+                            <!-- Vehicles will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking History Card -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-history"></i> Lịch sử đổi pin</h2>
+                        <button class="btn btn-outline btn-small" onclick="viewAllHistory()">
+                            <i class="fas fa-eye"></i> Xem tất cả
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div class="history-list">
+                            <div class="history-item">
+                                <div class="history-info">
+                                    <h4>Trạm đổi pin Quận 1</h4>
+                                    <p><i class="fas fa-calendar"></i> 20/01/2024 - 14:30</p>
+                                    <p><i class="fas fa-money-bill"></i> 50,000đ</p>
+                                </div>
+                                <span class="status success">Hoàn thành</span>
+                            </div>
+                            <div class="history-item">
+                                <div class="history-info">
+                                    <h4>Trạm đổi pin Quận 2</h4>
+                                    <p><i class="fas fa-calendar"></i> 18/01/2024 - 10:15</p>
+                                    <p><i class="fas fa-money-bill"></i> 50,000đ</p>
+                                </div>
+                                <span class="status success">Hoàn thành</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add Vehicle Modal -->
+    <div id="addVehicleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Thêm phương tiện</h2>
+                <span class="close" onclick="closeModal('addVehicleModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="addVehicleForm">
+                <div class="form-group">
+                    <label for="vehicleName">Tên xe *</label>
+                    <input type="text" id="vehicleName" name="vehicleName" required placeholder="VD: VinFast VF8">
+                </div>
+                
+                <div class="form-group">
+                    <label for="licensePlate">Biển số xe *</label>
+                    <input type="text" id="licensePlate" name="licensePlate" required placeholder="VD: 30A-12345">
+                </div>
+                
+                <div class="form-group">
+                    <label for="vehicleType">Loại xe *</label>
+                    <select id="vehicleType" name="vehicleType" required>
+                        <option value="">Chọn loại xe</option>
+                        <option value="car">Ô tô</option>
+                        <option value="motorcycle">Xe máy điện</option>
+                        <option value="bicycle">Xe đạp điện</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="batteryType">Loại pin *</label>
+                    <select id="batteryType" name="batteryType" required>
+                        <option value="">Chọn loại pin</option>
+                        <option value="lithium-ion">Lithium-ion</option>
+                        <option value="lithium-polymer">Lithium-polymer</option>
+                        <option value="lead-acid">Lead-acid</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="batteryCapacity">Dung lượng pin (kWh)</label>
+                    <input type="number" id="batteryCapacity" name="batteryCapacity" placeholder="VD: 42.5" step="0.1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="vehicleYear">Năm sản xuất</label>
+                    <input type="number" id="vehicleYear" name="vehicleYear" min="2000" max="2024" placeholder="VD: 2023">
+                </div>
+                
+                <div class="form-group">
+                    <label for="vehicleColor">Màu xe</label>
+                    <input type="text" id="vehicleColor" name="vehicleColor" placeholder="VD: Trắng">
+                </div>
+                
+                <div class="form-group">
+                    <label for="vehicleNotes">Ghi chú</label>
+                    <textarea id="vehicleNotes" name="vehicleNotes" rows="3" placeholder="Thông tin bổ sung về xe..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full">Thêm xe</button>
+                <div class="form-footer">
+                    <p>Thông tin xe sẽ được lưu trữ an toàn và chỉ sử dụng cho dịch vụ đổi pin</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Vehicle Modal -->
+    <div id="editVehicleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Chỉnh sửa phương tiện</h2>
+                <span class="close" onclick="closeModal('editVehicleModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="editVehicleForm">
+                <!-- Same fields as add vehicle form -->
+                <div class="form-group">
+                    <label for="editVehicleName">Tên xe *</label>
+                    <input type="text" id="editVehicleName" name="vehicleName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editLicensePlate">Biển số xe *</label>
+                    <input type="text" id="editLicensePlate" name="licensePlate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editVehicleType">Loại xe *</label>
+                    <select id="editVehicleType" name="vehicleType" required>
+                        <option value="">Chọn loại xe</option>
+                        <option value="car">Ô tô</option>
+                        <option value="motorcycle">Xe máy điện</option>
+                        <option value="bicycle">Xe đạp điện</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editBatteryType">Loại pin *</label>
+                    <select id="editBatteryType" name="batteryType" required>
+                        <option value="">Chọn loại pin</option>
+                        <option value="lithium-ion">Lithium-ion</option>
+                        <option value="lithium-polymer">Lithium-polymer</option>
+                        <option value="lead-acid">Lead-acid</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editBatteryCapacity">Dung lượng pin (kWh)</label>
+                    <input type="number" id="editBatteryCapacity" name="batteryCapacity" step="0.1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editVehicleYear">Năm sản xuất</label>
+                    <input type="number" id="editVehicleYear" name="vehicleYear" min="2000" max="2024">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editVehicleColor">Màu xe</label>
+                    <input type="text" id="editVehicleColor" name="vehicleColor">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editVehicleNotes">Ghi chú</label>
+                    <textarea id="editVehicleNotes" name="vehicleNotes" rows="3"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full">Cập nhật xe</button>
+                <div class="form-footer">
+                    <p>Thông tin xe sẽ được cập nhật ngay lập tức</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>EV Swap</h3>
+                    <p>Hệ thống đổi pin xe điện thông minh</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Dịch vụ</h4>
+                    <ul>
+                        <li><a href="index.html#stations">Tìm trạm</a></li>
+                        <li><a href="index.html#packages">Gói thuê</a></li>
+                        <li><a href="index.html#support">Hỗ trợ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Liên hệ</h4>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> 1900-1234</li>
+                        <li><i class="fas fa-envelope"></i> support@evswap.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> TP.HCM, Việt Nam</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 EV Swap. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/account.js"></script>
+</body>
+</html>

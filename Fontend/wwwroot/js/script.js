@@ -51,7 +51,6 @@ const stationsData = [
 ];
 
 // DOM Elements
-let currentUser = null;
 let currentFilter = 'all';
 
 // Initialize the app
@@ -59,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadStations();
     setupEventListeners();
     setupMobileMenu();
+    setupPasswordStrength();
 });
 
 // Setup event listeners
@@ -79,8 +79,9 @@ function setupEventListeners() {
     });
 
     // Form submissions
-    const loginForm = document.querySelector('#loginModal form');
-    const registerForm = document.querySelector('#registerModal form');
+    const loginForm = document.querySelector('#loginForm');
+    const registerForm = document.querySelector('#registerForm');
+    const forgotPasswordForm = document.querySelector('#forgotPasswordForm');
     
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
@@ -88,6 +89,10 @@ function setupEventListeners() {
     
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
+    }
+    
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', handleForgotPassword);
     }
 
     // Close modals when clicking outside
@@ -211,35 +216,10 @@ function searchStations() {
     `).join('');
 }
 
-// Book a station
+// Book a station - placeholder
 function bookStation(stationId) {
-    const station = stationsData.find(s => s.id === stationId);
-    if (!station) return;
-
-    if (!currentUser) {
-        showLoginModal();
-        return;
-    }
-
-    if (station.status !== 'available') {
-        alert('Trạm này hiện không khả dụng để đặt chỗ.');
-        return;
-    }
-
-    if (station.batteries === 0) {
-        alert('Trạm này hiện không có pin sẵn sàng.');
-        return;
-    }
-
-    // Simulate booking process
-    const bookingTime = new Date();
-    bookingTime.setHours(bookingTime.getHours() + 1);
-    
-    alert(`Đặt chỗ thành công!\nTrạm: ${station.name}\nThời gian: ${bookingTime.toLocaleString('vi-VN')}\nPin có sẵn: ${station.batteries}`);
-    
-    // Update station data
-    station.batteries -= 1;
-    loadStations();
+    // Logic xử lý sẽ được implement ở backend
+    console.log('Book station:', stationId);
 }
 
 // Get directions to station
@@ -295,79 +275,94 @@ function showModal(modalId) {
     }
 }
 
-// Handle login
+// Handle login - chỉ xử lý giao diện
 function handleLogin(event) {
     event.preventDefault();
     
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    
-    // Simulate login process
-    if (email && password) {
-        currentUser = {
-            email: email,
-            name: email.split('@')[0]
-        };
-        
-        alert('Đăng nhập thành công!');
-        closeModal('loginModal');
-        updateUserInterface();
-    } else {
-        alert('Vui lòng nhập đầy đủ thông tin.');
+    // Validate form
+    if (!validateForm('loginForm')) {
+        alert('Vui lòng điền đầy đủ thông tin');
+        return;
     }
+    
+    // Lấy dữ liệu form
+    const formData = new FormData(event.target);
+    const loginData = {
+        identifier: formData.get('loginIdentifier'),
+        password: formData.get('password'),
+        rememberMe: formData.get('rememberMe') === 'on'
+    };
+    
+    // Logic xử lý sẽ được implement ở backend
+    console.log('Login form submitted:', loginData);
+    
+    // Hiển thị thông báo thành công (tạm thời)
+    alert('Đăng nhập thành công! (Demo)');
+    closeModal('loginModal');
+    
+    // Reset form
+    event.target.reset();
 }
 
-// Handle register
+// Handle register - chỉ xử lý giao diện
 function handleRegister(event) {
     event.preventDefault();
     
-    const name = document.getElementById('registerName').value;
-    const email = document.getElementById('registerEmail').value;
-    const phone = document.getElementById('registerPhone').value;
-    const password = document.getElementById('registerPassword').value;
-    const vehicle = document.getElementById('registerVehicle').value;
+    // Validate form
+    if (!validateForm('registerForm')) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+        return;
+    }
     
-    // Simulate registration process
-    if (name && email && phone && password && vehicle) {
-        currentUser = {
-            name: name,
-            email: email,
-            phone: phone,
-            vehicle: vehicle
-        };
-        
-        alert('Đăng ký thành công!');
-        closeModal('registerModal');
-        updateUserInterface();
-    } else {
-        alert('Vui lòng nhập đầy đủ thông tin.');
+    // Lấy dữ liệu form
+    const formData = new FormData(event.target);
+    const userData = {
+        name: formData.get('name'),
+        age: formData.get('age'),
+        gender: formData.get('gender'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        password: formData.get('password'),
+        confirmPassword: formData.get('confirmPassword')
+    };
+    
+    // Validation cơ bản
+    if (!userData.gender) {
+        alert('Vui lòng chọn giới tính');
+        return;
     }
+    
+    if (userData.password !== userData.confirmPassword) {
+        alert('Mật khẩu xác nhận không khớp');
+        return;
+    }
+    
+    if (userData.password.length < 6) {
+        alert('Mật khẩu phải có ít nhất 6 ký tự');
+        return;
+    }
+    
+    // Logic xử lý sẽ được implement ở backend
+    console.log('Register form submitted:', userData);
+    
+    // Hiển thị thông báo thành công (tạm thời)
+    alert('Đăng ký thành công! (Demo)');
+    closeModal('registerModal');
+    
+    // Reset form
+    event.target.reset();
 }
 
-// Update user interface after login/register
+// Update user interface - placeholder cho backend integration
 function updateUserInterface() {
-    const navButtons = document.querySelector('.nav-buttons');
-    if (navButtons && currentUser) {
-        navButtons.innerHTML = `
-            <div class="user-info">
-                <span>Xin chào, ${currentUser.name}</span>
-                <button class="btn btn-outline" onclick="logout()">Đăng xuất</button>
-            </div>
-        `;
-    }
+    // Sẽ được implement khi có API backend
+    console.log('Update user interface');
 }
 
-// Logout function
+// Logout function - placeholder
 function logout() {
-    currentUser = null;
-    const navButtons = document.querySelector('.nav-buttons');
-    if (navButtons) {
-        navButtons.innerHTML = `
-            <button class="btn btn-outline" onclick="showLoginModal()">Đăng nhập</button>
-            <button class="btn btn-primary" onclick="showRegisterModal()">Đăng ký</button>
-        `;
-    }
-    alert('Đã đăng xuất thành công!');
+    // Sẽ được implement khi có API backend
+    console.log('Logout');
 }
 
 // Smooth scroll to section
@@ -390,51 +385,171 @@ window.addEventListener('scroll', function() {
     }
 });
 
-// Add loading animation
+// Loading functions - có thể sử dụng khi integrate với API
 function showLoading() {
-    const loading = document.createElement('div');
-    loading.id = 'loading';
-    loading.innerHTML = `
-        <div class="loading-spinner">
-            <i class="fas fa-battery-full"></i>
-        </div>
-    `;
-    loading.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.9);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    `;
-    document.body.appendChild(loading);
+    console.log('Show loading');
 }
 
 function hideLoading() {
-    const loading = document.getElementById('loading');
-    if (loading) {
-        loading.remove();
+    console.log('Hide loading');
+}
+
+// Handle forgot password - placeholder
+function handleForgotPassword(event) {
+    event.preventDefault();
+    // Logic xử lý sẽ được implement ở backend
+    console.log('Forgot password form submitted');
+}
+
+// Show forgot password modal
+function showForgotPassword() {
+    closeModal('loginModal');
+    showModal('forgotPasswordModal');
+}
+
+// Show terms modal
+function showTerms() {
+    showModal('termsModal');
+}
+
+// Show privacy modal
+function showPrivacy() {
+    showModal('privacyModal');
+}
+
+// Show user profile - placeholder
+function showUserProfile() {
+    // Sẽ được implement khi có API backend
+    console.log('Show user profile');
+}
+
+// Toggle password visibility
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const toggleBtn = input.parentElement.querySelector('.password-toggle i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        toggleBtn.classList.remove('fa-eye');
+        toggleBtn.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        toggleBtn.classList.remove('fa-eye-slash');
+        toggleBtn.classList.add('fa-eye');
     }
 }
 
-// Simulate API calls with loading
-function simulateApiCall(callback, delay = 1000) {
-    showLoading();
-    setTimeout(() => {
-        callback();
-        hideLoading();
-    }, delay);
+// Password strength checker
+function checkPasswordStrength(password) {
+    let strength = 0;
+    let strengthText = 'Mật khẩu yếu';
+    
+    if (password.length >= 6) strength += 1;
+    if (password.length >= 8) strength += 1;
+    if (/[a-z]/.test(password)) strength += 1;
+    if (/[A-Z]/.test(password)) strength += 1;
+    if (/[0-9]/.test(password)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    
+    const strengthBar = document.getElementById('passwordStrength');
+    const strengthTextEl = document.getElementById('passwordStrengthText');
+    
+    if (strengthBar && strengthTextEl) {
+        strengthBar.className = 'strength-fill';
+        
+        if (strength <= 2) {
+            strengthBar.classList.add('weak');
+            strengthText = 'Mật khẩu yếu';
+        } else if (strength <= 4) {
+            strengthBar.classList.add('medium');
+            strengthText = 'Mật khẩu trung bình';
+        } else {
+            strengthBar.classList.add('strong');
+            strengthText = 'Mật khẩu mạnh';
+        }
+        
+        strengthTextEl.textContent = strengthText;
+    }
 }
 
-// Initialize with loading simulation
+// Setup password strength monitoring
+function setupPasswordStrength() {
+    const passwordInput = document.getElementById('registerPassword');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+        });
+    }
+}
+
+// Enhanced form validation
+function validateForm(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return false;
+    
+    const inputs = form.querySelectorAll('input[required], select[required]');
+    let isValid = true;
+    
+    inputs.forEach(input => {
+        if (!input.value.trim()) {
+            input.style.borderColor = '#ef4444';
+            isValid = false;
+        } else {
+            input.style.borderColor = '#e2e8f0';
+        }
+    });
+    
+    // Check password match for register form
+    if (formId === 'registerForm') {
+        const password = document.getElementById('registerPassword');
+        const confirmPassword = document.getElementById('registerConfirmPassword');
+        
+        if (password && confirmPassword && password.value !== confirmPassword.value) {
+            confirmPassword.style.borderColor = '#ef4444';
+            isValid = false;
+        }
+    }
+    
+    return isValid;
+}
+
+// Initialize app
 document.addEventListener('DOMContentLoaded', function() {
-    simulateApiCall(() => {
-        loadStations();
-        setupEventListeners();
-        setupMobileMenu();
-    }, 500);
+    loadStations();
+    setupEventListeners();
+    setupMobileMenu();
+});
+
+// gửi dữ liệu cho api
+
+document.getElementById("register").addEventListener("submit", async function (e) {
+    e.preventDefault(); // chặn reload
+
+    const formData = new FormData(this);               // gom dữ liệu form
+    const body = Object.fromEntries(formData.entries()); // chuyển thành object
+
+    try {
+        const res = await fetch("http://localhost:5000/gateway/driver/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }, // gửi json
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            // hiển thị lỗi
+            message.style.display = "block";
+            message.style.color = "red";
+            message.innerText = data.message;
+        } else {
+            message.style.display = "block";
+            message.style.color = "green";
+            message.innerText = data.message;
+        }
+    } catch (err) {
+        message.style.display = "block";
+        message.style.color = "red";
+        message.innerText = "Mất kết nối";
+    }
 });

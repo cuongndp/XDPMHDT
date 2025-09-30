@@ -12,4 +12,6 @@ public partial class UsersCache
     public string? Email { get; set; }
 
     public string? SoDienThoai { get; set; }
+
+    public string? GioiTinh { get; set; }
 }
