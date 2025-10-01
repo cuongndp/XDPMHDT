@@ -553,3 +553,51 @@ document.getElementById("register").addEventListener("submit", async function (e
         message.innerText = "Mất kết nối";
     }
 });
+
+
+
+
+//login
+const messagelogin = document.getElementById("messagelogin");
+document.getElementById("login").addEventListener("submit", async function (e) {
+    e.preventDefault(); // chặn reload
+
+    const formData = new FormData(this);               // gom dữ liệu form
+    const body = Object.fromEntries(formData.entries()); // chuyển thành object
+    const messagewait = document.getElementById("messagewait");
+    messagewait.style.display = "block";
+    messagewait.style.color = "blue";
+    messagewait.innerText = "Đang đăng nhập vui lòng chờ...";
+    try {
+        const res = await fetch("http://localhost:5000/gateway/driver/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }, // gửi json
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+       
+
+        if (!res.ok) {
+            messagewait.style.display = "none"
+            // hiển thị lỗi
+            messagelogin.style.display = "block";
+            messagelogin.style.color = "red";
+            messagelogin.innerText = data.message;
+        } else {
+            messagewait.style.display="none"
+            messagelogin.style.display = "block";
+            messagelogin.style.color = "green";
+            messagelogin.innerText = data.message;
+            localStorage.setItem("token", data.token); // lưu token vào localstorage
+            setTimeout(() => {
+                window.location.href = "index.html"; // chuyển hướng về trang chủ sau 1s
+            }, 5000);
+        }
+    } catch (err) {
+        messagewait.style.display = "none"
+        messagelogin.style.display = "block";
+        messagelogin.style.color = "red";
+        messagelogin.innerText = "Mất kết nối";
+    }
+});
