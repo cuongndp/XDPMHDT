@@ -7,15 +7,15 @@ public partial class HoaDon
 {
     public int Id { get; set; }
 
-    public int? IdBooking { get; set; }
+    public int? Idbooking { get; set; }
 
-    public int? IdUser { get; set; }
+    public int Iduser { get; set; }
 
-    public int? IdLoaiPin { get; set; }
+    public int? Idloaipin { get; set; }
 
-    public int? IdTramDoiPin { get; set; }
+    public int? Idtramdoipin { get; set; }
 
-    public decimal? ChiPhi { get; set; }
+    public int Chiphi { get; set; }
 
-    public DateOnly? NgayDoiPin { get; set; }
+    public DateOnly? Ngaydoipin { get; set; }
 }

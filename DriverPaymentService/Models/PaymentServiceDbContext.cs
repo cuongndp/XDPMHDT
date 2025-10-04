@@ -15,11 +15,9 @@ public partial class PaymentServiceDbContext : DbContext
     {
     }
 
-    public virtual DbSet<BookingCache> BookingCaches { get; set; }
+    public virtual DbSet<DichVu> DichVus { get; set; }
 
     public virtual DbSet<HoaDon> HoaDons { get; set; }
-
-    public virtual DbSet<UsersCache> UsersCaches { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -27,29 +25,22 @@ public partial class PaymentServiceDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<BookingCache>(entity =>
+        modelBuilder.Entity<DichVu>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("booking_cache_pkey");
+            entity.HasKey(e => e.Id).HasName("dich_vu_pkey");
 
-            entity.ToTable("booking_cache");
+            entity.ToTable("dich_vu");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
-            entity.Property(e => e.ChiPhi)
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Mota).HasColumnName("mota");
+            entity.Property(e => e.Phi)
                 .HasPrecision(10, 2)
-                .HasColumnName("chi_phi");
-            entity.Property(e => e.IdLoaiPin).HasColumnName("id_loai_pin");
-            entity.Property(e => e.IdUser).HasColumnName("id_user");
-            entity.Property(e => e.PhuongThucThanhToan)
-                .HasMaxLength(20)
-                .HasColumnName("phuong_thuc_thanh_toan");
-            entity.Property(e => e.TrangThai)
-                .HasMaxLength(30)
-                .HasColumnName("trang_thai");
-            entity.Property(e => e.TrangThaiThanhToan)
-                .HasMaxLength(20)
-                .HasColumnName("trang_thai_thanh_toan");
+                .HasColumnName("phi");
+            entity.Property(e => e.Solandoipin).HasColumnName("solandoipin");
+            entity.Property(e => e.Tendichvu)
+                .HasMaxLength(100)
+                .HasColumnName("tendichvu");
+            entity.Property(e => e.Thoihan).HasColumnName("thoihan");
         });
 
         modelBuilder.Entity<HoaDon>(entity =>
@@ -59,37 +50,14 @@ public partial class PaymentServiceDbContext : DbContext
             entity.ToTable("hoa_don");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.ChiPhi)
-                .HasPrecision(10, 2)
-                .HasColumnName("chi_phi");
-            entity.Property(e => e.IdBooking).HasColumnName("id_booking");
-            entity.Property(e => e.IdLoaiPin).HasColumnName("id_loai_pin");
-            entity.Property(e => e.IdTramDoiPin).HasColumnName("id_tram_doi_pin");
-            entity.Property(e => e.IdUser).HasColumnName("id_user");
-            entity.Property(e => e.NgayDoiPin).HasColumnName("ngay_doi_pin");
-        });
-
-        modelBuilder.Entity<UsersCache>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("users_cache_pkey");
-
-            entity.ToTable("users_cache");
-
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
-            entity.Property(e => e.Email)
-                .HasMaxLength(150)
-                .HasColumnName("email");
-            entity.Property(e => e.GioiTinh)
-                .HasMaxLength(10)
-                .HasColumnName("gioi_tinh");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.SoDienThoai)
-                .HasMaxLength(15)
-                .HasColumnName("so_dien_thoai");
+            entity.Property(e => e.Chiphi).HasColumnName("chiphi");
+            entity.Property(e => e.Idbooking).HasColumnName("idbooking");
+            entity.Property(e => e.Idloaipin).HasColumnName("idloaipin");
+            entity.Property(e => e.Idtramdoipin).HasColumnName("idtramdoipin");
+            entity.Property(e => e.Iduser).HasColumnName("iduser");
+            entity.Property(e => e.Ngaydoipin)
+                .HasDefaultValueSql("CURRENT_DATE")
+                .HasColumnName("ngaydoipin");
         });
 
         OnModelCreatingPartial(modelBuilder);
