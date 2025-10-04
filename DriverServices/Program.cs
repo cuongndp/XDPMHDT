@@ -16,7 +16,7 @@ builder.Services.AddAuthentication(opstion =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = true; // dev có thể tắt HTTPS
+    options.RequireHttpsMetadata = false; // dev có thể tắt HTTPS
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -25,9 +25,21 @@ builder.Services.AddAuthentication(opstion =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
 
-        ValidIssuer = "AuthService",     // microservice cấp token
-        ValidAudience = "ApiGateway",    // audience là client/gateway
+        ValidIssuer = "ApiGateway",     // microservice cấp token
+        ValidAudience = "DriveService",    // audience là client/gateway
         IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (string.IsNullOrEmpty(context.Token) &&
+                context.Request.Cookies.ContainsKey("access_token"))
+            {
+                context.Token = context.Request.Cookies["access_token"];
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -43,11 +55,12 @@ builder.Services.AddDbContext<DriverServices.Models.DriverServiceDbContext>(opti
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
+    options.AddPolicy("AllowFrontend", builder =>
     {
-        builder.AllowAnyOrigin()
+        builder.WithOrigins("https://localhost:7210", "http://localhost:5000", "https://localhost:5000") // Thêm HTTPS cho API Gateway
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials();
     });
 });
 var app = builder.Build();
@@ -58,10 +71,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseAuthentication();
-app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

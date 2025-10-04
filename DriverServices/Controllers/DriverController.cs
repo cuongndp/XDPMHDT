@@ -21,58 +21,79 @@ namespace DriverServices.Controllers
 
 
         [HttpPost("register")]
-        public IActionResult Register([FromBody] Dictionary<string,string>data)
+        public IActionResult Register([FromBody] Dictionary<string, string> data)
         {
-            string confirmpassword= data["confirmpassword"];
-            User user = new User()
+            try
             {
-                Name = data["name"],
-                Email = data["email"],
-                Password = data["password"],
-                Age = int.Parse(data["age"]),
-                SoDienThoai = data["sodienthoai"],
-                GioiTinh = data["gioitinh"]
-            };
+                string confirmpassword = data["confirmpassword"];
+                User user = new User()
+                {
+                    Name = data["name"],
+                    Email = data["email"],
+                    Password = data["password"],
+                    Age = int.Parse(data["age"]),
+                    SoDienThoai = data["sodienthoai"],
+                    GioiTinh = data["gioitinh"]
+                };
 
-            if (ModelState.IsValid)
-            {
-                var email = _context.Users.FirstOrDefault(p => p.Email == user.Email);
-                if (email!=null)
+                if (ModelState.IsValid)
                 {
-                    return BadRequest(new { message = "Email đã tồn tại" });
-                }
-                else if (user.Password != confirmpassword)
-                {
-                    return BadRequest(new { message = "Mật khẩu xác nhận không trùng khớp" });
+                    var email = _context.Users.FirstOrDefault(p => p.Email == user.Email);
+                    if (email != null)
+                    {
+                        return BadRequest(new { message = "Email đã tồn tại" });
+                    }
+                    var phone = _context.Users.FirstOrDefault(p => p.SoDienThoai == user.SoDienThoai);
+                    if (phone != null)
+                    {
+                        return BadRequest(new { message = "Số điện thoại đã tồn tại" });
+                    }
+                    else if (user.Password != confirmpassword)
+                    {
+                        return BadRequest(new { message = "Mật khẩu xác nhận không trùng khớp" });
+                    }
+                    else
+                    {
+                        var hash = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                        var list = new User
+                        {
+                            Name = user.Name,
+                            Email = user.Email,
+                            Password = hash,
+                            Age = user.Age,
+                            Role = "driver",
+                            SoDienThoai = user.SoDienThoai,
+                            GioiTinh = user.GioiTinh
+                        };
+                        _context.Add(list);
+                        try
+                        {
+                            _context.SaveChanges();
+                        }
+                        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+                        {
+                            var inner = ex.InnerException?.Message ?? ex.Message;
+                            return StatusCode(500, new { message = $"Lỗi cơ sở dữ liệu: {inner}" });
+                        }
+                        return Ok(new { message = "Đăng ký thành công" });
+                    }
                 }
                 else
                 {
-                    var hash = BCrypt.Net.BCrypt.HashPassword(user.Password);
-                    var list = new User
-                    {
-                        Name = user.Name,
-                        Email = user.Email,
-                        Password = hash,
-                        Age = user.Age,
-                        Role = "Customer",
-                        SoDienThoai = user.SoDienThoai,
-                        GioiTinh = user.GioiTinh
-                    };
-                    _context.Add(list);
-                    _context.SaveChanges();
-                    return Ok(new { message = "Đăng ký thành công" });
+                    return BadRequest(new { message = "Dữ liệu không hợp lệ" });
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(new { message = "Dữ liệu không hợp lệ" });
+                Console.WriteLine($"Lỗi register: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
             }
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] Dictionary<string, string> data)
         {
-            var user=_context.Users.FirstOrDefault(p=>p.Email==data["email"]);
-            if (user==null)
+            var user = _context.Users.FirstOrDefault(p => p.Email == data["email"]);
+            if (user == null)
             {
                 return BadRequest(new { message = "Email không tồn tại" });
             }
@@ -89,16 +110,26 @@ namespace DriverServices.Controllers
                 {
                     Subject = new ClaimsIdentity(new[]
                     {
-                new Claim(ClaimTypes.Name, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Name)
+                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Role, user.Role)
             }),
-                    Expires = DateTime.UtcNow.AddHours(1), // token hết hạn sau 1 giờ
+                    Expires = DateTime.UtcNow.AddHours(1),
+                    Issuer = "ApiGateway",   // 👈 phải trùng với ValidIssuer
+                    Audience = "DriveService", // token hết hạn sau 1 giờ
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
 
                 var token = tokenHandler.CreateToken(tokenDescriptor);
                 var tokenString = tokenHandler.WriteToken(token);
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true, // chỉ gửi qua HTTPS
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddMinutes(30)
+                };
+                Response.Cookies.Append("access_token", tokenString, cookieOptions);
 
                 // 2️⃣ Trả về token cùng message
                 return Ok(new { message = "Đăng nhập thành công", token = tokenString });
