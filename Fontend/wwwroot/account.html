@@ -26,7 +26,7 @@
             <div class="nav-buttons">
                 <div class="user-info">
                     <div class="user-details">
-                        <span class="user-name">Xin chào, Nguyễn Văn A</span>
+                        <span class="user-name" id="accountUserName">Xin chào, ...</span>
                         <span class="user-role">Khách hàng</span>
                     </div>
                     <div class="user-actions">
@@ -63,19 +63,23 @@
                         <div class="info-grid">
                             <div class="info-item">
                                 <label>Họ và tên</label>
-                                <span>Nguyễn Văn A</span>
+                                <span id="userName"></span>
                             </div>
                             <div class="info-item">
                                 <label>Email</label>
-                                <span>nguyenvana@example.com</span>
+                                <span id="userEmail"></span>
                             </div>
                             <div class="info-item">
                                 <label>Số điện thoại</label>
-                                <span>0123456789</span>
+                                <span id="userPhone"></span>
                             </div>
                             <div class="info-item">
                                 <label>Tuổi</label>
-                                <span>25 tuổi</span>
+                                <span id="userAge"></span>
+                            </div>
+                            <div class="info-item">
+                                <label>Giới tính</label>
+                                <span id="userGioiTinh"></span>
                             </div>
                         </div>
                     </div>
@@ -85,7 +89,7 @@
                 <div class="info-card">
                     <div class="card-header">
                         <h2><i class="fas fa-car"></i> Phương tiện của tôi</h2>
-                        <button class="btn btn-primary btn-small" id="addVehicleBtn" onclick="showAddVehicleModal()" style="display: none;">
+                        <button class="btn btn-primary btn-small" id="addVehicleBtn" onclick="showAddVehicleModal(); loadBatteryInfo();" style="display: none;">
                             <i class="fas fa-plus"></i> Thêm xe
                         </button>
                     </div>
@@ -138,58 +142,33 @@
             </div>
             <form class="modal-form" id="addVehicleForm">
                 <div class="form-group">
-                    <label for="vehicleName">Tên xe *</label>
+                    <label for="vehicleName">Tên phương tiện *</label>
                     <input type="text" id="vehicleName" name="vehicleName" required placeholder="VD: VinFast VF8">
                 </div>
-                
+
                 <div class="form-group">
                     <label for="licensePlate">Biển số xe *</label>
                     <input type="text" id="licensePlate" name="licensePlate" required placeholder="VD: 30A-12345">
                 </div>
-                
-                <div class="form-group">
-                    <label for="vehicleType">Loại xe *</label>
-                    <select id="vehicleType" name="vehicleType" required>
-                        <option value="">Chọn loại xe</option>
-                        <option value="car">Ô tô</option>
-                        <option value="motorcycle">Xe máy điện</option>
-                        <option value="bicycle">Xe đạp điện</option>
-                    </select>
-                </div>
-                
+
                 <div class="form-group">
                     <label for="batteryType">Loại pin *</label>
                     <select id="batteryType" name="batteryType" required>
                         <option value="">Chọn loại pin</option>
-                        <option value="lithium-ion">Lithium-ion</option>
-                        <option value="lithium-polymer">Lithium-polymer</option>
-                        <option value="lead-acid">Lead-acid</option>
                     </select>
                 </div>
-                
-                <div class="form-group">
-                    <label for="batteryCapacity">Dung lượng pin (kWh)</label>
-                    <input type="number" id="batteryCapacity" name="batteryCapacity" placeholder="VD: 42.5" step="0.1">
+
+                <div class="form-group" id="batteryInfoAdd">
+                    <label>Thông tin pin</label>
+                    <div class="form-row">
+                        <input type="text" id="batteryVoltageInfo" placeholder="Điện áp (V)" disabled>
+                        <input type="text" id="batteryPowerInfo" placeholder="Công suất (kWh)" disabled>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="vehicleYear">Năm sản xuất</label>
-                    <input type="number" id="vehicleYear" name="vehicleYear" min="2000" max="2024" placeholder="VD: 2023">
-                </div>
-                
-                <div class="form-group">
-                    <label for="vehicleColor">Màu xe</label>
-                    <input type="text" id="vehicleColor" name="vehicleColor" placeholder="VD: Trắng">
-                </div>
-                
-                <div class="form-group">
-                    <label for="vehicleNotes">Ghi chú</label>
-                    <textarea id="vehicleNotes" name="vehicleNotes" rows="3" placeholder="Thông tin bổ sung về xe..."></textarea>
-                </div>
-                
+
                 <button type="submit" class="btn btn-primary btn-full">Thêm xe</button>
                 <div class="form-footer">
-                    <p>Thông tin xe sẽ được lưu trữ an toàn và chỉ sử dụng cho dịch vụ đổi pin</p>
+                    <p>Danh sách loại pin sẽ được tải từ hệ thống sau</p>
                 </div>
             </form>
         </div>
@@ -203,60 +182,34 @@
                 <span class="close" onclick="closeModal('editVehicleModal')">&times;</span>
             </div>
             <form class="modal-form" id="editVehicleForm">
-                <!-- Same fields as add vehicle form -->
                 <div class="form-group">
-                    <label for="editVehicleName">Tên xe *</label>
+                    <label for="editVehicleName">Tên phương tiện *</label>
                     <input type="text" id="editVehicleName" name="vehicleName" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="editLicensePlate">Biển số xe *</label>
                     <input type="text" id="editLicensePlate" name="licensePlate" required>
                 </div>
-                
-                <div class="form-group">
-                    <label for="editVehicleType">Loại xe *</label>
-                    <select id="editVehicleType" name="vehicleType" required>
-                        <option value="">Chọn loại xe</option>
-                        <option value="car">Ô tô</option>
-                        <option value="motorcycle">Xe máy điện</option>
-                        <option value="bicycle">Xe đạp điện</option>
-                    </select>
-                </div>
-                
+
                 <div class="form-group">
                     <label for="editBatteryType">Loại pin *</label>
                     <select id="editBatteryType" name="batteryType" required>
                         <option value="">Chọn loại pin</option>
-                        <option value="lithium-ion">Lithium-ion</option>
-                        <option value="lithium-polymer">Lithium-polymer</option>
-                        <option value="lead-acid">Lead-acid</option>
                     </select>
                 </div>
-                
-                <div class="form-group">
-                    <label for="editBatteryCapacity">Dung lượng pin (kWh)</label>
-                    <input type="number" id="editBatteryCapacity" name="batteryCapacity" step="0.1">
-                </div>
-                
-                <div class="form-group">
-                    <label for="editVehicleYear">Năm sản xuất</label>
-                    <input type="number" id="editVehicleYear" name="vehicleYear" min="2000" max="2024">
-                </div>
-                
-                <div class="form-group">
-                    <label for="editVehicleColor">Màu xe</label>
-                    <input type="text" id="editVehicleColor" name="vehicleColor">
-                </div>
-                
-                <div class="form-group">
-                    <label for="editVehicleNotes">Ghi chú</label>
-                    <textarea id="editVehicleNotes" name="vehicleNotes" rows="3"></textarea>
+
+                <div class="form-group" id="batteryInfoEdit">
+                    <label>Thông tin pin</label>
+                    <div class="form-row">
+                        <input type="text" id="editBatteryVoltageInfo" placeholder="Điện áp (V)" disabled>
+                        <input type="text" id="editBatteryPowerInfo" placeholder="Công suất (kWh)" disabled>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-full">Cập nhật xe</button>
                 <div class="form-footer">
-                    <p>Thông tin xe sẽ được cập nhật ngay lập tức</p>
+                    <p>Danh sách loại pin sẽ được tải từ hệ thống sau</p>
                 </div>
             </form>
         </div>

@@ -7,11 +7,11 @@ public partial class User
 {
     public int Id { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; } = null!;
 
-    public string? Email { get; set; }
+    public string Email { get; set; } = null!;
 
-    public string? Password { get; set; }
+    public string Password { get; set; } = null!;
 
     public int? Age { get; set; }
 
@@ -21,7 +21,7 @@ public partial class User
 
     public string? GioiTinh { get; set; }
 
-    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public virtual ICollection<DangKyDichVu> DangKyDichVus { get; set; } = new List<DangKyDichVu>();
 
     public virtual ICollection<PhuongTien> PhuongTiens { get; set; } = new List<PhuongTien>();
 }

@@ -7,15 +7,13 @@ public partial class PhuongTien
 {
     public int Id { get; set; }
 
-    public string? TenPhuongTien { get; set; }
+    public string Tenphuongtien { get; set; } = null!;
 
-    public string? BienSo { get; set; }
+    public string Bienso { get; set; } = null!;
 
-    public int? IdUser { get; set; }
+    public int Iduser { get; set; }
 
-    public int? IdLoaiPin { get; set; }
+    public int Idloaipin { get; set; }
 
-    public virtual LoaiPin? IdLoaiPinNavigation { get; set; }
-
-    public virtual User? IdUserNavigation { get; set; }
+    public virtual User IduserNavigation { get; set; } = null!;
 }

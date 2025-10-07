@@ -7,25 +7,21 @@ public partial class Booking
 {
     public int Id { get; set; }
 
-    public int? IdUser { get; set; }
+    public int Iduser { get; set; }
 
-    public int? IdLoaiPin { get; set; }
+    public int Idloaipin { get; set; }
 
-    public DateOnly? NgayDat { get; set; }
+    public DateOnly? Ngaydat { get; set; }
 
-    public DateOnly? NgayHen { get; set; }
+    public DateOnly? Ngayhen { get; set; }
 
-    public TimeOnly? GioHen { get; set; }
+    public TimeOnly? Giohen { get; set; }
 
-    public decimal? ChiPhi { get; set; }
+    public int? Chiphi { get; set; }
 
-    public string? TrangThai { get; set; }
+    public string? Trangthaithanhtoan { get; set; }
 
-    public string? TrangThaiThanhToan { get; set; }
+    public string? Trangthai { get; set; }
 
-    public string? PhuongThucThanhToan { get; set; }
-
-    public virtual LoaiPin? IdLoaiPinNavigation { get; set; }
-
-    public virtual User? IdUserNavigation { get; set; }
+    public string? Phuongthucthanhtoan { get; set; }
 }

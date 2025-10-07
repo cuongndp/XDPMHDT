@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setupMobileMenu();
     setupPasswordStrength();
+    checkLoginStatus(); // Kiểm tra trạng thái đăng nhập khi load trang
 });
 
 // Setup event listeners
@@ -359,10 +360,65 @@ function updateUserInterface() {
     console.log('Update user interface');
 }
 
-// Logout function - placeholder
+// Kiểm tra trạng thái đăng nhập
+function checkLoginStatus() {
+    const token = localStorage.getItem('token'); //cái này sẽ lấy token từ localStorage và lưu vào biến token
+    if (token) {
+        const decoded = parseJwt(token); //nếu có token thì giải mã token để lấy thông tin người dùng
+        // Hỗ trợ cả chuẩn JWT (unique_name) và các key phổ biến khác
+        const userName = decoded["unique_name"] || decoded["name"] || decoded["given_name"];
+        if (userName) {
+            showUserInterface(userName); //nếu có tên người dùng thì hiển thị giao diện người dùng đã đăng nhập
+            return;
+        }
+    }
+    showGuestInterface();
+}
+
+// Hiển thị giao diện người dùng đã đăng nhập
+function showUserInterface(userName) {
+    const navGuest = document.getElementById('navGuest');
+    const navUser = document.getElementById('navUser');
+    const userNameElement = document.getElementById('userName');
+    
+    if (navGuest && navUser && userNameElement) {
+        // Ẩn giao diện khách với animation
+        navGuest.classList.add('hidden');
+        setTimeout(() => {
+            navGuest.style.display = 'none';
+            navUser.style.display = 'flex';
+            navUser.classList.remove('hidden');
+            userNameElement.textContent = userName;
+        }, 150);
+    }
+}
+
+// Hiển thị giao diện khách
+function showGuestInterface() {
+    const navGuest = document.getElementById('navGuest');
+    const navUser = document.getElementById('navUser');
+    
+    if (navGuest && navUser) {
+        // Ẩn giao diện người dùng với animation
+        navUser.classList.add('hidden');
+        setTimeout(() => {
+            navUser.style.display = 'none';
+            navGuest.style.display = 'flex';
+            navGuest.classList.remove('hidden');
+        }, 150);
+    }
+}
+
+// Logout function
 function logout() {
-    // Sẽ được implement khi có API backend
-    console.log('Logout');
+    // Xóa thông tin đăng nhập khỏi localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('userName');
+    
+    // Chuyển về giao diện khách
+    showGuestInterface();
+    
+    
 }
 
 // Smooth scroll to section
@@ -521,15 +577,34 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // gửi dữ liệu cho api
+const GATEWAY_BASE = 'https://localhost:5000';
+
+function gatewayFetch(path, options = {}) {
+    const url = new URL(path, GATEWAY_BASE);
+    // Force HTTPS to avoid ERR_EMPTY_RESPONSE when hitting TLS port with HTTP
+    url.protocol = 'https:';
+    const finalOptions = {
+        credentials: 'include',
+        ...options
+    };
+    console.log('Gateway request →', url.toString());
+    return fetch(url.toString(), finalOptions);
+}
 
 document.getElementById("register").addEventListener("submit", async function (e) {
     e.preventDefault(); // chặn reload
 
     const formData = new FormData(this);               // gom dữ liệu form
     const body = Object.fromEntries(formData.entries()); // chuyển thành object
+    const messagewaitre = document.getElementById("messagewaitre");
+    const message = document.getElementById("message");
+    
+    messagewaitre.style.display = "block";
+    messagewaitre.style.color = "blue";
+    messagewaitre.innerText = "Đang đăng ký vui lòng chờ...";
 
     try {
-        const res = await fetch("http://localhost:5000/gateway/driver/register", {
+        const res = await gatewayFetch('/gateway/driver/register', {
             method: "POST",
             headers: { "Content-Type": "application/json" }, // gửi json
             body: JSON.stringify(body)
@@ -539,22 +614,44 @@ document.getElementById("register").addEventListener("submit", async function (e
 
         if (!res.ok) {
             // hiển thị lỗi
+            messagewaitre.style.display = "none";
             message.style.display = "block";
             message.style.color = "red";
             message.innerText = data.message;
         } else {
+            messagewaitre.style.display = "none";
             message.style.display = "block";
             message.style.color = "green";
             message.innerText = data.message;
+            setTimeout(() => {
+                closeModal('registerModal') // chuyển hướng về trang chủ sau 1s
+            }, 600);
         }
     } catch (err) {
+        messagewaitre.style.display = "none";
         message.style.display = "block";
         message.style.color = "red";
         message.innerText = "Mất kết nối";
     }
 });
 
-
+function parseJwt(token) {
+    // 1️⃣ Lấy payload từ token
+    const base64Url = token.split('.')[1]; // phải có const/let/var
+    // 2️⃣ Chuyển Base64Url -> Base64 chuẩn
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) {
+        base64 += '=';
+    }
+    // 3️⃣ Decode UTF-8
+    const jsonPayload = decodeURIComponent(
+        atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+    );
+    return JSON.parse(jsonPayload);
+}
 
 
 //login
@@ -569,7 +666,7 @@ document.getElementById("login").addEventListener("submit", async function (e) {
     messagewait.style.color = "blue";
     messagewait.innerText = "Đang đăng nhập vui lòng chờ...";
     try {
-        const res = await fetch("http://localhost:5000/gateway/driver/login", {
+        const res = await gatewayFetch('/gateway/driver/login', {
             method: "POST",
             headers: { "Content-Type": "application/json" }, // gửi json
             body: JSON.stringify(body)
@@ -589,10 +686,28 @@ document.getElementById("login").addEventListener("submit", async function (e) {
             messagelogin.style.display = "block";
             messagelogin.style.color = "green";
             messagelogin.innerText = data.message;
+
+            
+            
+            
+            // Lưu tên người dùng nếu có trong response
+            if (data.token) //nếu tokn tồn tại 
+            {
+                const decoded = parseJwt(data.token); //giải mã token để lấy thông tin lưu vào decoded
+                // Hỗ trợ cả chuẩn JWT (unique_name) và các key phổ biến khác
+                const userName = decoded["unique_name"] || decoded["name"] || decoded["given_name"]; //lấy tên người dùng từ decoded
+                console.log(userName);
+                localStorage.setItem("userName", userName); //lưu tên người dùng vào localStorage
+            }
+
             localStorage.setItem("token", data.token); // lưu token vào localstorage
+
+            // Cập nhật giao diện ngay lập tức
+            await checkLoginStatus();
+            
             setTimeout(() => {
-                window.location.href = "index.html"; // chuyển hướng về trang chủ sau 1s
-            }, 5000);
+                closeModal('loginModal') // chuyển hướng về trang chủ sau 1s
+            }, 600);
         }
     } catch (err) {
         messagewait.style.display = "none"
@@ -601,3 +716,34 @@ document.getElementById("login").addEventListener("submit", async function (e) {
         messagelogin.innerText = "Mất kết nối";
     }
 });
+
+document.getElementById("profileLink").addEventListener("click", function (e) {
+    e.preventDefault();
+    profile();
+});
+
+const profile = async () => {
+    const token = localStorage.getItem('token');
+    
+
+    const res = await fetch('https://localhost:5000/gateway/driver/profile', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+        }
+        // Nếu backend đọc token từ cookie thay vì header, thêm:
+        // credentials: 'include'
+    });
+
+    if (!res.ok) {
+        // Tùy ý: hiện lỗi/UI
+        console.error('Fetch profile failed:', res.status);
+        return;
+    }
+
+    const data = await res.json();
+    localStorage.setItem("profile", JSON.stringify(data));
+    window.location.href = "account.html";
+    
+};

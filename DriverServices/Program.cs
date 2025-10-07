@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +17,9 @@ builder.Services.AddAuthentication(opstion =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = true; // dev có thể tắt HTTPS
+    options.RequireHttpsMetadata = false; // dev có thể tắt HTTPS
     options.SaveToken = true;
+    options.MapInboundClaims = false; // đọc chuẩn JWT, không map sang ClaimTypes.*
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -25,9 +27,22 @@ builder.Services.AddAuthentication(opstion =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
 
-        ValidIssuer = "AuthService",     // microservice cấp token
-        ValidAudience = "ApiGateway",    // audience là client/gateway
-        IssuerSigningKey = new SymmetricSecurityKey(key)
+        ValidIssuer = "ApiGateway",     // microservice cấp token
+        ValidAudience = "DriveService",    // audience là client/gateway
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        NameClaimType = JwtRegisteredClaimNames.UniqueName,
+        RoleClaimType = "role"
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Cookies.ContainsKey("access_token"))
+            {
+                context.Token = context.Request.Cookies["access_token"];
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -43,11 +58,12 @@ builder.Services.AddDbContext<DriverServices.Models.DriverServiceDbContext>(opti
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
+    options.AddPolicy("AllowFrontend", builder =>
     {
-        builder.AllowAnyOrigin()
+        builder.WithOrigins("https://localhost:7210", "http://localhost:5000", "https://localhost:5000") // Thêm HTTPS cho API Gateway
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials();
     });
 });
 var app = builder.Build();
@@ -58,10 +74,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseAuthentication();
-app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

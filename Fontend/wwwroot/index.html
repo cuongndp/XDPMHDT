@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>EV Battery Swap System</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -24,8 +27,26 @@
                 <li><a href="#support" class="nav-link">Hỗ trợ</a></li>
             </ul>
             <div class="nav-buttons">
-                <button class="btn btn-outline" onclick="showLoginModal()">Đăng nhập</button>
-                <button class="btn btn-primary" onclick="showRegisterModal()">Đăng ký</button>
+                <!-- Hiển thị khi chưa đăng nhập -->
+                <div id="navGuest" class="nav-guest">
+                    <button class="btn btn-outline" onclick="showLoginModal()">Đăng nhập</button>
+                    <button class="btn btn-primary" onclick="showRegisterModal()">Đăng ký</button>
+                </div>
+                <!-- Hiển thị khi đã đăng nhập -->
+                <div id="navUser" class="nav-user" style="display: none;">
+                    <span class="welcome-text">
+                        <i class="fas fa-user-circle"></i>
+                        Xin chào, <span id="userName"></span>!
+                    </span>
+                    <a class="btn btn-outline" href="account.html" id="profileLink">
+                        <i class="fas fa-user"></i>
+                        Trang cá nhân
+                    </a>
+                    <button class="btn btn-outline" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Đăng xuất
+                    </button>
+                </div>
             </div>
             <div class="hamburger">
                 <span></span>
@@ -231,13 +252,13 @@
             </div>
             <form class="modal-form" id="register">
                 <!-- Thông tin cá nhân -->
-                
+
                 <div class="form-section">
                     <h3 class="section-title">
                         <i class="fas fa-user"></i>
                         Thông tin cá nhân
                     </h3>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="registerName">Họ và tên *</label>
@@ -248,43 +269,43 @@
                             <input type="number" id="registerAge" name="age" min="18" max="100" required placeholder="Nhập tuổi">
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="registerGender">Giới tính *</label>
                         <select id="registerGender" name="gioitinh" required>
                             <option value="">Chọn giới tính</option>
-                            <option value="male">Nam</option>
-                            <option value="female">Nữ</option>
-                            <option value="other">Khác</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                            <option value="Khác">Khác</option>
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- Thông tin liên hệ -->
                 <div class="form-section">
                     <h3 class="section-title">
                         <i class="fas fa-address-book"></i>
                         Thông tin liên hệ
                     </h3>
-                    
+
                     <div class="form-group">
                         <label for="registerEmail">Email *</label>
                         <input type="email" id="registerEmail" name="email" required placeholder="example@email.com">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="registerPhone">Số điện thoại *</label>
                         <input type="tel" id="registerPhone" name="sodienthoai" pattern="[0-9]{10,11}" placeholder="0123456789" required>
                     </div>
                 </div>
-                
+
                 <!-- Bảo mật -->
                 <div class="form-section">
                     <h3 class="section-title">
                         <i class="fas fa-shield-alt"></i>
                         Bảo mật
                     </h3>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="registerPassword">Mật khẩu *</label>
@@ -296,12 +317,13 @@
                         </div>
                     </div>
                 </div>
+                <div id="messagewaitre" style="display:none;text-align:center"></div>
                 <div id="message" style="display:none;text-align:center"></div>
-                
-                <button type="submit" class="btn btn-primary btn-full" >
+
+                <button type="submit" class="btn btn-primary btn-full">
                     Đăng ký tài khoản
                 </button>
-                
+
                 <div class="form-footer">
                     <p>Đã có tài khoản? <a href="#" onclick="switchModal('registerModal', 'loginModal')">Đăng nhập ngay</a></p>
                 </div>
@@ -417,10 +439,10 @@
         </div>
     </footer>
     <ul id="payment"></ul>
-    <script src="js/script.js"></script>
+    <script src="js/script.js?v=20251004-1"></script>
     <script>
         // gọi API PaymentService qua gateway hoặc trực tiếp
-        fetch("http://localhost:5000/gateway/payment")
+        fetch("https://localhost:5000/gateway/payment")
             .then(res => res.json())
             .then(data => {
                 console.log("API trả về:", data); // để check

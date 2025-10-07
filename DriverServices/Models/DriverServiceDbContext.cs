@@ -17,11 +17,9 @@ public partial class DriverServiceDbContext : DbContext
 
     public virtual DbSet<Booking> Bookings { get; set; }
 
-    public virtual DbSet<LoaiPin> LoaiPins { get; set; }
+    public virtual DbSet<DangKyDichVu> DangKyDichVus { get; set; }
 
     public virtual DbSet<PhuongTien> PhuongTiens { get; set; }
-
-    public virtual DbSet<TramDoiPinCache> TramDoiPinCaches { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
@@ -38,48 +36,52 @@ public partial class DriverServiceDbContext : DbContext
             entity.ToTable("booking");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.ChiPhi)
-                .HasPrecision(10, 2)
-                .HasColumnName("chi_phi");
-            entity.Property(e => e.GioHen).HasColumnName("gio_hen");
-            entity.Property(e => e.IdLoaiPin).HasColumnName("id_loai_pin");
-            entity.Property(e => e.IdUser).HasColumnName("id_user");
-            entity.Property(e => e.NgayDat).HasColumnName("ngay_dat");
-            entity.Property(e => e.NgayHen).HasColumnName("ngay_hen");
-            entity.Property(e => e.PhuongThucThanhToan)
+            entity.Property(e => e.Chiphi).HasColumnName("chiphi");
+            entity.Property(e => e.Giohen).HasColumnName("giohen");
+            entity.Property(e => e.Idloaipin).HasColumnName("idloaipin");
+            entity.Property(e => e.Iduser).HasColumnName("iduser");
+            entity.Property(e => e.Ngaydat)
+                .HasDefaultValueSql("CURRENT_DATE")
+                .HasColumnName("ngaydat");
+            entity.Property(e => e.Ngayhen).HasColumnName("ngayhen");
+            entity.Property(e => e.Phuongthucthanhtoan)
+                .HasMaxLength(50)
+                .HasColumnName("phuongthucthanhtoan");
+            entity.Property(e => e.Trangthai)
                 .HasMaxLength(20)
-                .HasColumnName("phuong_thuc_thanh_toan");
-            entity.Property(e => e.TrangThai)
-                .HasMaxLength(30)
-                .HasColumnName("trang_thai");
-            entity.Property(e => e.TrangThaiThanhToan)
+                .HasColumnName("trangthai");
+            entity.Property(e => e.Trangthaithanhtoan)
                 .HasMaxLength(20)
-                .HasColumnName("trang_thai_thanh_toan");
-
-            entity.HasOne(d => d.IdLoaiPinNavigation).WithMany(p => p.Bookings)
-                .HasForeignKey(d => d.IdLoaiPin)
-                .HasConstraintName("booking_id_loai_pin_fkey");
-
-            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.Bookings)
-                .HasForeignKey(d => d.IdUser)
-                .HasConstraintName("booking_id_user_fkey");
+                .HasColumnName("trangthaithanhtoan");
         });
 
-        modelBuilder.Entity<LoaiPin>(entity =>
+        modelBuilder.Entity<DangKyDichVu>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("loai_pin_pkey");
+            entity.HasKey(e => e.Id).HasName("dang_ky_dich_vu_pkey");
 
-            entity.ToTable("loai_pin");
+            entity.ToTable("dang_ky_dich_vu");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CongSuat).HasColumnName("cong_suat");
-            entity.Property(e => e.DienAp).HasColumnName("dien_ap");
-            entity.Property(e => e.GiaDoiPin)
-                .HasPrecision(10, 2)
-                .HasColumnName("gia_doi_pin");
-            entity.Property(e => e.TenLoaiPin)
-                .HasMaxLength(100)
-                .HasColumnName("ten_loai_pin");
+            entity.Property(e => e.Iddichvu).HasColumnName("iddichvu");
+            entity.Property(e => e.Iduser).HasColumnName("iduser");
+            entity.Property(e => e.Ngaydangky)
+                .HasDefaultValueSql("CURRENT_DATE")
+                .HasColumnName("ngaydangky");
+            entity.Property(e => e.Ngayketthuc).HasColumnName("ngayketthuc");
+            entity.Property(e => e.Phuongthucthanhtoan)
+                .HasMaxLength(50)
+                .HasColumnName("phuongthucthanhtoan");
+            entity.Property(e => e.Solandoipin).HasColumnName("solandoipin");
+            entity.Property(e => e.Trangthai)
+                .HasMaxLength(20)
+                .HasColumnName("trangthai");
+            entity.Property(e => e.Trangthaithanhtoan)
+                .HasMaxLength(20)
+                .HasColumnName("trangthaithanhtoan");
+
+            entity.HasOne(d => d.IduserNavigation).WithMany(p => p.DangKyDichVus)
+                .HasForeignKey(d => d.Iduser)
+                .HasConstraintName("dang_ky_dich_vu_iduser_fkey");
         });
 
         modelBuilder.Entity<PhuongTien>(entity =>
@@ -88,54 +90,21 @@ public partial class DriverServiceDbContext : DbContext
 
             entity.ToTable("phuong_tien");
 
+            entity.HasIndex(e => e.Bienso, "phuong_tien_bienso_key").IsUnique();
+
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.BienSo)
+            entity.Property(e => e.Bienso)
                 .HasMaxLength(20)
-                .HasColumnName("bien_so");
-            entity.Property(e => e.IdLoaiPin).HasColumnName("id_loai_pin");
-            entity.Property(e => e.IdUser).HasColumnName("id_user");
-            entity.Property(e => e.TenPhuongTien)
+                .HasColumnName("bienso");
+            entity.Property(e => e.Idloaipin).HasColumnName("idloaipin");
+            entity.Property(e => e.Iduser).HasColumnName("iduser");
+            entity.Property(e => e.Tenphuongtien)
                 .HasMaxLength(100)
-                .HasColumnName("ten_phuong_tien");
+                .HasColumnName("tenphuongtien");
 
-            entity.HasOne(d => d.IdLoaiPinNavigation).WithMany(p => p.PhuongTiens)
-                .HasForeignKey(d => d.IdLoaiPin)
-                .HasConstraintName("phuong_tien_id_loai_pin_fkey");
-
-            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.PhuongTiens)
-                .HasForeignKey(d => d.IdUser)
-                .HasConstraintName("phuong_tien_id_user_fkey");
-        });
-
-        modelBuilder.Entity<TramDoiPinCache>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("tram_doi_pin_cache_pkey");
-
-            entity.ToTable("tram_doi_pin_cache");
-
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
-            entity.Property(e => e.DiaChi).HasColumnName("dia_chi");
-            entity.Property(e => e.GioDongCua)
-                .HasMaxLength(10)
-                .HasColumnName("gio_dong_cua");
-            entity.Property(e => e.GioMoCua)
-                .HasMaxLength(10)
-                .HasColumnName("gio_mo_cua");
-            entity.Property(e => e.IdKho).HasColumnName("id_kho");
-            entity.Property(e => e.SoDienThoaiTd)
-                .HasMaxLength(15)
-                .HasColumnName("so_dien_thoai_td");
-            entity.Property(e => e.TenLoaiPin)
-                .HasMaxLength(500)
-                .HasColumnName("ten_loai_pin");
-            entity.Property(e => e.TenTram)
-                .HasMaxLength(200)
-                .HasColumnName("ten_tram");
-            entity.Property(e => e.TrangThai)
-                .HasMaxLength(20)
-                .HasColumnName("trang_thai");
+            entity.HasOne(d => d.IduserNavigation).WithMany(p => p.PhuongTiens)
+                .HasForeignKey(d => d.Iduser)
+                .HasConstraintName("phuong_tien_iduser_fkey");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -144,14 +113,16 @@ public partial class DriverServiceDbContext : DbContext
 
             entity.ToTable("users");
 
+            entity.HasIndex(e => e.Email, "users_email_key").IsUnique();
+
+            entity.HasIndex(e => e.SoDienThoai, "users_sodienthoai_key").IsUnique();
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Age).HasColumnName("age");
             entity.Property(e => e.Email)
-                .HasMaxLength(150)
+                .HasMaxLength(100)
                 .HasColumnName("email");
-            entity.Property(e => e.GioiTinh)
-                .HasMaxLength(10)
-                .HasColumnName("gioi_tinh");
+            entity.Property(e => e.GioiTinh).HasMaxLength(10);
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
@@ -159,11 +130,9 @@ public partial class DriverServiceDbContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("password");
             entity.Property(e => e.Role)
-                .HasMaxLength(50)
+                .HasMaxLength(20)
                 .HasColumnName("role");
-            entity.Property(e => e.SoDienThoai)
-                .HasMaxLength(15)
-                .HasColumnName("so_dien_thoai");
+            entity.Property(e => e.SoDienThoai).HasMaxLength(15);
         });
 
         OnModelCreatingPartial(modelBuilder);
