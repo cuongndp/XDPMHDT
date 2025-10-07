@@ -25,10 +25,34 @@ let bookingHistory = [
 
 // Initialize account page
 document.addEventListener('DOMContentLoaded', function() {
+    ensureAuthenticatedAndHydrate();
     loadVehicles();
     loadBookingHistory();
     setupEventListeners();
+    setupBatteryTypeUI();
 });
+
+function ensureAuthenticatedAndHydrate() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'index.html';
+        return;
+    }
+    let displayName = localStorage.getItem('userName') || '';
+    try {
+        if (typeof parseJwt === 'function') {
+            const decoded = parseJwt(token);
+            // Support both JWT standard and legacy mappings
+            displayName = decoded["unique_name"] || decoded["name"] || decoded["given_name"] || displayName || '';
+        }
+    } catch (_) {
+        // ignore decode errors, fallback to localStorage
+    }
+    const nameEl = document.getElementById('accountUserName');
+    if (nameEl) {
+        nameEl.textContent = displayName ? `Xin chào, ${displayName}` : 'Xin chào';
+    }
+}
 
 // Setup event listeners
 function setupEventListeners() {
@@ -44,6 +68,16 @@ function setupEventListeners() {
         editVehicleForm.addEventListener('submit', handleEditVehicle);
     }
     
+    // battery type change listeners
+    const batteryTypeAdd = document.getElementById('batteryType');
+    if (batteryTypeAdd) {
+        batteryTypeAdd.addEventListener('change', onBatteryTypeChangeAdd);
+    }
+    const batteryTypeEdit = document.getElementById('editBatteryType');
+    if (batteryTypeEdit) {
+        batteryTypeEdit.addEventListener('change', onBatteryTypeChangeEdit);
+    }
+    
     // Close modals when clicking outside
     window.addEventListener('click', function(event) {
         const modals = document.querySelectorAll('.modal');
@@ -53,6 +87,35 @@ function setupEventListeners() {
             }
         });
     });
+}
+
+// Populate battery type options and wire default info
+function setupBatteryTypeUI() {
+    const batteryTypes = window.__BATTERY_TYPES__ || [];
+    const selects = [document.getElementById('batteryType'), document.getElementById('editBatteryType')];
+    selects.forEach(sel => {
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Chọn loại pin</option>' + batteryTypes.map(bt => `<option value="${bt.id}">${bt.name}</option>`).join('');
+        if (current) sel.value = current;
+    });
+}
+
+function onBatteryTypeChangeAdd(e) {
+    const bt = findBatteryTypeById(e.target.value);
+    document.getElementById('batteryVoltageInfo').value = bt ? (bt.voltage + ' V') : '';
+    document.getElementById('batteryPowerInfo').value = bt ? (bt.power + ' kWh') : '';
+}
+
+function onBatteryTypeChangeEdit(e) {
+    const bt = findBatteryTypeById(e.target.value);
+    document.getElementById('editBatteryVoltageInfo').value = bt ? (bt.voltage + ' V') : '';
+    document.getElementById('editBatteryPowerInfo').value = bt ? (bt.power + ' kWh') : '';
+}
+
+function findBatteryTypeById(id) {
+    const list = window.__BATTERY_TYPES__ || [];
+    return list.find(x => String(x.id) === String(id));
 }
 
 // Load vehicles
@@ -68,7 +131,7 @@ function loadVehicles() {
                 <i class="fas fa-car"></i>
                 <h3>Chưa có phương tiện nào</h3>
                 <p>Thêm phương tiện của bạn để bắt đầu sử dụng dịch vụ đổi pin</p>
-                <button class="btn btn-primary" onclick="showAddVehicleModal()">
+                <button class="btn btn-primary" onclick="showAddVehicleModal(); loadBatteryInfo();">
                     <i class="fas fa-plus"></i> Thêm xe
                 </button>
             </div>
@@ -165,12 +228,7 @@ function handleAddVehicle(event) {
         id: Date.now(),
         name: formData.get('vehicleName'),
         licensePlate: formData.get('licensePlate'),
-        type: formData.get('vehicleType'),
         batteryType: formData.get('batteryType'),
-        batteryCapacity: formData.get('batteryCapacity'),
-        year: formData.get('vehicleYear'),
-        color: formData.get('vehicleColor'),
-        notes: formData.get('vehicleNotes'),
         addedDate: new Date().toISOString().split('T')[0]
     };
     
@@ -197,12 +255,8 @@ function editVehicle(vehicleId) {
     // Fill edit form with vehicle data
     document.getElementById('editVehicleName').value = vehicle.name;
     document.getElementById('editLicensePlate').value = vehicle.licensePlate;
-    document.getElementById('editVehicleType').value = vehicle.type;
+    // Only battery type is kept now
     document.getElementById('editBatteryType').value = vehicle.batteryType;
-    document.getElementById('editBatteryCapacity').value = vehicle.batteryCapacity || '';
-    document.getElementById('editVehicleYear').value = vehicle.year || '';
-    document.getElementById('editVehicleColor').value = vehicle.color || '';
-    document.getElementById('editVehicleNotes').value = vehicle.notes || '';
     
     // Show edit modal
     const modal = document.getElementById('editVehicleModal');
@@ -223,12 +277,7 @@ function handleEditVehicle(event) {
         id: vehicleId,
         name: formData.get('vehicleName'),
         licensePlate: formData.get('licensePlate'),
-        type: formData.get('vehicleType'),
         batteryType: formData.get('batteryType'),
-        batteryCapacity: formData.get('batteryCapacity'),
-        year: formData.get('vehicleYear'),
-        color: formData.get('vehicleColor'),
-        notes: formData.get('vehicleNotes'),
         addedDate: vehicles.find(v => v.id === vehicleId)?.addedDate || new Date().toISOString().split('T')[0]
     };
     
@@ -322,5 +371,155 @@ function showUserProfile() {
 }
 
 function logout() {
-    console.log('Logout');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userName');
+    window.location.href = 'index.html';
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    let profile = null;
+    try { profile = JSON.parse(localStorage.getItem("profile") || "{}"); } catch (_) {}
+
+    let displayName = profile?.name || profile?.fullName || localStorage.getItem('userName') || '';
+    let email = profile?.email || '';
+    let phone = profile?.sodienthoai || '';
+    let age = profile?.age || '';
+    let gioitinh = profile?.gioitinh || '';
+    if (!displayName) {
+        const token = localStorage.getItem('token');
+        try {
+            if (token && typeof parseJwt === 'function') {
+                const decoded = parseJwt(token);
+                displayName = decoded["unique_name"] || decoded["name"] || decoded["given_name"] || '';
+            }
+        } catch (_) {}
+    }
+
+    const nameEl = document.getElementById("userName");
+    if (nameEl && displayName) {
+        nameEl.innerText = displayName;
+    }
+
+    const helloEl = document.getElementById("accountUserName");
+    if (helloEl) helloEl.textContent = displayName ? `Xin chào, ${displayName}` : 'Xin chào';
+
+
+    const emailEl = document.getElementById("userEmail");
+    if (emailEl && email) {
+        emailEl.innerText = email;
+    }
+    const phoneEl = document.getElementById("userPhone");
+    if (phoneEl && phone) {
+        phoneEl.innerText = phone;
+    }
+    const ageEl = document.getElementById("userAge");
+    if (ageEl && age) {
+        ageEl.innerText = age;
+    }
+    const gioitinhEl = document.getElementById("userGioiTinh");
+    if (gioitinhEl && gioitinh) {
+        gioitinhEl.innerText = gioitinh;
+    }
+});
+
+
+
+const themxeBtn = document.getElementById("themxe");
+if (themxeBtn) {
+    themxeBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        loadBatteryInfo();
+    });
+}
+
+const loadBatteryInfo = async () => {
+    // Lấy token
+    const token = localStorage.getItem('token');
+
+    // Lấy các element input sớm để hiển thị trạng thái loading
+    const batteryTypeEl = document.getElementById('batteryType');
+    const voltageEl = document.getElementById('batteryVoltageInfo');
+    const powerEl = document.getElementById('batteryPowerInfo');
+
+    if (batteryTypeEl) {
+        batteryTypeEl.innerHTML = '<option value="">Đang tải danh sách...</option>';
+        batteryTypeEl.disabled = true;
+    }
+
+    // Lấy danh sách pin từ gateway
+    let batteryList = [];
+    try {
+        const res = await gatewayFetch('/gateway/station/themxe', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!res.ok) {
+            console.error('Fetch battery list failed:', res.status);
+            return;
+        }
+
+        const apiList = await res.json();
+        batteryList = (apiList || []).map(x => ({
+            id: x?.id ?? x?.Id,
+            name: x?.tenloaipin ?? x?.Tenloaipin,
+            voltage: x?.dienap ?? x?.Dienap,
+            power: x?.congsuat ?? x?.Congsuat
+        }));
+        localStorage.setItem('batteryList', JSON.stringify(batteryList));
+    } catch (_) {
+        console.error('Error fetching battery list');
+        if (batteryTypeEl) {
+            batteryTypeEl.innerHTML = '<option value="">Tải thất bại</option>';
+            batteryTypeEl.disabled = false;
+        }
+        return;
+    }
+
+    // Populate dropdown
+    if (batteryTypeEl) {
+        batteryTypeEl.disabled = false;
+        if (batteryList.length > 0) {
+            batteryTypeEl.innerHTML = '<option value="">--Chọn loại pin--</option>';
+            batteryList.forEach(b => {
+                const option = document.createElement('option');
+                option.value = b.id;
+                option.textContent = b.name;
+                batteryTypeEl.appendChild(option);
+            });
+
+            // Hiển thị pin mặc định (cái đầu tiên)
+            const firstBattery = batteryList[0];
+            if (firstBattery) {
+                batteryTypeEl.value = firstBattery.id;
+                if (voltageEl) voltageEl.value = firstBattery.voltage || '';
+                if (powerEl) powerEl.value = firstBattery.power || '';
+            }
+        } else {
+            batteryTypeEl.innerHTML = '<option value="">Không có dữ liệu</option>';
+        }
+    }
+
+    // Khi người dùng thay đổi loại pin
+    if (batteryTypeEl) {
+        batteryTypeEl.addEventListener('change', (e) => {
+            const selectedId = e.target.value;
+            const selectedBattery = batteryList.find(b => b.id == selectedId);
+
+            if (selectedBattery) {
+                if (voltageEl) voltageEl.value = selectedBattery.voltage || '';
+                if (powerEl) powerEl.value = selectedBattery.power || '';
+            } else {
+                if (voltageEl) voltageEl.value = '';
+                if (powerEl) powerEl.value = '';
+            }
+        });
+    }
+};
+
+// Gọi hàm khi DOM đã sẵn sàng
+document.addEventListener('DOMContentLoaded', loadBatteryInfo);
