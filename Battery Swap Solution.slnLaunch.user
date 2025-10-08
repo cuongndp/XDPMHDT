@@ -17,6 +17,10 @@
       {
         "Path": "DriverServices\\DriverServices.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "StationService\\StationService.csproj",
+        "Action": "Start"
       }
     ]
   }

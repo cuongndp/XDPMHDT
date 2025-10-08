@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -22,7 +23,7 @@ namespace DriverServices.Controllers
 
 
         [HttpPost("register")]
-        public IActionResult Register([FromBody] Dictionary<string, string> data)
+        public async Task<IActionResult> Register([FromBody] Dictionary<string, string> data)
         {
             try
             {
@@ -69,7 +70,7 @@ namespace DriverServices.Controllers
                         _context.Add(list);
                         try
                         {
-                            _context.SaveChanges();
+                            await _context.SaveChangesAsync();
                         }
                         catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
                         {
@@ -91,9 +92,9 @@ namespace DriverServices.Controllers
             }
         }
         [HttpPost("login")]
-        public IActionResult Login([FromBody] Dictionary<string, string> data)
+        public async Task<IActionResult> Login([FromBody] Dictionary<string, string> data)
         {
-            var user = _context.Users.FirstOrDefault(p => p.Email == data["email"]);
+            var user = await _context.Users.FirstOrDefaultAsync(p => p.Email == data["email"]);
             if (user == null)
             {
                 return BadRequest(new { message = "Email không tồn tại" });
@@ -138,6 +139,16 @@ namespace DriverServices.Controllers
             }
 
         }
+        [HttpPost("logoutdriver")]
+        [Authorize(Roles = "driver")]
+        public IActionResult Logout()
+        {
+            // Xóa cookie chứa token
+            Response.Cookies.Delete("access_token");
+            return Ok(new { message = "Đăng xuất thành công" });
+        }
+
+
         [HttpGet("profile")]
         [Authorize]
         public IActionResult profile ()
@@ -156,5 +167,80 @@ namespace DriverServices.Controllers
             });
         }
 
+        [HttpPost("formthemxe")]
+        [Authorize]
+        public async Task<IActionResult> formthemxe([FromBody] Dictionary<string, string> data)
+        {
+            var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            PhuongTien pt = new PhuongTien()
+            {
+                Tenphuongtien = data["tenphuongtien"],
+                Bienso = data["bienso"],
+                Idloaipin = int.Parse(data["idloaipin"]),
+                Iduser = int.Parse(userId)
+            };
+            if (ModelState.IsValid)
+            {
+                var bienSo = await _context.PhuongTiens.FirstOrDefaultAsync(p => p.Bienso == pt.Bienso);
+               
+                var user = await _context.PhuongTiens.FirstOrDefaultAsync(p => p.Iduser == pt.Iduser);
+                if (user != null)
+                {
+                    return BadRequest(new { message = "Bạn đã có phương tiện" });
+                }
+                else
+                {
+                    if (bienSo != null)
+                    {
+                        return BadRequest(new { message = "Biển số đã tồn tại" });
+                    }
+                    else
+                    {
+                        var list = new PhuongTien
+                        {
+                            Tenphuongtien = pt.Tenphuongtien,
+                            Bienso = pt.Bienso,
+                            Idloaipin = pt.Idloaipin,
+                            Iduser = pt.Iduser
+                        };
+                        _context.Add(list);
+                        try
+                        {
+                            await _context.SaveChangesAsync();
+                        }
+                        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+                        {
+                            var inner = ex.InnerException?.Message ?? ex.Message;
+                            return StatusCode(500, new { message = $"Lỗi cơ sở dữ liệu: {inner}" });
+                        }
+                        return Ok(new { message = "Thêm phương tiện thành công" });
+                    }
+                }
+            }
+            else
+            {
+                return BadRequest(new { message = "Dữ liệu không hợp lệ" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("check")]
+        public async Task<IActionResult> Check()
+        {
+            var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            int iduser = int.Parse(userId);
+            var user =await _context.PhuongTiens.FirstOrDefaultAsync(p => p.Iduser == iduser);
+            if (user == null)
+            {
+                return BadRequest(new { message = "Bạn chưa có phương tiện" });
+            }
+            else
+                return Ok( new PhuongTien
+                {
+                    Tenphuongtien = user.Tenphuongtien,
+                    Bienso = user.Bienso,
+                    Idloaipin = user.Idloaipin
+                });
+        }
     }
 }

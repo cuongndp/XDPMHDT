@@ -17,6 +17,16 @@ builder.Services.AddDbContext<PaymentServiceDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder =>
+    {
+        builder.WithOrigins("https://localhost:7210", "http://localhost:5000", "https://localhost:5000")
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               .AllowCredentials();
+    });
+});
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -26,6 +36,7 @@ builder.Services.AddAuthentication(options =>
     {
         options.RequireHttpsMetadata = false;
         options.SaveToken = true;
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -35,7 +46,21 @@ builder.Services.AddAuthentication(options =>
 
             ValidIssuer = "DriveService",     // phải trùng với issuer ở DriverService
             ValidAudience = "ApiGateway",     // phải trùng với audience lúc phát token
-            IssuerSigningKey = new SymmetricSecurityKey(key)
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            NameClaimType = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.UniqueName,
+            RoleClaimType = "role",
+            ClockSkew = TimeSpan.Zero
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (context.Request.Cookies.ContainsKey("access_token"))
+                {
+                    context.Token = context.Request.Cookies["access_token"];
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 builder.Services.AddEndpointsApiExplorer();
@@ -51,6 +76,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 

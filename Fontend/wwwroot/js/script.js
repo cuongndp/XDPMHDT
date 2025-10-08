@@ -410,7 +410,12 @@ function showGuestInterface() {
 }
 
 // Logout function
-function logout() {
+async function logout() {
+    // 1️⃣ Gọi API để xóa cookie trên server
+    await fetch('https://localhost:5000/gateway/driver/logoutdriver', {
+        method: 'POST',
+        credentials: 'include'
+    });
     // Xóa thông tin đăng nhập khỏi localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('userName');

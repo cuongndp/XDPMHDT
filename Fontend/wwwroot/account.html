@@ -94,6 +94,19 @@
                         </button>
                     </div>
                     <div class="card-content">
+                        <!-- Thông tin xe đã liên kết -->
+                        <div id="linkedVehicleDisplay" style="display: none;">
+                            <div class="vehicle-item">
+                                <div class="vehicle-info">
+                                    <h3 id="driverName">--</h3>
+                                    <p><i class="fas fa-id-card"></i> Biển số: <span id="driverBienso">--</span></p>
+                                    <p><i class="fas fa-battery-full"></i> Loại pin: <span id="driverNameloaipin">--</span></p>
+                                    <p><i class="fas fa-bolt"></i> Điện áp: <span id="driverBattery">--</span> V</p>
+                                    <p><i class="fas fa-plug"></i> Công suất: <span id="driverCongsuat">--</span> kWh</p>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="vehicles-list" id="vehiclesList">
                             <!-- Vehicles will be loaded here -->
                         </div>
@@ -140,20 +153,58 @@
                 <h2>Thêm phương tiện</h2>
                 <span class="close" onclick="closeModal('addVehicleModal')">&times;</span>
             </div>
-            <form class="modal-form" id="addVehicleForm">
+            
+            <!-- Phần hiển thị thông tin xe đã liên kết -->
+            <div id="linkedVehicleInfo" style="display:none;">
+                <div class="vehicle-linked-card">
+                    <div class="linked-header">
+                        <i class="fas fa-check-circle" style="color: #4CAF50; font-size: 48px;"></i>
+                        <h3>Phương tiện đã được liên kết</h3>
+                        <p>Bạn đã đăng ký phương tiện với hệ thống</p>
+                    </div>
+                    <div class="linked-details">
+                        <div class="detail-item">
+                            <label><i class="fas fa-car"></i> Tên phương tiện:</label>
+                            <span id="linkedVehicleName">--</span>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fas fa-id-card"></i> Biển số xe:</label>
+                            <span id="linkedLicensePlate">--</span>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fas fa-battery-full"></i> Loại pin:</label>
+                            <span id="linkedBatteryType">--</span>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fas fa-bolt"></i> Điện áp:</label>
+                            <span id="linkedVoltage">--</span>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fas fa-plug"></i> Công suất:</label>
+                            <span id="linkedPower">--</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="closeModal('addVehicleModal')">
+                        <i class="fas fa-times"></i> Đóng
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Form thêm xe mới -->
+            <form class="modal-form" id="themxeform">
                 <div class="form-group">
                     <label for="vehicleName">Tên phương tiện *</label>
-                    <input type="text" id="vehicleName" name="vehicleName" required placeholder="VD: VinFast VF8">
+                    <input type="text" id="vehicleName" name="tenphuongtien" required placeholder="VD: VinFast VF8">
                 </div>
 
                 <div class="form-group">
                     <label for="licensePlate">Biển số xe *</label>
-                    <input type="text" id="licensePlate" name="licensePlate" required placeholder="VD: 30A-12345">
+                    <input type="text" id="licensePlate" name="bienso" required placeholder="VD: 30A-12345">
                 </div>
 
                 <div class="form-group">
                     <label for="batteryType">Loại pin *</label>
-                    <select id="batteryType" name="batteryType" required>
+                    <select id="batteryType" name="idloaipin" required>
                         <option value="">Chọn loại pin</option>
                     </select>
                 </div>
@@ -165,6 +216,9 @@
                         <input type="text" id="batteryPowerInfo" placeholder="Công suất (kWh)" disabled>
                     </div>
                 </div>
+
+                <div id="thongbao" style="display:none;text-align:center;margin-bottom:15px;"></div>
+                <div id="messageform" style="display:none;text-align:center;margin-bottom:15px;"></div>
 
                 <button type="submit" class="btn btn-primary btn-full">Thêm xe</button>
                 <div class="form-footer">

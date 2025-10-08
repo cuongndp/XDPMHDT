@@ -258,6 +258,68 @@
     margin-bottom: 20px;
 }
 
+/* Linked Vehicle Info Styles */
+.vehicle-linked-card {
+    padding: 20px;
+    text-align: center;
+}
+
+.linked-header {
+    margin-bottom: 30px;
+}
+
+.linked-header h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 15px 0 10px;
+}
+
+.linked-header p {
+    color: #64748b;
+    font-size: 16px;
+}
+
+.linked-details {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-item label {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-item label i {
+    color: #2563eb;
+    width: 20px;
+}
+
+.detail-item span {
+    font-size: 16px;
+    color: #1e293b;
+    font-weight: 500;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .account-section {
@@ -305,6 +367,12 @@
     
     .status {
         align-self: flex-end;
+    }
+    
+    .detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
     }
 }
 

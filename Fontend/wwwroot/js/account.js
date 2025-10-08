@@ -26,7 +26,7 @@ let bookingHistory = [
 // Initialize account page
 document.addEventListener('DOMContentLoaded', function() {
     ensureAuthenticatedAndHydrate();
-    loadVehicles();
+     checkUserVehicle(); // hàm này sẽ dc gọi khi load trang
     loadBookingHistory();
     setupEventListeners();
     setupBatteryTypeUI();
@@ -523,3 +523,171 @@ const loadBatteryInfo = async () => {
 
 // Gọi hàm khi DOM đã sẵn sàng
 document.addEventListener('DOMContentLoaded', loadBatteryInfo);
+
+
+//document.getElementById("themxeform").addEventListener("submit", async function (e) {
+//    e.preventDefault(); // chặn reload
+    
+//});
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("themxeform");
+    if (form) {
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            console.log("Form submit ok!");
+            // Lấy token
+            const token = localStorage.getItem('token');
+            const formData = new FormData(this);               // gom dữ liệu form
+            const body = Object.fromEntries(formData.entries()); // chuyển thành object
+
+
+            //const messagewaitredd = document.getElementById("messagewaitredd");
+            const message = document.getElementById("thongbaothemxe");
+
+
+            const thongbao = document.getElementById("thongbao");
+            thongbao.style.display = "block";
+            thongbao.style.color = "blue";
+            thongbao.innerText = "Đang đăng ký vui lòng chờ...";
+            try {
+                const res = await gatewayFetch('/gateway/driver/formthemxe', {
+                    method: "POST",
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // gửi json
+                    body: JSON.stringify(body)
+                    
+                });
+                const data = await res.json();
+                const message = document.getElementById("messageform");
+                if (!res.ok) {
+                    // hiển thị lỗi
+                    thongbao.style.display = "none";
+                    message.style.display = "block";
+                    message.style.color = "red";
+                    message.innerText = data.message;
+                } else {
+                    thongbao.style.display = "none";
+                    message.style.display = "block";
+                    message.style.color = "green";
+                    message.innerText = data.message;
+                    setTimeout(() => {
+                        closeModal('addVehicleModal'); // đóng modal thêm xe
+                        setTimeout(() => {
+                            location.reload(); // reload lại trang để cập nhật danh sách xe
+                        }, 800);
+                        
+                    }, 900);
+                }
+            } catch (err) {
+                thongbao.style.display = "none";
+                message.style.display = "block";
+                message.style.color = "red";
+                message.innerText = "Mất kết nối";
+            }
+        });
+    } else {
+        console.error("Không tìm thấy form themxeform");
+    }
+});
+
+
+async function checkUserVehicle() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.log('No token found');
+        loadVehicles();
+        return;
+    }
+
+    try {
+        console.log('Calling API to check vehicle...');
+        // Gọi API để kiểm tra xem user có xe chưa - SỬA LẠI URL CHO ĐÚNG
+        const res = await gatewayFetch('/gateway/driver/check', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        console.log('API response status:', res.status);
+
+        if (!res.ok) {
+            console.log('API returned error, no vehicle found');
+            loadVehicles(); // Hiển thị empty state
+            return;
+        }
+
+        const data = await res.json();
+        console.log('Vehicle data:', data);
+
+        if (data != null) {
+            console.log('Vehicle found, loading battery info...');
+            
+            const resstation = await gatewayFetch(`/gateway/station/check/${data.idloaipin}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+            
+            const dataloaipin = await resstation.json();
+            console.log('Battery info:', dataloaipin);
+            
+            //gắn dô html
+            const nameEl = document.getElementById("driverName");
+            if (nameEl) {
+                nameEl.innerText = data.tenphuongtien || '--';
+            }
+            const licenseEl = document.getElementById("driverBienso");
+            if (licenseEl) {
+                licenseEl.innerText = data.bienso || '--';
+            }
+            const loaipinEl = document.getElementById("driverNameloaipin");
+            if (loaipinEl) {
+                loaipinEl.innerText = dataloaipin.tenloaipin || '--';
+            }
+            const batteryEl = document.getElementById("driverBattery");
+            if (batteryEl) {
+                batteryEl.innerText = dataloaipin.dienap || '--';
+            }
+            const congsuatEl = document.getElementById("driverCongsuat");
+            if (congsuatEl) {
+                congsuatEl.innerText = dataloaipin.congsuat || '--';
+            }
+            
+            // Hiển thị phần thông tin xe
+            const linkedDisplay = document.getElementById("linkedVehicleDisplay");
+            if (linkedDisplay) {
+                linkedDisplay.style.display = 'block';
+                console.log('Showing vehicle info');
+            }
+            
+            // Ẩn phần empty state
+            const vehiclesList = document.getElementById("vehiclesList");
+            if (vehiclesList) {
+                vehiclesList.style.display = 'none';
+            }
+            
+            // Ẩn nút thêm xe
+            const addBtn = document.getElementById("addVehicleBtn");
+            if (addBtn) {
+                addBtn.style.display = 'none';
+            }
+        } else {
+            console.log('No vehicle data, showing empty state');
+            loadVehicles(); // Hiển thị empty state
+        }
+
+    } catch (err) {
+        console.error('Error checking vehicle:', err);
+        loadVehicles(); // Hiển thị empty state khi lỗi
+    }
+}

@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fontend", "Fontend\Fontend.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DriverServices", "DriverServices\DriverServices.csproj", "{950D365F-0006-442D-A4CF-3879CDD33B5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationService", "StationService\StationService.csproj", "{2FEB332A-AD92-4481-A47C-C2AB5F1716B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{950D365F-0006-442D-A4CF-3879CDD33B5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{950D365F-0006-442D-A4CF-3879CDD33B5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{950D365F-0006-442D-A4CF-3879CDD33B5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FEB332A-AD92-4481-A47C-C2AB5F1716B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FEB332A-AD92-4481-A47C-C2AB5F1716B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FEB332A-AD92-4481-A47C-C2AB5F1716B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FEB332A-AD92-4481-A47C-C2AB5F1716B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
