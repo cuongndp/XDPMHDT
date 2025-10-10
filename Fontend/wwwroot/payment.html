@@ -85,7 +85,7 @@
                     <form id="paymentForm">
                         <div class="payment-methods">
                             <label class="payment-method-option">
-                                <input type="radio" name="paymentMethod" value="card" checked>
+                                <input type="radio" name="phuongthucthanhtoan" data-name="Thẻ tín dụng/Ghi nợ" value="Thẻ tín dụng/Ghi nợ" checked>
                                 <div class="method-content">
                                     <div class="method-icon">
                                         <i class="fas fa-credit-card"></i>
@@ -98,7 +98,7 @@
                             </label>
 
                             <label class="payment-method-option">
-                                <input type="radio" name="paymentMethod" value="momo">
+                                <input type="radio" name="phuongthucthanhtoan" data-name="Ví MoMo" value="momo">
                                 <div class="method-content">
                                     <div class="method-icon momo">
                                         <i class="fas fa-mobile-alt"></i>
@@ -111,7 +111,7 @@
                             </label>
 
                             <label class="payment-method-option">
-                                <input type="radio" name="paymentMethod" value="banking">
+                                <input type="radio" name="phuongthucthanhtoan" data-name="Chuyển khoản ngân hàng" value="banking">
                                 <div class="method-content">
                                     <div class="method-icon banking">
                                         <i class="fas fa-university"></i>
@@ -124,7 +124,7 @@
                             </label>
 
                             <label class="payment-method-option">
-                                <input type="radio" name="paymentMethod" value="zalopay">
+                                <input type="radio" name="phuongthucthanhtoan" data-name="ZaloPay" value="zalopay">
                                 <div class="method-content">
                                     <div class="method-icon zalopay">
                                         <i class="fas fa-mobile-screen"></i>
@@ -139,28 +139,27 @@
 
                         <!-- Ghi chú -->
                         <!--<div class="form-group">
-                            <label for="paymentNote">
-                                <i class="fas fa-sticky-note"></i>
-                                Ghi chú (tùy chọn)
-                            </label>
-                            <textarea id="paymentNote" rows="3" placeholder="Nhập ghi chú cho đơn hàng của bạn..."></textarea>
-                        </div>-->
-
+        <label for="paymentNote">
+            <i class="fas fa-sticky-note"></i>
+            Ghi chú (tùy chọn)
+        </label>
+        <textarea id="paymentNote" rows="3" placeholder="Nhập ghi chú cho đơn hàng của bạn..."></textarea>
+    </div>-->
                         <!-- Điều khoản -->
                         <!--<div class="terms-agreement">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="agreeTerms" required>
-                                <span class="checkmark"></span>
-                                <span class="checkbox-label">
-                                    Tôi đồng ý với 
-                                    <a href="#" target="_blank">Điều khoản sử dụng</a> và 
-                                    <a href="#" target="_blank">Chính sách bảo mật</a>
-                                </span>
-                            </label>
-                        </div>-->
-
+        <label class="checkbox-container">
+            <input type="checkbox" id="agreeTerms" required>
+            <span class="checkmark"></span>
+            <span class="checkbox-label">
+                Tôi đồng ý với
+                <a href="#" target="_blank">Điều khoản sử dụng</a> và
+                <a href="#" target="_blank">Chính sách bảo mật</a>
+            </span>
+        </label>
+    </div>-->
                         <!-- Messages -->
-                        <div id="paymentMessage" class="alert-message" style="display:none;"></div>
+                        <!--<div id="messagedangky" class="alert-message" style="display:none;"></div>-->
+                        <div id="messageform" class="alert-message" style="display:none; text-align:center"></div>
 
                         <!-- Submit Button -->
                         <button type="submit" class="btn btn-primary btn-large" id="submitPaymentBtn">

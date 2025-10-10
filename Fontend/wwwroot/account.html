@@ -113,6 +113,59 @@
                     </div>
                 </div>
 
+                <!-- Service Subscription Card -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-box"></i> Dịch vụ của bạn</h2>
+                        <button class="btn btn-outline btn-small" onclick="viewAllServices()">
+                            <i class="fas fa-eye"></i> Xem chi tiết
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div class="services-list" id="servicesList">
+                            <!-- Services will be loaded here via JS -->
+                            <!-- Example structure for reference:
+                            <div class="service-item">
+                                <div class="service-badge active">
+                                    <i class="fas fa-check-circle"></i>
+                                    Đang hoạt động
+                                </div>
+                                <div class="service-info">
+                                    <div class="service-header">
+                                        <h3>Gói Tiêu Chuẩn</h3>
+                                        <span class="service-price">799,000đ</span>
+                                    </div>
+                                    <div class="service-details">
+                                        <div class="detail-row">
+                                            <i class="fas fa-calendar-check"></i>
+                                            <span>Thời hạn: 3 tháng</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <i class="fas fa-calendar-times"></i>
+                                            <span>Hết hạn: 20/03/2024</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <i class="fas fa-sync-alt"></i>
+                                            <span>Số lần đổi: Không giới hạn</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            -->
+                        </div>
+                        
+                        <!-- Empty state khi chưa có dịch vụ -->
+                        <div class="empty-state" id="emptyServices">
+                            <i class="fas fa-box-open"></i>
+                            <h3>Chưa có dịch vụ nào</h3>
+                            <p>Bạn chưa đăng ký gói dịch vụ nào</p>
+                            <a href="index.html#packages" class="btn btn-primary">
+                                <i class="fas fa-shopping-cart"></i> Xem gói dịch vụ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Booking History Card -->
                 <div class="info-card">
                     <div class="card-header">

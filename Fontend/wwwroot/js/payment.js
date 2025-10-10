@@ -25,7 +25,7 @@ function formatCurrencyVND(amount) {
 document.addEventListener('DOMContentLoaded', function () {
     checkLoginStatus();
     getPackagesFromAPI();
-    setupEventListeners();
+    //setupEventListeners();
 });
 
 // Bắt buộc đăng nhập
@@ -134,19 +134,19 @@ async function getPackagesFromAPI() {
     } catch (error) {
         console.error('getPackagesFromAPI error:', error);
         showMessage('error', error.message || 'Không thể tải dữ liệu. Vui lòng thử lại.');
-        setTimeout(() => {
-            window.location.href = 'index.html#packages';
-        }, 1500);
+        //setTimeout(() => {
+        //    window.location.href = 'index.html#packages';
+        //}, 1500);
     }
 }
 
-// Lắng nghe submit form
-function setupEventListeners() {
-    const form = document.getElementById('paymentForm');
-    if (form) {
-        form.addEventListener('submit', handlePayment);
-    }
-}
+//// Lắng nghe submit form
+//function setupEventListeners() {
+//    const form = document.getElementById('paymentForm');
+//    if (form) {
+//        form.addEventListener('submit', handlePayment);
+//    }
+//}
 
 // Xử lý thanh toán (gọi API thật)
 async function handlePayment(e) {
@@ -250,3 +250,88 @@ function showMessage(type, message) {
 function goBack() {
     window.history.back();
 }
+
+
+
+document.getElementById("paymentForm").addEventListener("submit", async function (e) {
+    e.preventDefault(); // chặn reload
+    const formData = new FormData(this);
+    const body = Object.fromEntries(formData.entries());
+    const token = localStorage.getItem('token');
+    let id = new URLSearchParams(window.location.search).get('packageId') || localStorage.getItem('selectedPackageId');
+
+    try {
+        //const res = await gatewayFetch('/gateway/driver/register', {
+        //    method: "POST",
+        //    headers: { "Content-Type": "application/json" }, // gửi json
+        //    body: JSON.stringify(body)
+        //});
+
+        //const data = await res.json();
+
+        
+        const res = await gatewayFetch(`/gateway/payment/paymentgetgoi/${id}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                
+            },
+            credentials: 'include'
+        });
+        const data = await res.json();
+        const payload = {
+            ...body,
+            iddichvu: String(id),
+            thoihan: String(data.thoihan),
+            solandoipin: String(data.solandoipin),
+        };
+
+        const res2 = await gatewayFetch('/gateway/driver/dangkydichvu', {
+
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+            credentials: 'include',
+                body: JSON.stringify(payload)
+        });
+        const data2 = await res2.json();
+        
+        //const messagedangky = document.getElementById("messagedangky");
+        const messageform = document.getElementById("messageform");
+
+        //messagedangky.style.display = "block";
+        //messagedangky.style.color = "blue";
+        //messagedangky.innerText = "Đang đăng ký vui lòng chờ...";
+
+        if (!res2.ok) {
+            //// hiển thị lỗi
+            //messagedangky.style.display = "none";
+            messageform.style.display = "block";
+            messageform.style.color = "red";
+            messageform.innerText = data2.message;
+            setTimeout(() => {
+                window.location.href = 'index.html';// chuyển hướng về trang chủ sau 1s
+            }, 1500);
+        } else {
+            //messagedangky.style.display = "none";
+            messageform.style.display = "block";
+            messageform.style.color = "green";
+            messageform.innerText = data2.message;
+            setTimeout(() => {
+                window.location.href = 'index.html';// chuyển hướng về trang chủ sau 1s
+            }, 1500);
+        }
+    } catch (err) {
+        //messagedangky.style.display = "none";
+        messageform.style.display = "block";
+        messageform.style.color = "red";
+        messageform.innerText = "Mất kết nối";
+    }
+
+
+
+
+});

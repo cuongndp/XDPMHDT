@@ -150,12 +150,12 @@ namespace DriverServices.Controllers
 
 
         [HttpGet("profile")]
-        [Authorize]
-        public IActionResult profile ()
+        [Authorize(Roles ="driver")]
+        public IActionResult profile()
         {
             var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
             var user = _context.Users.FirstOrDefault(p => p.Id == int.Parse(userId));
-            
+
             return Ok(new
             {
                 id = user.Id,
@@ -182,7 +182,7 @@ namespace DriverServices.Controllers
             if (ModelState.IsValid)
             {
                 var bienSo = await _context.PhuongTiens.FirstOrDefaultAsync(p => p.Bienso == pt.Bienso);
-               
+
                 var user = await _context.PhuongTiens.FirstOrDefaultAsync(p => p.Iduser == pt.Iduser);
                 if (user != null)
                 {
@@ -229,18 +229,62 @@ namespace DriverServices.Controllers
         {
             var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
             int iduser = int.Parse(userId);
-            var user =await _context.PhuongTiens.FirstOrDefaultAsync(p => p.Iduser == iduser);
+            var user = await _context.PhuongTiens.FirstOrDefaultAsync(p => p.Iduser == iduser);
             if (user == null)
             {
                 return BadRequest(new { message = "Bạn chưa có phương tiện" });
             }
             else
-                return Ok( new PhuongTien
+                return Ok(new PhuongTien
                 {
                     Tenphuongtien = user.Tenphuongtien,
                     Bienso = user.Bienso,
                     Idloaipin = user.Idloaipin
                 });
+        }
+
+        [Authorize("driver")]
+        [HttpPost("dangkydichvu")]
+        public async Task<IActionResult> Themdv([FromBody] Dictionary<string, string> data)
+        {
+            try
+            {
+                
+                var userid = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+                int iduser = int.Parse(userid);
+                var dv = await _context.DangKyDichVus.FirstOrDefaultAsync(p => p.Iduser == iduser);
+                if (dv != null)
+                {
+                    return BadRequest(new { message = "Bạn đã đăng ký dịch vụ rồi" });
+                }
+                else
+                {
+
+                    var day = DateOnly.FromDateTime(DateTime.Now);
+                    int month = int.Parse(data["thoihan"]);
+                    var ngayketthuc = day.AddMonths(3);
+
+                    DangKyDichVu dk = new DangKyDichVu()
+                    {
+                        Iduser = iduser,
+                        Iddichvu = int.Parse(data["iddichvu"]),
+                        Ngaydangky = day,
+                        Ngayketthuc = ngayketthuc,
+                        Trangthai = "Đang hoạt động",
+                        Solandoipin = data["solandoipin"],
+                        Phuongthucthanhtoan = data["phuongthucthanhtoan"],
+                        Trangthaithanhtoan = "Đã thanh toán"
+                    };
+                    _context.Add(dk);
+                    await _context.SaveChangesAsync();
+                    return Ok(new { message = "Đăng ký dịch vụ thành công" });
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

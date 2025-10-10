@@ -65,6 +65,13 @@ builder.Services.AddAuthentication(options =>
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services
+    .AddAuthorizationBuilder()
+    .AddPolicy("driver", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("driver"); // trùng giá trị claim "role" trong JWT
+    });
 
 var app = builder.Build();
 

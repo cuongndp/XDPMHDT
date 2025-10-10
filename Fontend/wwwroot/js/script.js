@@ -947,25 +947,53 @@ async function getPackagesFromAPI() {
     });
 }
 
-
+// Helper: format tiền VND
+function formatCurrencyVND(amount) {
+    const n = Number(amount ?? 0);
+    if (Number.isNaN(n)) return '0đ';
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+        maximumFractionDigits: 0
+    }).format(n);
+    // Nếu muốn dạng "1.234.567đ": return n.toLocaleString('vi-VN') + 'đ';
+}
 
     async function chonGoi(Idgoi) {
-        // Kiểm tra đăng nhập
         const token = localStorage.getItem('token');
-        if (!token) {
-            alert('Vui lòng đăng nhập để chọn gói dịch vụ!');
-            showLoginModal();
-            return;
-        }
+        const res = await gatewayFetch(`/gateway/payment/loggoiid/${Idgoi}`, {
+            method: 'GET',
+            headers: {
+                'authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
 
-        try {
-            // Lưu ID gói đã chọn vào localStorage
-            localStorage.setItem('selectedPackageId', Idgoi);
-            
-            // Chuyển hướng đến trang thanh toán
-            window.location.href = `payment.html?packageId=${Idgoi}`;
-        } catch (error) {
-            console.error('Error selecting package:', error);
-            alert('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+
+        });
+        localStorage.setItem('selectedPackageId', String(Idgoi));
+
+        // CHUYỂN TRANG
+        window.location.href = `payment.html?packageId=${encodeURIComponent(Idgoi)}`;
+        const data = await res.json();
+        const NamegoiEl = document.getElementById("selectedPackageName");
+        if (NamegoiEl) {
+            NamegoiEl.textContent = data.tendichvu || "Gói dịch vụ";
+        }
+        const PricegoiEl = document.getElementById("selectedPackagePrice");
+        if (PricegoiEl) {
+            PricegoiEl.textContent = formatCurrencyVND(data.phi || 0);
+        }
+        const MotaEl = document.getElementById("Mota");
+        if (MotaEl) {
+            MotaEl.textContent = data.mota || "Không có mô tả";
+        }
+        const ThoihanEl = document.getElementById("Thoihan");
+        if (ThoihanEl) {
+            ThoihanEl.textContent = data.thoihan ? `${data.thoihan} tháng` : "Không xác định";
+        }
+        const SolandoipinEl = document.getElementById("Solandoipin");
+        if (SolandoipinEl) {
+            SolandoipinEl.textContent = data.solandoipin === -1 ? "Không giới hạn" : (data.solandoipin || "--");
         }
     }
