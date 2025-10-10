@@ -36,7 +36,9 @@ public partial class PaymentServiceDbContext : DbContext
             entity.Property(e => e.Phi)
                 .HasPrecision(10, 2)
                 .HasColumnName("phi");
-            entity.Property(e => e.Solandoipin).HasColumnName("solandoipin");
+            entity.Property(e => e.Solandoipin)
+                .HasMaxLength(50)
+                .HasColumnName("solandoipin");
             entity.Property(e => e.Tendichvu)
                 .HasMaxLength(100)
                 .HasColumnName("tendichvu");

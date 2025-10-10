@@ -145,49 +145,73 @@
     <section id="packages" class="packages">
         <div class="container">
             <h2 class="section-title">Gói thuê pin</h2>
-            <div class="packages-grid">
-                <div class="package-card">
-                    <div class="package-header">
-                        <h3>Gói cơ bản</h3>
-                        <div class="price">50,000đ<span>/lần</span></div>
-                    </div>
-                    <ul class="package-features">
-                        <li><i class="fas fa-check"></i> Đổi pin không giới hạn</li>
-                        <li><i class="fas fa-check"></i> Hỗ trợ 24/7</li>
-                        <li><i class="fas fa-check"></i> Bảo hành pin</li>
-                    </ul>
-                    <button class="btn btn-outline">Chọn gói</button>
-                </div>
-                <div class="package-card featured">
+            
+            <!-- Container để render các gói từ API -->
+            <div class="packages-grid" id="packagesContainer">
+                <!-- TEMPLATE MẪU - XÓA HOẶC THAY THẾ KHI DÙNG API -->
+                
+                <!-- Gói 1: Gói featured (phổ biến) -->
+                <!--<div class="package-card featured">
                     <div class="package-badge">Phổ biến</div>
                     <div class="package-header">
-                        <h3>Gói tháng</h3>
-                        <div class="price">800,000đ<span>/tháng</span></div>
+                        <h3>Tên gói</h3>
+                        <div class="package-duration">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Thời gian: [số] tháng</span>
+                        </div>
+                        <div class="price">[giá]đ</div>
                     </div>
-                    <ul class="package-features">
-                        <li><i class="fas fa-check"></i> Đổi pin không giới hạn</li>
-                        <li><i class="fas fa-check"></i> Ưu tiên đặt chỗ</li>
-                        <li><i class="fas fa-check"></i> Hỗ trợ 24/7</li>
-                        <li><i class="fas fa-check"></i> Bảo hành pin</li>
-                        <li><i class="fas fa-check"></i> Giảm giá 20%</li>
-                    </ul>
-                    <button class="btn btn-primary">Chọn gói</button>
-                </div>
-                <div class="package-card">
+                    <div class="package-info">
+                        <div class="info-item">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Số lần đổi: [số lần]</span>
+                        </div>
+                    </div>
+                    <div class="package-description">
+                        <p>[Mô tả chi tiết về gói dịch vụ]</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="selectPackage([id])">
+                        Chọn gói
+                    </button>
+                </div>-->
+
+                <!-- Gói 2: Gói thường -->
+                <!--<div class="package-card">
                     <div class="package-header">
-                        <h3>Gói năm</h3>
-                        <div class="price">8,000,000đ<span>/năm</span></div>
+                        <h3>Tên gói</h3>
+                        <div class="package-duration">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Thời gian: [số] tháng</span>
+                        </div>
+                        <div class="price">[giá]đ</div>
                     </div>
-                    <ul class="package-features">
-                        <li><i class="fas fa-check"></i> Đổi pin không giới hạn</li>
-                        <li><i class="fas fa-check"></i> Ưu tiên đặt chỗ</li>
-                        <li><i class="fas fa-check"></i> Hỗ trợ 24/7</li>
-                        <li><i class="fas fa-check"></i> Bảo hành pin</li>
-                        <li><i class="fas fa-check"></i> Giảm giá 30%</li>
-                        <li><i class="fas fa-check"></i> Pin cao cấp</li>
-                    </ul>
-                    <button class="btn btn-outline">Chọn gói</button>
-                </div>
+                    <div class="package-info">
+                        <div class="info-item">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Số lần đổi: [số lần]</span>
+                        </div>
+                    </div>
+                    <div class="package-description">
+                        <p>[Mô tả chi tiết về gói dịch vụ]</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="selectPackage([id])">
+                        Chọn gói
+                    </button>
+                </div>-->
+                
+                <!-- KẾT THÚC TEMPLATE MẪU -->
+            </div>
+            
+            <!-- Hiển thị khi đang load hoặc không có gói nào -->
+            <div class="empty-state" id="packagesLoading" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <h3>Đang tải gói dịch vụ...</h3>
+            </div>
+            
+            <div class="empty-state" id="packagesEmpty" style="display: none;">
+                <i class="fas fa-box-open"></i>
+                <h3>Chưa có gói dịch vụ nào</h3>
+                <p>Vui lòng quay lại sau</p>
             </div>
         </div>
     </section>
@@ -207,12 +231,12 @@
                 <div id="messagewait" style="display:none; text-align:center"></div>
                 <div id="messagelogin" style="display:none; text-align:center"></div>
                 <div class="form-group">
-                    <label for="loginEmail">Email hoặc số điện thoại *</label>
+                    <!--<label for="loginEmail">Email hoặc số điện thoại *</label>-->
                     <input type="text" id="loginEmail" name="email" required placeholder="Nhập email">
                 </div>
 
                 <div class="form-group">
-                    <label for="loginPassword">Mật khẩu *</label>
+                    <!--<label for="loginPassword">Mật khẩu *</label>-->
                     <input type="password" id="loginPassword" name="password" required placeholder="Nhập mật khẩu">
                 </div>
 
@@ -261,17 +285,17 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="registerName">Họ và tên *</label>
+                            <!--<label for="registerName">Họ và tên *</label>-->
                             <input type="text" id="registerName" name="name" required placeholder="Nhập họ và tên">
                         </div>
                         <div class="form-group">
-                            <label for="registerAge">Tuổi *</label>
+                            <!--<label for="registerAge">Tuổi *</label>-->
                             <input type="number" id="registerAge" name="age" min="18" max="100" required placeholder="Nhập tuổi">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="registerGender">Giới tính *</label>
+                        <!--<label for="registerGender">Giới tính *</label>-->
                         <select id="registerGender" name="gioitinh" required>
                             <option value="">Chọn giới tính</option>
                             <option value="Nam">Nam</option>
@@ -289,12 +313,12 @@
                     </h3>
 
                     <div class="form-group">
-                        <label for="registerEmail">Email *</label>
+                        <!--<label for="registerEmail">Email *</label>-->
                         <input type="email" id="registerEmail" name="email" required placeholder="example@email.com">
                     </div>
 
                     <div class="form-group">
-                        <label for="registerPhone">Số điện thoại *</label>
+                        <!--<label for="registerPhone">Số điện thoại *</label>-->
                         <input type="tel" id="registerPhone" name="sodienthoai" pattern="[0-9]{10,11}" placeholder="0123456789" required>
                     </div>
                 </div>
@@ -308,11 +332,11 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="registerPassword">Mật khẩu *</label>
+                            <!--<label for="registerPassword">Mật khẩu *</label>-->
                             <input type="password" id="registerPassword" name="password" minlength="6" required placeholder="Tối thiểu 6 ký tự">
                         </div>
                         <div class="form-group">
-                            <label for="registerConfirmPassword">Xác nhận mật khẩu *</label>
+                            <!--<label for="registerConfirmPassword">Xác nhận mật khẩu *</label>-->
                             <input type="password" id="registerConfirmPassword" name="confirmpassword" minlength="6" required placeholder="Nhập lại mật khẩu">
                         </div>
                     </div>
@@ -400,6 +424,79 @@
         </div>
     </div>
 
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <h2>Thanh toán gói thuê</h2>
+                <p class="modal-subtitle">Xác nhận và thanh toán gói dịch vụ của bạn</p>
+                <span class="close" onclick="closeModal('paymentModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="paymentForm">
+                <!-- Thông tin gói đã chọn -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-box"></i>
+                        Gói dịch vụ đã chọn
+                    </h3>
+                    <div class="package-summary">
+                        <div class="summary-item">
+                            <label>Tên gói:</label>
+                            <span id="selectedPackageName">--</span>
+                        </div>
+                        <div class="summary-item">
+                            <label>Giá:</label>
+                            <span id="selectedPackagePrice" style="font-size: 1.5rem; font-weight: 600; color: #3b82f6;">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phương thức thanh toán -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-wallet"></i>
+                        Phương thức thanh toán
+                    </h3>
+                    <div class="form-group">
+                        <label>
+                            <input type="radio" name="paymentMethod" value="card" checked>
+                            <i class="fas fa-credit-card"></i> Thẻ tín dụng/Ghi nợ
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="radio" name="paymentMethod" value="momo">
+                            <i class="fas fa-mobile-alt"></i> Ví MoMo
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="radio" name="paymentMethod" value="banking">
+                            <i class="fas fa-university"></i> Chuyển khoản ngân hàng
+                        </label>
+                    </div>
+                </div>
+
+                <div id="paymentMessage" style="display:none;text-align:center;margin-bottom:15px;"></div>
+                <div id="paymentWait" style="display:none;text-align:center;margin-bottom:15px;"></div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-check"></i> Xác nhận thanh toán
+                </button>
+
+                <div class="form-footer">
+                    <p style="text-align: center; color: #64748b;">
+                        <i class="fas fa-shield-alt"></i> 
+                        Giao dịch được bảo mật với SSL 256-bit
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="packagesContainer" ></div>
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -438,9 +535,10 @@
             </div>
         </div>
     </footer>
-    <ul id="payment"></ul>
-    <script src="js/script.js?v=20251004-1"></script>
-    <script>
+    <!-- <ul id="payment"></ul> -->
+    <!--<script src="js/script.js?v=20251004-1"></script>-->
+    <script src="js/script.js"></script>
+    <!--<script>
         // gọi API PaymentService qua gateway hoặc trực tiếp
         fetch("https://localhost:5000/gateway/payment")
             .then(res => res.json())
@@ -457,6 +555,6 @@
                 });
             })
             .catch(err => console.error("Lỗi:", err));
-    </script>
+    </script>-->
 </body>
 </html>

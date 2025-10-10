@@ -1173,6 +1173,205 @@ body {
     color: #94a3b8;
 }
 
+/* Payment Modal Styles */
+.package-summary {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.summary-item label {
+    font-weight: 500;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.summary-item span {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Payment method radio buttons styling */
+.form-group label {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 12px;
+    background: white;
+}
+
+.form-group label:hover {
+    border-color: #3b82f6;
+    background: #f8fafc;
+}
+
+.form-group label input[type="radio"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.form-group label input[type="radio"]:checked + i,
+.form-group label:has(input[type="radio"]:checked) {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.form-group label i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+    color: #3b82f6;
+    width: 24px;
+    text-align: center;
+}
+
+/* Section styling in payment modal */
+.form-section {
+    margin-bottom: 25px;
+}
+
+.form-section .section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-section .section-title i {
+    color: #3b82f6;
+    font-size: 1.3rem;
+}
+
+/* Package cards responsive adjustment */
+.packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+/* Ensure only 2 packages display nicely */
+.packages-grid[style*="display: flex"] .package-card {
+    max-width: 400px;
+    width: 100%;
+}
+
+/* Package Duration Styling */
+.package-duration {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    color: #475569;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.package-duration i {
+    color: #3b82f6;
+    font-size: 1rem;
+}
+
+/* Package Info Section */
+.package-info {
+    margin: 15px 0;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.info-item i {
+    color: #3b82f6;
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.info-item span {
+    font-size: 0.95rem;
+}
+
+/* Package Description */
+.package-description {
+    margin: 15px 0;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.package-description p {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+    text-align: left;
+}
+
+/* Empty State Styling */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #cbd5e1;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.empty-state i.fa-spinner {
+    color: #3b82f6;
+    font-size: 48px;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: #475569;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #94a3b8;
+    font-size: 1rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .nav-menu {
@@ -1210,6 +1409,40 @@ body {
     
     .package-card.featured {
         transform: none;
+    }
+    
+    /* Package responsive */
+    .package-duration {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
+    
+    .package-info {
+        padding: 12px;
+    }
+    
+    .info-item {
+        font-size: 0.9rem;
+    }
+    
+    .package-description {
+        padding: 10px;
+    }
+    
+    .package-description p {
+        font-size: 0.85rem;
+    }
+    
+    .empty-state {
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 48px;
+    }
+    
+    .empty-state h3 {
+        font-size: 1.2rem;
     }
     
     .station-filters {

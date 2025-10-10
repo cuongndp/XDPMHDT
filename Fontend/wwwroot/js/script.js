@@ -57,6 +57,7 @@ let currentFilter = 'all';
 document.addEventListener('DOMContentLoaded', function() {
     loadStations();
     setupEventListeners();
+    getPackagesFromAPI();
     setupMobileMenu();
     setupPasswordStrength();
     checkLoginStatus(); // Kiểm tra trạng thái đăng nhập khi load trang
@@ -752,3 +753,219 @@ const profile = async () => {
     window.location.href = "account.html";
     
 };
+
+
+
+
+
+
+
+// Chọn gói thuê và chuyển đến trang thanh toán
+// function selectPackage(packageType, price) {
+//     // Kiểm tra đăng nhập
+//     const token = localStorage.getItem('token');
+//     if (!token) {
+//         alert('Vui lòng đăng nhập để đăng ký gói dịch vụ');
+//         showLoginModal();
+//         return;
+//     }
+
+//     // Lưu thông tin gói đã chọn
+//     const packageData = {
+//         type: packageType,
+//         price: price,
+//         name: packageType === 'month' ? 'Gói tháng' : 'Gói năm',
+//         duration: packageType === 'month' ? '1 tháng' : '1 năm'
+//     };
+
+//     localStorage.setItem('selectedPackage', JSON.stringify(packageData));
+
+//     // Hiển thị thông tin trong modal thanh toán
+//     document.getElementById('selectedPackageName').textContent = packageData.name;
+//     document.getElementById('selectedPackagePrice').textContent = formatCurrencyVND(price);
+
+//     // Mở modal thanh toán
+//     showModal('paymentModal');
+// }
+
+// // Format tiền tệ VNĐ
+// function formatCurrencyVND(amount) {
+//     return new Intl.NumberFormat('vi-VN', {
+//         style: 'currency',
+//         currency: 'VND'
+//     }).format(amount);
+// }
+
+// // Xử lý form thanh toán
+// document.addEventListener('DOMContentLoaded', function() {
+//     const paymentForm = document.getElementById('paymentForm');
+//     if (paymentForm) {
+//         paymentForm.addEventListener('submit', handlePayment);
+//     }
+// });
+
+// async function handlePayment(event) {
+//     event.preventDefault();
+
+//     const token = localStorage.getItem('token');
+//     if (!token) {
+//         alert('Vui lòng đăng nhập lại');
+//         closeModal('paymentModal');
+//         showLoginModal();
+//         return;
+//     }
+
+//     // Lấy thông tin gói đã chọn
+//     const packageData = JSON.parse(localStorage.getItem('selectedPackage') || '{}');
+//     if (!packageData.type) {
+//         alert('Không tìm thấy thông tin gói dịch vụ');
+//         return;
+//     }
+
+//     // Lấy phương thức thanh toán
+//     const formData = new FormData(event.target);
+//     const paymentMethod = formData.get('paymentMethod');
+
+//     const paymentWait = document.getElementById('paymentWait');
+//     const paymentMessage = document.getElementById('paymentMessage');
+
+//     paymentWait.style.display = 'block';
+//     paymentWait.style.color = 'blue';
+//     paymentWait.innerText = 'Đang xử lý thanh toán...';
+
+//     // Chuẩn bị dữ liệu gửi lên server
+//     const paymentData = {
+//         packageType: packageData.type,
+//         price: packageData.price,
+//         paymentMethod: paymentMethod,
+//         packageName: packageData.name
+//     };
+
+//     try {
+//         // Gọi API thanh toán (cần implement backend)
+//         const res = await gatewayFetch('/gateway/payment/subscribe', {
+//             method: 'POST',
+//             headers: {
+//                 'Authorization': `Bearer ${token}`,
+//                 'Content-Type': 'application/json',
+//                 'Accept': 'application/json'
+//             },
+//             credentials: 'include',
+//             body: JSON.stringify(paymentData)
+//         });
+
+//         const data = await res.json();
+
+//         if (!res.ok) {
+//             paymentWait.style.display = 'none';
+//             paymentMessage.style.display = 'block';
+//             paymentMessage.style.color = 'red';
+//             paymentMessage.innerText = data.message || 'Thanh toán thất bại';
+//         } else {
+//             paymentWait.style.display = 'none';
+//             paymentMessage.style.display = 'block';
+//             paymentMessage.style.color = 'green';
+//             paymentMessage.innerText = data.message || 'Thanh toán thành công!';
+
+//             // Xóa thông tin gói đã chọn
+//             localStorage.removeItem('selectedPackage');
+
+//             setTimeout(() => {
+//                 closeModal('paymentModal');
+//                 // Có thể chuyển đến trang tài khoản hoặc hiển thị thông báo
+//                 alert('Cảm ơn bạn đã đăng ký gói dịch vụ. Bạn có thể sử dụng dịch vụ ngay bây giờ!');
+//             }, 1500);
+//         }
+//     } catch (err) {
+//         console.error('Payment error:', err);
+//         paymentWait.style.display = 'none';
+//         paymentMessage.style.display = 'block';
+//         paymentMessage.style.color = 'red';
+//         paymentMessage.innerText = 'Lỗi kết nối. Vui lòng thử lại sau.';
+//     }
+// }
+
+async function getPackagesFromAPI() {
+    const token = localStorage.getItem('token');
+    const res = await gatewayFetch('/gateway/payment/loggoi', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    });
+    const data = await res.json();
+    console.log('Battery info:', data);
+
+    // Lấy container
+    const container = document.getElementById("packagesContainer");
+    container.innerHTML = ""; // xóa nội dung cũ
+
+    // Lặp qua từng gói
+    data.forEach(pkg => {
+        // Tạo khối HTML mẫu (giống cách bạn làm ở trên với nameEl...)
+        const card = document.createElement("div");
+        card.classList.add("package-card"); // class cho CSS
+
+        // Template gắn dữ liệu
+        //card.innerHTML = `
+        //    <h3>${pkg.tendichvu || '--'}</h3>
+        //    <p>${pkg.mota || '--'}</p>
+        //    <p><strong>Thời hạn:</strong> ${pkg.thoihan || '--'} tháng</p>
+        //    <p><strong>Số lần đổi pin:</strong> ${pkg.solandoipin || '--'}</p>
+        //    <p><strong>Phí:</strong> ${pkg.phi?.toLocaleString() || '--'}đ</p>
+        //    <button onclick="chonGoi(${pkg.id})" class="btn-choose">Chọn gói</button>
+        //`;
+
+
+        card.innerHTML = `
+            <div class="package-badge">${pkg.phobien ? "Phổ biến" : ""}</div>
+            <div class="package-header">
+                <h3>${pkg.tendichvu || "--"}</h3>
+                <div class="package-duration">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Thời gian: ${pkg.thoihan || "--"} tháng</span>
+                </div>
+                <div class="price">${(pkg.phi || 0).toLocaleString()}đ</div>
+            </div>
+            <div class="package-info">
+                <div class="info-item">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Số lần đổi: ${pkg.solandoipin === -1 ? "Không giới hạn" : pkg.solandoipin || "--"}</span>
+                </div>
+            </div>
+            <div class="package-description">
+                <p>${pkg.mota || "Không có mô tả"}</p>
+            </div>
+            <button class="btn" onclick="chonGoi(${pkg.id})">
+                Chọn gói
+            </button>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+
+
+    async function chonGoi(Idgoi) {
+        // Kiểm tra đăng nhập
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Vui lòng đăng nhập để chọn gói dịch vụ!');
+            showLoginModal();
+            return;
+        }
+
+        try {
+            // Lưu ID gói đã chọn vào localStorage
+            localStorage.setItem('selectedPackageId', Idgoi);
+            
+            // Chuyển hướng đến trang thanh toán
+            window.location.href = `payment.html?packageId=${Idgoi}`;
+        } catch (error) {
+            console.error('Error selecting package:', error);
+            alert('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+        }
+    }

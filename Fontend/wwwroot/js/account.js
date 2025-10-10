@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ensureAuthenticatedAndHydrate();
      checkUserVehicle(); // hàm này sẽ dc gọi khi load trang
     loadBookingHistory();
+    //getPackagesFromAPI();
     setupEventListeners();
     setupBatteryTypeUI();
 });
@@ -691,3 +692,7 @@ async function checkUserVehicle() {
         loadVehicles(); // Hiển thị empty state khi lỗi
     }
 }
+
+
+
+

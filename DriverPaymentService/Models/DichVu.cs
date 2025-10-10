@@ -15,5 +15,5 @@ public partial class DichVu
 
     public decimal Phi { get; set; }
 
-    public int? Solandoipin { get; set; }
+    public string? Solandoipin { get; set; }
 }

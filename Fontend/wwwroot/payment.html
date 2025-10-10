@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán - EV Battery Swap System</title>
+    <link rel="stylesheet" href="css/payment.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-battery-full"></i>
+                <span>EV Swap</span>
+            </div>
+            <div class="nav-title">
+                <h1>Thanh toán</h1>
+            </div>
+            <a href="index.html" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i>
+                Quay lại
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="payment-container">
+        <div class="payment-content">
+            <!-- Left Column - Payment Form -->
+            <div class="payment-left">
+                <!-- Thông tin người dùng -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <i class="fas fa-user-circle"></i>
+                        <h2>Thông tin người dùng</h2>
+                    </div>
+                    <div class="user-info-display" id="userInfoDisplay">
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-user"></i>
+                                <span>Họ và tên:</span>
+                            </div>
+                            <div class="info-value" id="userName">Đang tải...</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email:</span>
+                            </div>
+                            <div class="info-value" id="userEmail">Đang tải...</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-phone"></i>
+                                <span>Số điện thoại:</span>
+                            </div>
+                            <div class="info-value" id="userPhone">Đang tải...</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-birthday-cake"></i>
+                                <span>Tuổi:</span>
+                            </div>
+                            <div class="info-value" id="userAge">Đang tải...</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-venus-mars"></i>
+                                <span>Giới tính:</span>
+                            </div>
+                            <div class="info-value" id="userGender">Đang tải...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phương thức thanh toán -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <i class="fas fa-wallet"></i>
+                        <h2>Phương thức thanh toán</h2>
+                    </div>
+                    <form id="paymentForm">
+                        <div class="payment-methods">
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="card" checked>
+                                <div class="method-content">
+                                    <div class="method-icon">
+                                        <i class="fas fa-credit-card"></i>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">Thẻ tín dụng/Ghi nợ</div>
+                                        <div class="method-desc">Visa, Mastercard, JCB</div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="momo">
+                                <div class="method-content">
+                                    <div class="method-icon momo">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">Ví MoMo</div>
+                                        <div class="method-desc">Thanh toán qua ví điện tử MoMo</div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="banking">
+                                <div class="method-content">
+                                    <div class="method-icon banking">
+                                        <i class="fas fa-university"></i>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">Chuyển khoản ngân hàng</div>
+                                        <div class="method-desc">Internet Banking, ATM</div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="zalopay">
+                                <div class="method-content">
+                                    <div class="method-icon zalopay">
+                                        <i class="fas fa-mobile-screen"></i>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">ZaloPay</div>
+                                        <div class="method-desc">Thanh toán qua ví ZaloPay</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Ghi chú -->
+                        <!--<div class="form-group">
+                            <label for="paymentNote">
+                                <i class="fas fa-sticky-note"></i>
+                                Ghi chú (tùy chọn)
+                            </label>
+                            <textarea id="paymentNote" rows="3" placeholder="Nhập ghi chú cho đơn hàng của bạn..."></textarea>
+                        </div>-->
+
+                        <!-- Điều khoản -->
+                        <!--<div class="terms-agreement">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="agreeTerms" required>
+                                <span class="checkmark"></span>
+                                <span class="checkbox-label">
+                                    Tôi đồng ý với 
+                                    <a href="#" target="_blank">Điều khoản sử dụng</a> và 
+                                    <a href="#" target="_blank">Chính sách bảo mật</a>
+                                </span>
+                            </label>
+                        </div>-->
+
+                        <!-- Messages -->
+                        <div id="paymentMessage" class="alert-message" style="display:none;"></div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary btn-large" id="submitPaymentBtn">
+                            <i class="fas fa-lock"></i>
+                            Xác nhận thanh toán
+                        </button>
+
+                        <div class="security-note">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Giao dịch được bảo mật với SSL 256-bit</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column - Order Summary -->
+            <div class="payment-right">
+                <div class="order-summary">
+                    <div class="summary-header">
+                        <i class="fas fa-receipt"></i>
+                        <h2>Chi tiết đơn hàng</h2>
+                    </div>
+
+                    <!-- Thông tin gói dịch vụ -->
+                    <div class="package-details" id="packageDetails">
+                        <div class="package-image">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <div class="package-info-summary">
+                            <h3 id="packageName">Đang tải...</h3>
+                            <div class="package-features">
+                                <div class="feature-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span id="packageDuration">-- tháng</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span id="packageSwaps">-- lần đổi</span>
+                                </div>
+                            </div>
+                            <div class="package-description" id="packageDescription">
+                                Đang tải mô tả...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <!-- Bảng giá -->
+                    <!--<div class="price-breakdown">
+                        <div class="price-row">
+                            <span class="price-label">Giá gói dịch vụ:</span>
+                            <span class="price-value" id="packagePrice">0đ</span>
+                        </div>
+                        <div class="price-row">
+                            <span class="price-label">Thuế VAT (10%):</span>
+                            <span class="price-value" id="vatAmount">0đ</span>
+                        </div>-->
+                        <!--<div class="price-row discount">
+                            <span class="price-label">
+                                <i class="fas fa-tag"></i>
+                                Giảm giá:
+                            </span>
+                            <span class="price-value" id="discountAmount">-0đ</span>
+                        </div>-->
+                    <!--</div>-->
+
+                    <div class="summary-divider"></div>
+
+                    <!-- Tổng cộng -->
+                    <div class="total-price">
+                        <span class="total-label">Tổng thanh toán:</span>
+                        <span class="total-value" id="packagePrice">0đ</span>
+                    </div>
+
+                    <!-- Mã giảm giá -->
+                    <!--<div class="coupon-section">
+                        <div class="coupon-input-group">
+                            <input type="text" id="couponCode" placeholder="Nhập mã giảm giá">
+                            <button type="button" class="btn btn-outline btn-small" onclick="applyCoupon()">
+                                Áp dụng
+                            </button>
+                        </div>
+                        <div id="couponMessage" class="coupon-message" style="display:none;"></div>
+                    </div>-->
+
+                    <!-- Thông tin thanh toán -->
+                    <div class="payment-info">
+                        <div class="info-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Thanh toán an toàn & bảo mật</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-undo"></i>
+                            <span>Hoàn tiền trong 7 ngày nếu chưa sử dụng</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-headset"></i>
+                            <span>Hỗ trợ 24/7</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 EV Swap. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+    <script src="js/payment.js"></script>
+</body>
+</html>
+

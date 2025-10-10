@@ -17,7 +17,7 @@ public partial class DangKyDichVu
 
     public string? Trangthai { get; set; }
 
-    public int? Solandoipin { get; set; }
+    public string? Solandoipin { get; set; }
 
     public string? Phuongthucthanhtoan { get; set; }
 

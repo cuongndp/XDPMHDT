@@ -1,6 +1,8 @@
 ﻿using DriverPaymentService.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace DriverPaymentService.Controllers
 {
@@ -13,12 +15,53 @@ namespace DriverPaymentService.Controllers
         {
             _context = context;
         }
-        [HttpGet]
-        public IActionResult GetUsers()
+
+
+
+        //[Authorize("driver")]
+        [HttpGet("loggoi")]
+        public async Task<IActionResult> GetLogGoi()
         {
-            var users = _context.HoaDons.ToList();
-            return Ok(users);
+            var loggoi = await _context.DichVus.ToListAsync();
+            return Ok(loggoi);
         }
 
+
+        [Authorize("driver")]
+        [HttpGet("loggoiid/{id}")]
+        public async Task<IActionResult> Getloggoiid(int id)
+        {
+            var loggoi = await _context.DichVus.FindAsync(id);
+            if (loggoi == null)
+            {
+                return BadRequest();
+            }
+            return Ok(loggoi);
+        }
+
+        //[Authorize("driver")]
+        [HttpGet("paymentgetgoi/{id}")]
+        public async Task<IActionResult> Goidichvu(int id)
+        {
+            var loggoi = await _context.DichVus.FirstOrDefaultAsync(i=>i.Id==id);
+            if (loggoi == null)
+            {
+                return BadRequest(new {message ="Gói bạn đang load không tồn tại" });
+            }
+            else
+            {
+                var dichvu = new DichVu
+                {
+                        Id = loggoi.Id,
+                        Tendichvu = loggoi.Tendichvu,
+                        Mota = loggoi.Mota,
+                        Thoihan = loggoi.Thoihan,
+                        Phi = loggoi.Phi,
+                        Solandoipin = loggoi.Solandoipin
+                };
+                return Ok(dichvu);
+            }    
+                
+        }
     }
 }

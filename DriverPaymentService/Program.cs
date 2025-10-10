@@ -44,8 +44,8 @@ builder.Services.AddAuthentication(options =>
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
 
-            ValidIssuer = "DriveService",     // phải trùng với issuer ở DriverService
-            ValidAudience = "ApiGateway",     // phải trùng với audience lúc phát token
+            ValidIssuer = "ApiGateway",     // phải trùng với issuer ở DriverService
+            ValidAudience = "DriveService",     // phải trùng với audience lúc phát token
             IssuerSigningKey = new SymmetricSecurityKey(key),
             NameClaimType = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.UniqueName,
             RoleClaimType = "role",

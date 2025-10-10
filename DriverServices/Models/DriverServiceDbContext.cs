@@ -29,6 +29,8 @@ public partial class DriverServiceDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresExtension("pg_catalog", "pg_cron");
+
         modelBuilder.Entity<Booking>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("booking_pkey");
@@ -71,7 +73,9 @@ public partial class DriverServiceDbContext : DbContext
             entity.Property(e => e.Phuongthucthanhtoan)
                 .HasMaxLength(50)
                 .HasColumnName("phuongthucthanhtoan");
-            entity.Property(e => e.Solandoipin).HasColumnName("solandoipin");
+            entity.Property(e => e.Solandoipin)
+                .HasMaxLength(100)
+                .HasColumnName("solandoipin");
             entity.Property(e => e.Trangthai)
                 .HasMaxLength(20)
                 .HasColumnName("trangthai");
@@ -134,6 +138,8 @@ public partial class DriverServiceDbContext : DbContext
                 .HasColumnName("role");
             entity.Property(e => e.SoDienThoai).HasMaxLength(15);
         });
+        modelBuilder.HasSequence("jobid_seq", "cron");
+        modelBuilder.HasSequence("runid_seq", "cron");
 
         OnModelCreatingPartial(modelBuilder);
     }
