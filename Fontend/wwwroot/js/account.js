@@ -23,15 +23,6 @@ let bookingHistory = [
     }
 ];
 
-// Initialize account page
-document.addEventListener('DOMContentLoaded', function() {
-    ensureAuthenticatedAndHydrate();
-     checkUserVehicle(); // hàm này sẽ dc gọi khi load trang
-    loadBookingHistory();
-    //getPackagesFromAPI();
-    setupEventListeners();
-    setupBatteryTypeUI();
-});
 
 function ensureAuthenticatedAndHydrate() {
     const token = localStorage.getItem('token');
@@ -696,3 +687,133 @@ async function checkUserVehicle() {
 
 
 
+    async function checkUserDV() {
+        const token = localStorage.getItem('token');
+        console.log('Hàm checkUserDV đang chạy...');
+
+        try {
+
+            const res = await gatewayFetch('/gateway/driver/logdichvu', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            const data = await res.json();
+            console.log('dịch vụ:', data);
+
+
+            if (res.ok) {
+                const res2 = await gatewayFetch(`/gateway/payment/logdichvu/${data.iddichvu}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+
+                });
+                const data2 = await res2.json();
+                console.log('tên dịch vụ:', data2);
+                if (!res2.ok) {
+                    console.log('gọi tên dịch vụ trong db payment dichvu lỗi');
+
+                    return;
+                }
+
+
+
+                //  ngaydangky ngayketthuc solandoipin trong bảng driver 
+
+                //gắn dô html
+                const daydkEl = document.getElementById("ngayDK");
+                if (daydkEl) {
+                    daydkEl.innerText = data.ngaydangky || '--';
+                }
+                const dayktEl = document.getElementById("ngayKT");
+                if (dayktEl) {
+                    dayktEl.innerText = data.ngayketthuc || '--';
+                }
+                const today = new Date();
+                const endDate = new Date(data.ngayketthuc);
+                if (endDate < today) {
+                    //hết hạn
+                    dayktEl.style.color = "red";
+                    dayktEl.style.fontWeight = "bold";
+                }
+                else {
+                    //còn hạn
+                    dayktEl.style.color = "green";
+                    dayktEl.style.fontWeight = "bold";
+                }
+                const solandoi = document.getElementById("solandoi");
+                if (solandoi) {
+                    solandoi.innerText = data.solandoipin || '--';
+                }
+
+                //thông tin cần lấy tendichvu mota phi  trong bảng dichvu của payment 
+                const nameDVEl = document.getElementById("tendv");
+                if (nameDVEl) {
+                    nameDVEl.innerText = data2.tendichvu || '--';
+                }
+                const motaEl = document.getElementById("mota");
+                if (motaEl) {
+                    motaEl.innerText = data2.mota || '--';
+                }
+                const phiEl = document.getElementById("phi");
+                if (phiEl) {
+                    phiEl.innerText = data2.phi || '--';
+                }
+
+
+                document.getElementById("dvdk").style.display = "block";
+                document.getElementById("emptyServices").style.display = "none";
+            }
+             else {
+                    document.getElementById("dvdk").style.display = "none";
+                    document.getElementById("emptyServices").style.display = "block";
+             }
+
+
+                //// Hiển thị phần thông tin xe
+                //const linkedDisplay = document.getElementById("dvdk");
+                //if (linkedDisplay) {
+                //    linkedDisplay.style.display = 'block';
+                //    console.log('Showing vehicle info');
+                //}
+
+                //// Ẩn phần empty state
+                //const vehiclesList = document.getElementById("emptyServices");
+                //if (vehiclesList) {
+                //    vehiclesList.style.display = 'none';
+                //}
+
+                //// Ẩn nút thêm xe
+                //const addBtn = document.getElementById("addVehicleBtn");
+                //if (addBtn) {
+                //    addBtn.style.display = 'none';
+                //}
+
+            
+        } catch (err) {
+            console.error('Error checking vehicle:', err);
+            loadVehicles(); // Hiển thị empty state khi lỗi
+        }
+    }
+    
+
+
+
+// Initialize account page
+document.addEventListener('DOMContentLoaded', function () {
+    ensureAuthenticatedAndHydrate();
+    checkUserVehicle(); // hàm này sẽ dc gọi khi load trang
+    loadBookingHistory();
+    checkUserDV();
+    //getPackagesFromAPI();
+    setupEventListeners();
+    setupBatteryTypeUI();
+});

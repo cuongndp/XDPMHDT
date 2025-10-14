@@ -11,7 +11,9 @@ public partial class Kho
 
     public int? Soluong { get; set; }
 
+    public int? Idtram { get; set; }
+
     public virtual LoaiPin IdloaipinNavigation { get; set; } = null!;
 
-    public virtual ICollection<TramDoiPin> TramDoiPins { get; set; } = new List<TramDoiPin>();
+    public virtual TramDoiPin? IdtramNavigation { get; set; }
 }

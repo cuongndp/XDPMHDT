@@ -35,6 +35,7 @@ public partial class StationServiceContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Idloaipin).HasColumnName("idloaipin");
+            entity.Property(e => e.Idtram).HasColumnName("idtram");
             entity.Property(e => e.Soluong)
                 .HasDefaultValue(0)
                 .HasColumnName("soluong");
@@ -42,6 +43,11 @@ public partial class StationServiceContext : DbContext
             entity.HasOne(d => d.IdloaipinNavigation).WithMany(p => p.Khos)
                 .HasForeignKey(d => d.Idloaipin)
                 .HasConstraintName("kho_idloaipin_fkey");
+
+            entity.HasOne(d => d.IdtramNavigation).WithMany(p => p.Khos)
+                .HasForeignKey(d => d.Idtram)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_kho_tram");
         });
 
         modelBuilder.Entity<LoaiPin>(entity =>
@@ -65,28 +71,23 @@ public partial class StationServiceContext : DbContext
 
             entity.ToTable("tram_doi_pin");
 
+            entity.HasIndex(e => new { e.Latitude, e.Longitude }, "unique_kinhvi").IsUnique();
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Diachi).HasColumnName("diachi");
             entity.Property(e => e.Giodongcua).HasColumnName("giodongcua");
             entity.Property(e => e.Giomocua).HasColumnName("giomocua");
-            entity.Property(e => e.Idkho).HasColumnName("idkho");
+            entity.Property(e => e.Latitude).HasColumnName("latitude");
+            entity.Property(e => e.Longitude).HasColumnName("longitude");
             entity.Property(e => e.Sodienthoaitd)
                 .HasMaxLength(15)
                 .HasColumnName("sodienthoaitd");
-            entity.Property(e => e.Tenloaipin)
-                .HasMaxLength(100)
-                .HasColumnName("tenloaipin");
             entity.Property(e => e.Tentram)
                 .HasMaxLength(100)
                 .HasColumnName("tentram");
             entity.Property(e => e.Trangthai)
                 .HasMaxLength(20)
                 .HasColumnName("trangthai");
-
-            entity.HasOne(d => d.IdkhoNavigation).WithMany(p => p.TramDoiPins)
-                .HasForeignKey(d => d.Idkho)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("tram_doi_pin_idkho_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

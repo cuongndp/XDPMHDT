@@ -997,3 +997,68 @@ function formatCurrencyVND(amount) {
             SolandoipinEl.textContent = data.solandoipin === -1 ? "Không giới hạn" : (data.solandoipin || "--");
         }
     }
+
+
+
+
+let autocomplete;
+let selectedLatLng = null; // lưu kinh độ và vĩ độ
+
+async function initAutocomplete() {
+    // Tạo autocomplete
+    const input = document.getElementById('locationInput');
+
+    // Dùng PlaceAutocompleteElement
+    autocomplete = new google.maps.places.Autocomplete(input, {
+        types: ['geocode'],  // chỉ địa chỉ
+        componentRestrictions: { country: 'vn' } // chỉ Việt Nam
+    });
+
+    // Khi người dùng chọn địa chỉ
+    autocomplete.addListener('place_changed', async function () {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) {
+            alert("Địa chỉ không hợp lệ!");
+            selectedLatLng = null;
+            return;
+        }
+        selectedLatLng = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+        };
+        console.log("Địa chỉ:", place.formatted_address);
+        console.log("Kinh độ, vĩ độ:", selectedLatLng);
+
+
+        const token = localStorage.getItem('token');
+        console.log("Token hiện tại:", token);
+        const res = await gatewayFetch(`/gateway/station/map/${selectedLatLng.lat}/${selectedLatLng.lng}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+
+
+        });
+        const data = res.json();
+        console.log("Battery info:", data);
+
+
+
+    });
+    
+    
+
+}
+
+// Khi nhấn nút tìm kiếm
+document.getElementById('btnSearch').addEventListener('click', function () {
+    if (!selectedLatLng) {
+        alert("Vui lòng chọn địa chỉ hợp lệ từ gợi ý!");
+        return;
+    }
+    console.log("Gọi API với kinh độ, vĩ độ:", selectedLatLng);
+    // TODO: Gọi API của bạn ở đây
+});

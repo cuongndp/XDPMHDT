@@ -63,5 +63,24 @@ namespace DriverPaymentService.Controllers
             }    
                 
         }
+        [Authorize("driver")]
+        [HttpGet("logdichvu/{id}")]
+        public async Task<IActionResult> GetLogDichVu(int id)
+        {
+            var logdichvu = await _context.DichVus
+                .Where(d => d.Id == id)
+                .Select(selector: d => new
+                {
+                    d.Tendichvu,
+                    d.Mota,
+                    d.Phi,
+                }).FirstOrDefaultAsync();
+            if (logdichvu == null)
+            {
+                return BadRequest();
+            }
+            else
+                return Ok(logdichvu);
+        }
     }
 }

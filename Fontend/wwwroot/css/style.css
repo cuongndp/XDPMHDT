@@ -553,13 +553,17 @@ body {
     position: relative;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #374151;
-    font-size: 14px;
-}
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+        border: none !important; /* tắt border */
+        outline: none !important; /* tắt outline nếu focusable */
+        background: transparent !important; /* trong suốt */
+        box-shadow: none !important;
+    }
 
 .form-group input,
 .form-group select {

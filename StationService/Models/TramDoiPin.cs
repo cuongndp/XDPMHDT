@@ -19,9 +19,9 @@ public partial class TramDoiPin
 
     public string? Trangthai { get; set; }
 
-    public string? Tenloaipin { get; set; }
+    public double? Latitude { get; set; }
 
-    public int? Idkho { get; set; }
+    public double? Longitude { get; set; }
 
-    public virtual Kho? IdkhoNavigation { get; set; }
+    public virtual ICollection<Kho> Khos { get; set; } = new List<Kho>();
 }

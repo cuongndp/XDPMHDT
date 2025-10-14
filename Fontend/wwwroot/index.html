@@ -126,7 +126,7 @@
                 <div class="search-box">
                     <i class="fas fa-search"></i>
                     <input type="text" id="locationInput" placeholder="Nhập địa chỉ hoặc vị trí hiện tại">
-                    <button class="btn btn-primary" onclick="searchStations()">Tìm kiếm</button>
+                    <button class="btn btn-primary" id="btnSearch">Tìm kiếm</button>
                 </div>
             </div>
             <div class="station-filters">
@@ -145,11 +145,10 @@
     <section id="packages" class="packages">
         <div class="container">
             <h2 class="section-title">Gói thuê pin</h2>
-            
+
             <!-- Container để render các gói từ API -->
             <div class="packages-grid" id="packagesContainer">
                 <!-- TEMPLATE MẪU - XÓA HOẶC THAY THẾ KHI DÙNG API -->
-                
                 <!-- Gói 1: Gói featured (phổ biến) -->
                 <!--<div class="package-card featured">
                     <div class="package-badge">Phổ biến</div>
@@ -174,7 +173,6 @@
                         Chọn gói
                     </button>
                 </div>-->
-
                 <!-- Gói 2: Gói thường -->
                 <!--<div class="package-card">
                     <div class="package-header">
@@ -198,16 +196,15 @@
                         Chọn gói
                     </button>
                 </div>-->
-                
                 <!-- KẾT THÚC TEMPLATE MẪU -->
             </div>
-            
+
             <!-- Hiển thị khi đang load hoặc không có gói nào -->
             <div class="empty-state" id="packagesLoading" style="display: none;">
                 <i class="fas fa-spinner fa-spin"></i>
                 <h3>Đang tải gói dịch vụ...</h3>
             </div>
-            
+
             <div class="empty-state" id="packagesEmpty" style="display: none;">
                 <i class="fas fa-box-open"></i>
                 <h3>Chưa có gói dịch vụ nào</h3>
@@ -389,13 +386,13 @@
             <div class="modal-body">
                 <h3>1. Điều khoản chung</h3>
                 <p>Bằng việc sử dụng dịch vụ EV Swap, bạn đồng ý tuân thủ các điều khoản và điều kiện sau đây.</p>
-                
+
                 <h3>2. Quyền và nghĩa vụ của người dùng</h3>
                 <p>Người dùng có quyền sử dụng dịch vụ đổi pin theo quy định và có nghĩa vụ thanh toán đầy đủ các khoản phí dịch vụ.</p>
-                
+
                 <h3>3. Bảo mật thông tin</h3>
                 <p>Chúng tôi cam kết bảo mật thông tin cá nhân của người dùng theo quy định pháp luật.</p>
-                
+
                 <h3>4. Liên hệ</h3>
                 <p>Mọi thắc mắc vui lòng liên hệ: support@evswap.vn</p>
             </div>
@@ -411,13 +408,13 @@
             <div class="modal-body">
                 <h3>1. Thu thập thông tin</h3>
                 <p>Chúng tôi thu thập thông tin cá nhân cần thiết để cung cấp dịch vụ đổi pin xe điện.</p>
-                
+
                 <h3>2. Sử dụng thông tin</h3>
                 <p>Thông tin được sử dụng để xác thực danh tính, cung cấp dịch vụ và cải thiện trải nghiệm người dùng.</p>
-                
+
                 <h3>3. Bảo vệ thông tin</h3>
                 <p>Chúng tôi áp dụng các biện pháp bảo mật tiên tiến để bảo vệ thông tin cá nhân của bạn.</p>
-                
+
                 <h3>4. Chia sẻ thông tin</h3>
                 <p>Chúng tôi không chia sẻ thông tin cá nhân với bên thứ ba mà không có sự đồng ý của bạn.</p>
             </div>
@@ -489,7 +486,7 @@
 
                 <div class="form-footer">
                     <p style="text-align: center; color: #64748b;">
-                        <i class="fas fa-shield-alt"></i> 
+                        <i class="fas fa-shield-alt"></i>
                         Giao dịch được bảo mật với SSL 256-bit
                     </p>
                 </div>
@@ -535,26 +532,9 @@
             </div>
         </div>
     </footer>
-    <!-- <ul id="payment"></ul> -->
-    <!--<script src="js/script.js?v=20251004-1"></script>-->
     <script src="js/script.js"></script>
-    <!--<script>
-        // gọi API PaymentService qua gateway hoặc trực tiếp
-        fetch("https://localhost:5000/gateway/payment")
-            .then(res => res.json())
-            .then(data => {
-                console.log("API trả về:", data); // để check
-                let list = document.getElementById("payment");
-
-
-                list.innerHTML = "";
-                data.forEach(p => {
-                    let li = document.createElement("li");
-                    li.textContent = `Id: ${p.idUser}, Chi phí: ${p.chiPhi}, Ngày đổi pin: ${p.ngayDoiPin}`;
-                    list.appendChild(li);
-                });
-            })
-            .catch(err => console.error("Lỗi:", err));
-    </script>-->
+    
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhKLQftgIywgKiCq1As-6fWeo9bPiIjYY&libraries=places&callback=initAutocomplete" async defer></script>
+   
 </body>
 </html>

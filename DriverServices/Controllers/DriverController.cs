@@ -286,5 +286,26 @@ namespace DriverServices.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+
+        [Authorize("driver")]
+        [HttpGet("logdichvu")]
+        public async Task<IActionResult> GetLogDichVu()
+        {
+            var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            int iduser = int.Parse(userId);
+            var logdichvu = await _context.DangKyDichVus
+                .Where(p => p.Iduser == iduser)
+                .Select(p=> new {
+                    p.Iddichvu,
+                    p.Ngaydangky,
+                    p.Ngayketthuc,
+                    p.Solandoipin,
+                }).FirstOrDefaultAsync();
+            if (logdichvu == null)
+                return BadRequest();
+            else
+                return Ok(logdichvu);
+        }
     }
 }

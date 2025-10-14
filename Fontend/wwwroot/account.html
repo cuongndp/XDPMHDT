@@ -123,37 +123,9 @@
                     </div>
                     <div class="card-content">
                         <div class="services-list" id="servicesList">
-                            <!-- Services will be loaded here via JS -->
-                            <!-- Example structure for reference:
-                            <div class="service-item">
-                                <div class="service-badge active">
-                                    <i class="fas fa-check-circle"></i>
-                                    Đang hoạt động
-                                </div>
-                                <div class="service-info">
-                                    <div class="service-header">
-                                        <h3>Gói Tiêu Chuẩn</h3>
-                                        <span class="service-price">799,000đ</span>
-                                    </div>
-                                    <div class="service-details">
-                                        <div class="detail-row">
-                                            <i class="fas fa-calendar-check"></i>
-                                            <span>Thời hạn: 3 tháng</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <i class="fas fa-calendar-times"></i>
-                                            <span>Hết hạn: 20/03/2024</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <i class="fas fa-sync-alt"></i>
-                                            <span>Số lần đổi: Không giới hạn</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            -->
+
                         </div>
-                        
+
                         <!-- Empty state khi chưa có dịch vụ -->
                         <div class="empty-state" id="emptyServices">
                             <i class="fas fa-box-open"></i>
@@ -163,6 +135,24 @@
                                 <i class="fas fa-shopping-cart"></i> Xem gói dịch vụ
                             </a>
                         </div>
+
+
+                        <!-- Empty state khi có dịch vụ -->
+                        <div id="dvdk" style="display: none;">
+                            <div class="vehicle-item">
+                                <div class="vehicle-info">
+                                    <!--<h3 id="driverName">--</h3>-->
+                                    <p><i class="fas fa-gift"></i> Gói dịch vụ: <span id="tendv">--</span></p>
+                                    <p><i class="fas fa-sync-alt"></i> Số lần đổi pin: <span id="solandoi">--</span></p>
+                                    <p><i class="fas fa-calendar-plus"></i> Ngày đăng ký: <span id="ngayDK">--</span> ngày</p>
+                                    <p><i class="fas fa-calendar-times"></i> Ngày hết hạn: <span id="ngayKT">--</span> ngày</p>
+                                    <p><i class="fas fa-info-circle"></i> Mô tả: <span id="mota">--</span> </p>
+                                    <p><i class="fas fa-money-bill-wave"></i> Phí: <span id="phi">--</span> VND</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+
                     </div>
                 </div>
 
