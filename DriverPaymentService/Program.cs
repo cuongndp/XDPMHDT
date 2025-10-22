@@ -55,9 +55,21 @@ builder.Services.AddAuthentication(options =>
         {
             OnMessageReceived = context =>
             {
-                if (context.Request.Cookies.ContainsKey("access_token"))
+                // 1. Ưu tiên đọc từ Authorization Header (Bearer token)
+                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+                {
+                    context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                }
+                // 2. Nếu không có header, đọc từ cookie access_token (cho driver)
+                else if (context.Request.Cookies.ContainsKey("access_token"))
                 {
                     context.Token = context.Request.Cookies["access_token"];
+                }
+                // 3. Nếu không có, đọc từ cookie staff_token (cho staff)
+                else if (context.Request.Cookies.ContainsKey("staff_token"))
+                {
+                    context.Token = context.Request.Cookies["staff_token"];
                 }
                 return Task.CompletedTask;
             }
@@ -71,6 +83,11 @@ builder.Services
     {
         policy.RequireAuthenticatedUser();
         policy.RequireRole("driver"); // trùng giá trị claim "role" trong JWT
+    })
+    .AddPolicy("staff", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("staff"); // policy cho nhân viên
     });
 
 var app = builder.Build();

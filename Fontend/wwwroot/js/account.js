@@ -3,26 +3,9 @@
 // Sample vehicle data - chỉ cho phép 1 xe
 let vehicles = [];
 
-// Sample booking history
-let bookingHistory = [
-    {
-        id: 1,
-        stationName: 'Trạm đổi pin Quận 1',
-        date: '2024-01-20',
-        time: '14:30',
-        cost: 50000,
-        status: 'success'
-    },
-    {
-        id: 2,
-        stationName: 'Trạm đổi pin Quận 2',
-        date: '2024-01-18',
-        time: '10:15',
-        cost: 50000,
-        status: 'success'
-    }
-];
-
+// Lịch sử booking - sẽ load từ API
+let bookingHistory = [];
+let tramdoipin = null; // Mã trạm đổi pin giả định
 
 function ensureAuthenticatedAndHydrate() {
     const token = localStorage.getItem('token');
@@ -162,32 +145,110 @@ function loadVehicles() {
     }
 }
 
-// Load booking history
-function loadBookingHistory() {
+// Load booking history từ API
+async function loadBookingHistory() {
     const historyList = document.querySelector('.history-list');
     if (!historyList) return;
     
-    if (bookingHistory.length === 0) {
+    const token = localStorage.getItem('token');
+    if (!token) {
         historyList.innerHTML = `
             <div class="empty-state">
-                <i class="fas fa-history"></i>
-                <h3>Chưa có lịch sử đổi pin</h3>
-                <p>Lịch sử đổi pin của bạn sẽ hiển thị ở đây</p>
+                <i class="fas fa-sign-in-alt"></i>
+                <h3>Vui lòng đăng nhập</h3>
+                <p>Đăng nhập để xem lịch sử đổi pin</p>
             </div>
         `;
         return;
     }
     
-    historyList.innerHTML = bookingHistory.map(booking => `
-        <div class="history-item">
-            <div class="history-info">
-                <h4>${booking.stationName}</h4>
-                <p><i class="fas fa-calendar"></i> ${formatDate(booking.date)} - ${booking.time}</p>
-                <p><i class="fas fa-money-bill"></i> ${formatCurrency(booking.cost)}</p>
+    try {
+        const res = await gatewayFetch('/gateway/driver/mybookings', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            console.error('Không thể tải lịch sử booking');
+            historyList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Không thể tải lịch sử</h3>
+                    <p>Vui lòng thử lại sau</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const data = await res.json();
+        console.log('Lịch sử booking:', data);
+        bookingHistory = data;
+        
+        if (bookingHistory.length === 0) {
+            historyList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <h3>Chưa có lịch sử đổi pin</h3>
+                    <p>Lịch sử đổi pin của bạn sẽ hiển thị ở đây</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Render lịch sử với dữ liệu THẬT từ database
+        historyList.innerHTML = bookingHistory.map(booking => `
+            <div class="history-item">
+                <div class="history-info">
+                    <h4>
+                        <i class="fas fa-map-marker-alt"></i> 
+                        Trạm ID: ${booking.idtram || 'N/A'}
+                    </h4>
+                    <p><i class="fas fa-calendar"></i> ${formatDate(booking.ngayhen)} - ${formatTime(booking.giohen)}</p>
+                    <p><i class="fas fa-money-bill"></i> ${formatCurrency(booking.chiphi || 0)}</p>
+                    <p><i class="fas fa-info-circle"></i> Thanh toán: ${booking.trangthaithanhtoan || 'N/A'}</p>
+                    ${booking.phuongthucthanhtoan ? `<p><i class="fas fa-credit-card"></i> ${booking.phuongthucthanhtoan}</p>` : ''}
+                </div>
+                <div class="history-actions">
+                    <span class="status ${getStatusClass(booking.trangthai)}">${booking.trangthai}</span>
+                    ${booking.trangthai === 'Hoàn thành' && booking.trangthaithanhtoan === 'Đã thanh toán' ? 
+                        `<button class="btn btn-primary btn-small" onclick="viewInvoice(${booking.id})">
+                            <i class="fas fa-file-invoice"></i> Xem hóa đơn
+                        </button>` : ''}
+                </div>
             </div>
-            <span class="status ${booking.status}">${getStatusText(booking.status)}</span>
-        </div>
-    `).join('');
+        `).join('');
+        
+    } catch (error) {
+        console.error('Lỗi khi load booking history:', error);
+        historyList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Lỗi kết nối</h3>
+                <p>Không thể tải lịch sử đổi pin</p>
+            </div>
+        `;
+    }
+}
+
+// Format time từ TimeOnly
+function formatTime(timeString) {
+    if (!timeString) return '';
+    return timeString.substring(0, 5); // HH:mm
+}
+
+// Get status class
+function getStatusClass(status) {
+    const classMap = {
+        'Hoàn thành': 'success',
+        'Đang xử lý': 'pending',
+        'Đã đặt': 'pending',
+        'Đã hủy': 'cancelled'
+    };
+    return classMap[status] || 'pending';
 }
 
 // Show add vehicle modal
@@ -305,8 +366,155 @@ function editPersonalInfo() {
 
 // View all history
 function viewAllHistory() {
-    // Sẽ được implement khi có API backend
-    console.log('View all history');
+    // Scroll đến phần lịch sử
+    document.querySelector('.info-card:last-of-type').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Xem hóa đơn
+async function viewInvoice(bookingId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Vui lòng đăng nhập để xem hóa đơn');
+        return;
+    }
+    
+    try {
+        // Gọi API lấy hóa đơn từ PaymentService
+        const res = await gatewayFetch(`/gateway/payment/hoadon/booking/${bookingId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            if (res.status === 404) {
+                alert('Chưa có hóa đơn cho lần đổi pin này');
+            } else {
+                alert('Không thể tải hóa đơn. Vui lòng thử lại sau.');
+            }
+            return;
+        }
+        
+        const invoice = await res.json();
+        console.log('Hóa đơn:', invoice);
+        
+        // Hiển thị modal hóa đơn
+        showInvoiceModal(invoice, bookingId);
+        
+    } catch (error) {
+        console.error('Lỗi khi load hóa đơn:', error);
+        alert('Lỗi kết nối. Không thể tải hóa đơn.');
+    }
+}
+  
+
+async function getTenTram(idTram) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:5000/gateway/station/hoadon/${idTram}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Không thể lấy thông tin trạm');
+        const tenTram = await response.text();
+        return tenTram || 'Không xác định';
+    } catch (error) {
+        console.error('Lỗi khi lấy tên trạm:', error);
+        return 'Không xác định';
+    }
+}
+
+
+// Hiển thị modal hóa đơn
+async function showInvoiceModal(invoice, bookingId) {
+    const booking = bookingHistory.find(b => b.id === bookingId);
+    
+    const modal = document.getElementById('invoiceModal');
+    if (!modal) {
+        createInvoiceModal();
+        return showInvoiceModal(invoice, bookingId);
+    }
+
+
+    const tenTram = await getTenTram(invoice.idtramdoipin);
+    console.log('Tên trạm đổi pin:', tenTram);
+
+
+
+    const invoiceContent = document.getElementById('invoiceContent');
+    if (invoiceContent) {
+        invoiceContent.innerHTML = `
+            <div class="invoice-header">
+                <h2><i class="fas fa-file-invoice"></i> HÓA ĐƠN ĐỔI PIN</h2>
+                <p class="invoice-number">Số hóa đơn: #${invoice.id}</p>
+            </div>
+            <div class="invoice-body">
+                <div class="invoice-row">
+                    <span class="label">Mã booking:</span>
+                    <span class="value">#${invoice.idbooking}</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="label">Ngày đổi pin:</span>
+                    <span class="value">${formatDate(invoice.ngaydoipin)}</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="label">Trạm đổi pin:</span>
+                    <span class="value">Trạm ID: ${tenTram || 'N/A'}</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="label">Loại pin:</span>
+                    <span class="value">Pin ${invoice.idloaipin}kWh</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="label">Phương thức thanh toán:</span>
+                    <span class="value">${booking?.phuongthucthanhtoan || 'N/A'}</span>
+                </div>
+                <div class="invoice-divider"></div>
+                <div class="invoice-row invoice-total">
+                    <span class="label">Tổng tiền:</span>
+                    <span class="value">${formatCurrency(invoice.chiphi)}</span>
+                </div>
+            </div>
+            <div class="invoice-footer">
+                <p><i class="fas fa-check-circle"></i> Đã thanh toán</p>
+                <button class="btn btn-outline" onclick="printInvoice()">
+                    <i class="fas fa-print"></i> In hóa đơn
+                </button>
+            </div>
+        `;
+    }
+    
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+// Tạo modal hóa đơn nếu chưa có
+function createInvoiceModal() {
+    const modal = document.createElement('div');
+    modal.id = 'invoiceModal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content invoice-modal">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal('invoiceModal')">&times;</span>
+            </div>
+            <div id="invoiceContent"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// In hóa đơn
+function printInvoice() {
+    window.print();
 }
 
 // Utility functions

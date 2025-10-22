@@ -574,3 +574,127 @@
         font-size: 48px;
     }
 }
+
+/* History Actions */
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.history-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.history-actions .status {
+    white-space: nowrap;
+}
+
+.history-actions .btn {
+    white-space: nowrap;
+}
+
+/* Invoice Modal */
+.invoice-modal {
+    max-width: 600px;
+}
+
+.invoice-header {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.invoice-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.invoice-number {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.invoice-body {
+    padding: 30px;
+}
+
+.invoice-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 15px;
+}
+
+.invoice-row .label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.invoice-row .value {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.invoice-divider {
+    height: 2px;
+    background: #e2e8f0;
+    margin: 20px 0;
+}
+
+.invoice-total {
+    padding-top: 15px;
+    border-top: 2px solid #3b82f6;
+}
+
+.invoice-total .label {
+    font-size: 18px;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.invoice-total .value {
+    font-size: 24px;
+    color: #3b82f6;
+    font-weight: 700;
+}
+
+.invoice-footer {
+    padding: 20px 30px;
+    background: #f8fafc;
+    text-align: center;
+    border-top: 1px solid #e2e8f0;
+}
+
+.invoice-footer p {
+    color: #10b981;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.invoice-footer .btn {
+    margin: 0 auto;
+}
+
+/* Print styles for invoice */
+@media print {
+    .modal {
+        background: white !important;
+    }
+    
+    .modal-header .close,
+    .invoice-footer .btn {
+        display: none !important;
+    }
+    
+    .invoice-modal {
+        box-shadow: none !important;
+        max-width: 100% !important;
+    }
+}
