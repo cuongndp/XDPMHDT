@@ -56,7 +56,7 @@ namespace StationService.Controllers
         [HttpGet("map/{lat}/{lng}")]
         public async Task<IActionResult> GetStations(double lat, double lng)
         {
-            var apiKey = "AIzaSyCrXJFF1NSyl9Wp_iYBUnRwe_yDMTxyhHY"; // hoặc lấy từ cấu hình
+            var apiKey = ""; // hoặc lấy từ cấu hình
             var stations = await _context.TramDoiPins
                 .Where(t => t.Latitude != null && t.Longitude != null)
                 .ToListAsync();
