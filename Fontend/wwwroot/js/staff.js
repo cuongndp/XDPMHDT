@@ -1,23 +1,47 @@
 // Staff Dashboard JavaScript
+const API_BASE_URL = 'https://localhost:5000/gateway/driver';
 let currentUser = null;
 let batteryInventory = [];
 let recentTransactions = [];
+let allBookings = [];
+let currentBookingId = null;
 
 // Initialize the staff dashboard
 document.addEventListener('DOMContentLoaded', function() {
+    // Kiểm tra đăng nhập
+    checkStaffLogin();
     initializeDashboard();
     setupEventListeners();
     loadDashboardData();
 });
 
+// Kiểm tra đăng nhập
+function checkStaffLogin() {
+    const staffToken = localStorage.getItem('staffToken');
+    if (!staffToken) {
+        window.location.href = 'staff-login.html';
+        return;
+    }
+}
+
 // Initialize dashboard
 function initializeDashboard() {
-    // Set current user (in real app, this would come from authentication)
+    // Lấy thông tin nhân viên từ localStorage
+    const staffName = localStorage.getItem('staffName') || 'Nhân viên';
+    const staffEmail = localStorage.getItem('staffEmail') || '';
+    
     currentUser = {
-        name: 'Nguyễn Văn A',
+        name: staffName,
+        email: staffEmail,
         station: 'Trạm Quận 1',
         role: 'staff'
     };
+    
+    // Hiển thị tên nhân viên trên header
+    const userNameElement = document.querySelector('.user-name');
+    if (userNameElement) {
+        userNameElement.textContent = staffName;
+    }
     
     // Load initial data
     loadBatteryInventory();
@@ -351,11 +375,8 @@ function updateStationStatus() {
 
 // Show swap modal
 function showSwapModal() {
-    const modal = document.getElementById('swapModal');
-    if (modal) {
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-    }
+    // Chuyển sang xem danh sách bookings
+    document.querySelector('.booking-management').scrollIntoView({ behavior: 'smooth' });
 }
 
 // Show payment modal
@@ -588,8 +609,25 @@ function viewAllTransactions() {
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
+    
+    // Icon mapping
+    const iconMap = {
+        'success': 'check',
+        'error': 'times',
+        'warning': 'exclamation-triangle',
+        'info': 'info'
+    };
+    
+    // Color mapping
+    const colorMap = {
+        'success': '#10b981',
+        'error': '#ef4444',
+        'warning': '#f59e0b',
+        'info': '#3b82f6'
+    };
+    
     notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle"></i>
+        <i class="fas fa-${iconMap[type] || 'info'}-circle"></i>
         <span>${message}</span>
     `;
     
@@ -598,7 +636,7 @@ function showNotification(message, type = 'info') {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        background: ${colorMap[type] || '#3b82f6'};
         color: white;
         padding: 15px 20px;
         border-radius: 8px;
@@ -612,22 +650,44 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Remove after 3 seconds
+    // Remove after 3 seconds (warning/error: 5s)
+    const duration = (type === 'warning' || type === 'error') ? 5000 : 3000;
     setTimeout(() => {
         notification.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => {
             notification.remove();
         }, 300);
-    }, 3000);
+    }, duration);
 }
 
 // Logout function
-function logout() {
+async function logout() {
     if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+        try {
+            // Gọi API logout staff
+            const staffToken = localStorage.getItem('staffToken');
+            await fetch(`${API_BASE_URL}/staff/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${staffToken}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+        } catch (error) {
+            console.log('Lỗi khi logout:', error);
+        }
+        
+        // Xóa tất cả thông tin staff
+        localStorage.removeItem('staffToken');
+        localStorage.removeItem('staffEmail');
+        localStorage.removeItem('staffName');
+        localStorage.removeItem('staffId');
+        
         showNotification('Đã đăng xuất thành công!', 'success');
         // Redirect to login page
         setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = 'staff-login.html';
         }, 1000);
     }
 }

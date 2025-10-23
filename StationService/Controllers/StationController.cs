@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using StationService.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace StationService.Controllers
 {
@@ -44,12 +45,18 @@ namespace StationService.Controllers
             }
             
         }
-        
+        [HttpGet("danhsach")]
+        public async Task<IActionResult> GetStations()
+        {
+            var stations = await _context.TramDoiPins.ToListAsync();
+            return Ok(stations);
+        }
+
         [Authorize(Roles = "driver")]
         [HttpGet("map/{lat}/{lng}")]
         public async Task<IActionResult> GetStations(double lat, double lng)
         {
-            var apiKey = "AIzaSyAhKLQftgIywgKiCq1As-6fWeo9bPiIjYY"; // hoặc lấy từ cấu hình
+            var apiKey = "AIzaSyCrXJFF1NSyl9Wp_iYBUnRwe_yDMTxyhHY"; // hoặc lấy từ cấu hình
             var stations = await _context.TramDoiPins
                 .Where(t => t.Latitude != null && t.Longitude != null)
                 .ToListAsync();
@@ -84,7 +91,26 @@ namespace StationService.Controllers
 
             return Ok(result);
         }
+
+        [Authorize("driver")]
+        [HttpGet("gettram/{id}")]
+        public async Task<IActionResult> GetStationById(int id)
+        {
+            var station = await _context.TramDoiPins.FindAsync(id);
+            if (station == null)
+                return NotFound("Không tìm thấy trạm với ID đã cho.");
+            return Ok(station);
+        }
+        [Authorize]
+        [HttpGet("hoadon/{id}")]
+        public async Task<IActionResult> GetStationInvoice(int id)
+        {
+            var stationInvoice = await _context.TramDoiPins.FirstOrDefaultAsync(d=>d.Id==id);
+            return Ok(stationInvoice.Tentram);
+        }
+
     }
 
 }
-    
+
+

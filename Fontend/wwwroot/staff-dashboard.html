@@ -45,43 +45,43 @@
             <div class="overview-cards">
                 <div class="overview-card">
                     <div class="card-icon">
-                        <i class="fas fa-battery-full"></i>
+                        <i class="fas fa-clock"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Pin có sẵn</h3>
-                        <p class="card-number">15</p>
-                        <span class="card-change positive">+2 so với hôm qua</span>
+                        <h3>Chờ xử lý</h3>
+                        <p class="card-number">0</p>
+                        <span class="card-change">Đặt lịch chờ xác nhận</span>
                     </div>
                 </div>
                 <div class="overview-card">
                     <div class="card-icon">
-                        <i class="fas fa-charging-station"></i>
+                        <i class="fas fa-sync"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Đang sạc</h3>
-                        <p class="card-number">8</p>
-                        <span class="card-change">3 sẽ hoàn thành trong 30 phút</span>
+                        <h3>Đang xử lý</h3>
+                        <p class="card-number">0</p>
+                        <span class="card-change">Đang thực hiện đổi pin</span>
                     </div>
                 </div>
                 <div class="overview-card">
                     <div class="card-icon">
-                        <i class="fas fa-tools"></i>
+                        <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Bảo trì</h3>
-                        <p class="card-number">2</p>
-                        <span class="card-change">Cần kiểm tra</span>
+                        <h3>Hoàn thành hôm nay</h3>
+                        <p class="card-number">0</p>
+                        <span class="card-change">Đã hoàn tất</span>
                     </div>
                 </div>
                 <div class="overview-card">
                     <div class="card-icon">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
-                    <div-content>
-                        <h3>Lượt đổi hôm nay</h3>
-                        <p class="card-number">24</p>
-                        <span class="card-change positive">+3 so với hôm qua</span>
-                    </div-content>
+                    <div class="card-content">
+                        <h3>Tổng lượt hôm nay</h3>
+                        <p class="card-number">0</p>
+                        <span class="card-change">Tất cả trạng thái</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -225,60 +225,41 @@
             </div>
         </section>
 
-        <!-- Recent Transactions -->
-        <section class="recent-transactions">
+        <!-- Booking Management Section -->
+        <section class="booking-management">
             <div class="section-header">
-                <h2>Giao dịch gần đây</h2>
-                <button class="btn btn-outline" onclick="viewAllTransactions()">
-                    <i class="fas fa-list"></i> Xem tất cả
-                </button>
+                <h2>Quản lý đặt lịch đổi pin</h2>
+                <div class="booking-filters">
+                    <select id="bookingStatusFilter" onchange="filterBookings(this.value)">
+                        <option value="all">Tất cả</option>
+                        <option value="Đã đặt">Đã đặt</option>
+                        <option value="Đang xử lý">Đang xử lý</option>
+                        <option value="Hoàn thành">Hoàn thành</option>
+                    </select>
+                </div>
             </div>
             
-            <div class="transactions-list">
-                <div class="transaction-item">
-                    <div class="transaction-icon success">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div class="transaction-content">
-                        <h4>Đổi pin thành công</h4>
-                        <p>Khách hàng: Nguyễn Văn A</p>
-                        <p>Pin: BAT-001 → BAT-005</p>
-                        <span class="transaction-time">10 phút trước</span>
-                    </div>
-                    <div class="transaction-amount">
-                        <span class="amount">50,000đ</span>
-                    </div>
-                </div>
-
-                <div class="transaction-item">
-                    <div class="transaction-icon info">
-                        <i class="fas fa-info"></i>
-                    </div>
-                    <div class="transaction-content">
-                        <h4>Thanh toán gói tháng</h4>
-                        <p>Khách hàng: Trần Thị B</p>
-                        <p>Gói: Tháng - 800,000đ</p>
-                        <span class="transaction-time">25 phút trước</span>
-                    </div>
-                    <div class="transaction-amount">
-                        <span class="amount">800,000đ</span>
-                    </div>
-                </div>
-
-                <div class="transaction-item">
-                    <div class="transaction-icon warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="transaction-content">
-                        <h4>Pin lỗi được trả về</h4>
-                        <p>Khách hàng: Lê Văn C</p>
-                        <p>Pin: BAT-003 - Cần bảo trì</p>
-                        <span class="transaction-time">1 giờ trước</span>
-                    </div>
-                    <div class="transaction-amount">
-                        <span class="amount">-</span>
-                    </div>
-                </div>
+            <div class="bookings-table-container">
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Khách hàng</th>
+                            <th>Loại pin</th>
+                            <th>Ngày đặt</th>
+                            <th>Ngày hẹn</th>
+                            <th>Giờ hẹn</th>
+                            <th>Chi phí</th>
+                            <th>Thanh toán</th>
+                            <th>PT Thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsTableBody">
+                        <!-- Dữ liệu sẽ được load từ JavaScript -->
+                    </tbody>
+                </table>
             </div>
         </section>
 
@@ -326,47 +307,41 @@
         </section>
     </main>
 
-    <!-- Swap Modal -->
-    <div id="swapModal" class="modal">
+    <!-- Update Booking Status Modal -->
+    <div id="updateStatusModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Xử lý đổi pin</h2>
-                <span class="close" onclick="closeModal('swapModal')">&times;</span>
+                <h2>Cập nhật trạng thái đổi pin</h2>
+                <span class="close" onclick="closeModal('updateStatusModal')">&times;</span>
             </div>
-            <form class="modal-form">
-                <div class="form-group">
-                    <label for="customerPhone">Số điện thoại khách hàng:</label>
-                    <input type="tel" id="customerPhone" placeholder="0901234567" required>
+            <div class="modal-form">
+                <div class="booking-details" id="bookingDetails">
+                    <!-- Thông tin booking sẽ hiển thị ở đây -->
                 </div>
                 <div class="form-group">
-                    <label for="oldBattery">Pin cũ:</label>
-                    <select id="oldBattery" required>
-                        <option value="">Chọn pin cũ</option>
-                        <option value="BAT-001">BAT-001 (75kWh)</option>
-                        <option value="BAT-002">BAT-002 (50kWh)</option>
+                    <label for="newStatus">Trạng thái mới:</label>
+                    <select id="newStatus" required>
+                        <option value="Đã đặt">Đã đặt</option>
+                        <option value="Đang xử lý">Đang xử lý</option>
+                        <option value="Hoàn thành">Hoàn thành</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="newBattery">Pin mới:</label>
-                    <select id="newBattery" required>
-                        <option value="">Chọn pin mới</option>
-                        <option value="BAT-004">BAT-004 (75kWh) - 95% SoH</option>
-                        <option value="BAT-005">BAT-005 (50kWh) - 92% SoH</option>
+                    <label for="paymentStatus">Trạng thái thanh toán:</label>
+                    <select id="paymentStatus" required>
+                        <option value="Chưa thanh toán">Chưa thanh toán</option>
+                        <option value="Đã thanh toán">Đã thanh toán</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="paymentMethod">Phương thức thanh toán:</label>
-                    <select id="paymentMethod" required>
-                        <option value="cash">Tiền mặt</option>
-                        <option value="card">Thẻ</option>
-                        <option value="mobile">Ví điện tử</option>
-                    </select>
+                    <label for="staffNotes">Ghi chú:</label>
+                    <textarea id="staffNotes" rows="3" placeholder="Ghi chú về quá trình đổi pin..."></textarea>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('swapModal')">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Xác nhận đổi pin</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('updateStatusModal')">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmUpdateStatus()">Cập nhật</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 

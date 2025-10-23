@@ -596,17 +596,22 @@ body {
     height: 100%;
     background-color: rgba(0,0,0,0.5);
     backdrop-filter: blur(5px);
+    overflow-y: auto; /* Cho phép scroll modal */
+    padding: 20px 0; /* Padding để modal không dính sát cạnh */
 }
 
 .modal-content {
     background-color: white;
-    margin: 5% auto;
+    margin: 20px auto;
     padding: 0;
     border-radius: 16px;
     width: 90%;
     max-width: 500px;
+    max-height: calc(100vh - 80px); /* Giới hạn chiều cao */
     box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     animation: modalSlideIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column; /* Để header cố định, form scroll */
 }
 
 @keyframes modalSlideIn {
@@ -648,6 +653,27 @@ body {
 
 .modal-form {
     padding: 30px;
+    overflow-y: auto; /* Cho phép scroll nội dung form */
+    max-height: calc(100vh - 200px); /* Giới hạn chiều cao form */
+}
+
+/* Custom scrollbar cho modal */
+.modal-form::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-form::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.modal-form::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.modal-form::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 .form-group {
@@ -685,6 +711,133 @@ body {
     gap: 10px;
     justify-content: flex-end;
     margin-top: 30px;
+}
+
+/* Booking Management */
+.booking-management {
+    margin-bottom: 40px;
+}
+
+.bookings-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    overflow-x: auto;
+}
+
+.bookings-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1200px;
+}
+
+.bookings-table thead {
+    background: #f8fafc;
+}
+
+.bookings-table th {
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.bookings-table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.bookings-table tbody tr {
+    transition: background 0.3s;
+}
+
+.bookings-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.status-badge.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.status-processing {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.status-completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.status-paid {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.status-unpaid {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.booking-details {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.booking-details .detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    font-size: 14px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.booking-details .detail-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.booking-details .detail-row .label {
+    color: #64748b;
+    font-weight: 500;
+    flex: 0 0 40%;
+}
+
+.booking-details .detail-row .value {
+    color: #1e293b;
+    font-weight: 600;
+    text-align: right;
+    flex: 1;
+}
+
+.booking-filters select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: white;
+    color: #64748b;
+    font-size: 14px;
+    cursor: pointer;
 }
 
 /* Responsive Design */
@@ -752,8 +905,33 @@ body {
     }
     
     .modal-content {
-        margin: 10% auto;
+        margin: 10px auto;
         width: 95%;
+        max-height: calc(100vh - 40px);
+    }
+    
+    .modal-form {
+        max-height: calc(100vh - 180px);
+        padding: 20px;
+    }
+    
+    .booking-details {
+        padding: 15px;
+    }
+    
+    .booking-details .detail-row {
+        flex-direction: column;
+        gap: 5px;
+        text-align: left;
+    }
+    
+    .booking-details .detail-row .label {
+        flex: none;
+    }
+    
+    .booking-details .detail-row .value {
+        text-align: left;
+        font-size: 15px;
     }
 }
 
