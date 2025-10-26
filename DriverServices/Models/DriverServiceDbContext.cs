@@ -39,6 +39,7 @@ public partial class DriverServiceDbContext : DbContext
             entity.Property(e => e.Chiphi).HasColumnName("chiphi");
             entity.Property(e => e.Giohen).HasColumnName("giohen");
             entity.Property(e => e.Idloaipin).HasColumnName("idloaipin");
+            entity.Property(e => e.Idtram).HasColumnName("idtram");
             entity.Property(e => e.Iduser).HasColumnName("iduser");
             entity.Property(e => e.Ngaydat)
                 .HasDefaultValueSql("CURRENT_DATE")
@@ -53,6 +54,11 @@ public partial class DriverServiceDbContext : DbContext
             entity.Property(e => e.Trangthaithanhtoan)
                 .HasMaxLength(20)
                 .HasColumnName("trangthaithanhtoan");
+
+            entity.HasOne(d => d.IduserNavigation).WithMany(p => p.Bookings)
+                .HasForeignKey(d => d.Iduser)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_booking_user");
         });
 
         modelBuilder.Entity<DangKyDichVu>(entity =>

@@ -24,4 +24,8 @@ public partial class Booking
     public string? Trangthai { get; set; }
 
     public string? Phuongthucthanhtoan { get; set; }
+
+    public int? Idtram { get; set; }
+
+    public virtual User IduserNavigation { get; set; } = null!;
 }

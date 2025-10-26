@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt chỗ đổi pin - EV Swap</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/booking.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-battery-full"></i>
+                <span>EV Swap</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Trang chủ</a></li>
+                <li><a href="index.html#stations" class="nav-link">Tìm trạm</a></li>
+                <li><a href="index.html#packages" class="nav-link">Gói thuê</a></li>
+                <li><a href="index.html#support" class="nav-link">Hỗ trợ</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <div class="user-info">
+                    <div class="user-details">
+                        <span class="user-name" id="bookingUserName">Xin chào, ...</span>
+                        <span class="user-role">Khách hàng</span>
+                    </div>
+                    <div class="user-actions">
+                        <a class="btn btn-outline btn-small" href="account.html">
+                            <i class="fas fa-user"></i> Trang cá nhân
+                        </a>
+                        <button class="btn btn-outline btn-small" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Booking Section -->
+    <section class="booking-section">
+        <div class="container">
+            <div class="booking-header">
+                <h1><i class="fas fa-calendar-check"></i> Đặt chỗ đổi pin</h1>
+                <p>Hoàn tất đặt chỗ tại trạm đã chọn</p>
+            </div>
+
+            <div class="booking-container">
+                <!-- Booking Form -->
+                <div class="booking-form-container">
+                    <form id="bookingForm" class="booking-form">
+                        <!-- Thông tin trạm đã chọn -->
+                        <div class="selected-station-info">
+                            <div class="station-info-header">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <h3>Trạm đã chọn</h3>
+                            </div>
+                            <div class="station-details" id="selectedStationDetails">
+                                <div class="loading-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Đang tải thông tin trạm...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bước 1: Chọn thời gian -->
+                        <div class="form-step active" id="step1">
+                            <div class="step-header">
+                                <div class="step-number">1</div>
+                                <div class="step-info">
+                                    <h3>Chọn thời gian</h3>
+                                    <p>Chọn ngày và giờ phù hợp với bạn</p>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="bookingDate">
+                                        <i class="fas fa-calendar"></i> Ngày đặt
+                                    </label>
+                                    <input type="date" id="bookingDate" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="bookingTime">
+                                        <i class="fas fa-clock"></i> Giờ đặt
+                                    </label>
+                                    <select id="bookingTime" required>
+                                        <option value="">Chọn giờ</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="08:30">08:30</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vehicleSelect">
+                                    <i class="fas fa-car"></i> Phương tiện
+                                </label>
+                                <!--<select id="vehicleSelect" required>
+    <option value="">Chọn phương tiện</option>-->
+                                <!-- Vehicles sẽ được load từ API -->
+                                <!--</select>-->
+                                <div id="linkedVehicleDisplay" style="display: none;">
+                                    <div class="vehicle-item">
+                                        <div class="vehicle-info">
+                                            <h3 id="driverName">--</h3>
+                                            <p><i class="fas fa-id-card"></i> Biển số: <span id="driverBienso">--</span></p>
+                                            <p><i class="fas fa-battery-full"></i> Loại pin: <span id="driverNameloaipin">--</span></p>
+                                            <p><i class="fas fa-bolt"></i> Điện áp: <span id="driverBattery">--</span> V</p>
+                                            <p><i class="fas fa-plug"></i> Công suất: <span id="driverCongsuat">--</span> kWh</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--<input type="hidden" id="selectedVehicleId" name="selectedVehicleId">-->
+                            </div>
+
+                            <div class="form-group">
+                                <label for="bookingNote">
+                                    <i class="fas fa-sticky-note"></i> Ghi chú (tùy chọn)
+                                </label>
+                                <textarea id="bookingNote" rows="3" placeholder="Nhập ghi chú nếu có..."></textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <a href="index.html#stations" class="btn btn-outline">
+                                    <i class="fas fa-arrow-left"></i> Chọn trạm khác
+                                </a>
+                                <button type="button" class="btn btn-primary" onclick="nextStep()">
+                                    Tiếp tục <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Bước 2: Xác nhận -->
+                        <div class="form-step" id="step2">
+                            <div class="step-header">
+                                <div class="step-number">2</div>
+                                <div class="step-info">
+                                    <h3>Xác nhận đặt chỗ</h3>
+                                    <p>Kiểm tra thông tin và xác nhận</p>
+                                </div>
+                            </div>
+
+                            <div class="booking-summary">
+                                <div class="summary-section">
+                                    <h4><i class="fas fa-map-marker-alt"></i> Trạm đổi pin</h4>
+                                    <div class="summary-content">
+                                        <p class="summary-title" id="summaryStationName">--</p>
+                                        <p class="summary-detail" id="summaryStationAddress">--</p>
+                                        <p class="summary-detail" id="summaryStationPhone">--</p>
+                                    </div>
+                                </div>
+
+                                <div class="summary-section">
+                                    <h4><i class="fas fa-clock"></i> Thời gian</h4>
+                                    <div class="summary-content">
+                                        <p class="summary-detail">
+                                            <span class="label">Ngày:</span>
+                                            <span id="summaryDate">--</span>
+                                        </p>
+                                        <p class="summary-detail">
+                                            <span class="label">Giờ:</span>
+                                            <span id="summaryTime">--</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="summary-section">
+                                    <h4><i class="fas fa-car"></i> Phương tiện</h4>
+                                    <div class="summary-content">
+                                        <p class="summary-detail" id="summaryVehicle">--</p>
+                                    </div>
+                                </div>
+
+                                <div class="summary-section" id="noteSection" style="display: none;">
+                                    <h4><i class="fas fa-sticky-note"></i> Ghi chú</h4>
+                                    <div class="summary-content">
+                                        <p class="summary-detail" id="summaryNote">--</p>
+                                    </div>
+                                </div>
+
+                                <!-- Phần hiển thị khi có gói dịch vụ -->
+                                <div class="summary-section price-section" id="hasPackageSection" style="display: none;">
+                                    <h4><i class="fas fa-check-circle"></i> Gói dịch vụ</h4>
+                                    <div class="summary-content">
+                                        <p class="summary-price" style="color: #10b981;">0đ</p>
+                                        <p class="summary-note">Bạn đang sử dụng gói dịch vụ đã đăng ký</p>
+                                    </div>
+                                </div>
+
+                                <!-- Phần hiển thị khi không có gói dịch vụ -->
+                                <div class="summary-section price-section" id="noPackageSection" style="display: none;">
+                                    <h4><i class="fas fa-money-bill-wave"></i> Phí dịch vụ</h4>
+                                    <div class="summary-content">
+                                        <p class="summary-price" id="giadoipin">đ</p>
+                                    </div>
+                                    
+                                    <!-- Form chọn phương thức thanh toán -->
+                                    <div class="payment-methods">
+                                        <h4><i class="fas fa-credit-card"></i> Phương thức thanh toán</h4>
+                                        <div class="payment-options">
+                                            <label class="payment-option">
+                                                <input type="radio" name="paymentMethod" value="vnpay" required>
+                                                <div class="payment-card">
+                                                    <i class="fas fa-wallet"></i>
+                                                    <span>VNPay</span>
+                                                </div>
+                                            </label>
+                                            <label class="payment-option">
+                                                <input type="radio" name="paymentMethod" value="momo">
+                                                <div class="payment-card">
+                                                    <i class="fas fa-mobile-alt"></i>
+                                                    <span>Momo</span>
+                                                </div>
+                                            </label>
+                                            <label class="payment-option">
+                                                <input type="radio" name="paymentMethod" value="zalopay">
+                                                <div class="payment-card">
+                                                    <i class="fas fa-qrcode"></i>
+                                                    <span>ZaloPay</span>
+                                                </div>
+                                            </label>
+                                            <label class="payment-option">
+                                                <input type="radio" name="paymentMethod" value="cash">
+                                                <div class="payment-card">
+                                                    <i class="fas fa-money-bill-wave"></i>
+                                                    <span>Tiền mặt</span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="bookingMessage" style="display:none;text-align:center;margin-bottom:15px;"></div>
+                            <div id="bookingWait" style="display:none;text-align:center;margin-bottom:15px;"></div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline" onclick="prevStep(1)">
+                                    <i class="fas fa-arrow-left"></i> Quay lại
+                                </button>
+                                <button type="submit" class="btn btn-primary btn-large">
+                                    <i class="fas fa-check-circle"></i> Xác nhận đặt chỗ
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Booking Progress Sidebar -->
+                <div class="booking-sidebar">
+                    <div class="progress-tracker">
+                        <h3>Tiến trình đặt chỗ</h3>
+                        <div class="progress-steps">
+                            <div class="progress-step active" id="progress1">
+                                <div class="progress-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="progress-text">
+                                    <h4>Chọn thời gian</h4>
+                                    <p>Đặt lịch hẹn</p>
+                                </div>
+                            </div>
+                            <div class="progress-step" id="progress2">
+                                <div class="progress-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="progress-text">
+                                    <h4>Xác nhận</h4>
+                                    <p>Hoàn tất đặt chỗ</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="help-box">
+                        <i class="fas fa-info-circle"></i>
+                        <h4>Cần hỗ trợ?</h4>
+                        <p>Liên hệ hotline: <strong>1900-1234</strong></p>
+                        <p>Email: <strong>support@evswap.vn</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-modal">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Đặt chỗ thành công!</h2>
+            <p>Mã đặt chỗ của bạn: <strong id="bookingCode">--</strong></p>
+            <p class="success-message">Vui lòng đến trạm đúng giờ. Chúng tôi đã gửi thông tin đặt chỗ đến email của bạn.</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="goToAccount()">
+                    <i class="fas fa-user"></i> Xem lịch sử đặt chỗ
+                </button>
+                <button class="btn btn-outline" onclick="closeSuccessModal()">
+                    <i class="fas fa-home"></i> Về trang chủ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>EV Swap</h3>
+                    <p>Hệ thống đổi pin xe điện thông minh</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Dịch vụ</h4>
+                    <ul>
+                        <li><a href="index.html#stations">Tìm trạm</a></li>
+                        <li><a href="index.html#packages">Gói thuê</a></li>
+                        <li><a href="index.html#support">Hỗ trợ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Liên hệ</h4>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> 1900-1234</li>
+                        <li><i class="fas fa-envelope"></i> support@evswap.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> TP.HCM, Việt Nam</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 EV Swap. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/booking.js"></script>
+</body>
+</html>
+

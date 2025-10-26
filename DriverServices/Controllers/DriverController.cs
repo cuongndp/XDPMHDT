@@ -307,5 +307,106 @@ namespace DriverServices.Controllers
             else
                 return Ok(logdichvu);
         }
+        [Authorize("driver")]
+        [HttpPost("datlich")]
+        public async Task<IActionResult> datlich([FromBody] Dictionary<string, string> data)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+                int iduser = int.Parse(userId);
+                int giadoipin = int.Parse(data["giadoipin"]!);
+                int idtram = int.Parse(data["idtram"]!);
+                DateOnly day = DateOnly.FromDateTime(DateTime.Now);
+                TimeOnly giodat = TimeOnly.ParseExact(data["giodat"]!, "HH:mm", null);
+
+                string idloaipin = data["idloaipin"]!;
+                DateOnly ngayhen = DateOnly.ParseExact(data["ngaydat"]!, "yyyy-MM-dd", null);
+                Booking db;
+                data.TryGetValue("paymentMethod", out string? paymentMethod);
+                if (string.IsNullOrEmpty(paymentMethod))
+                {
+                    // 🧩 Trường hợp 1: paymentMethod = null hoặc rỗng
+                    db = new Booking
+                    {
+                        Iduser = iduser,
+                        Ngaydat = day,
+                        Chiphi = 0,
+                        Giohen = giodat,
+                        Phuongthucthanhtoan = "trống",
+                        Idloaipin = int.Parse(idloaipin),
+                        Ngayhen = ngayhen,
+                        Trangthai = "Đang xử lý",
+                        Trangthaithanhtoan = "Đã thanh toán",
+                        Idtram = idtram
+                    };
+                }
+                else
+                {
+                    // 🧩 Trường hợp 2: paymentMethod có giá trị (vd: vnpay)
+                    db = new Booking
+                    {
+                        Iduser = iduser,
+                        Ngaydat = day,
+                        Chiphi = giadoipin,
+                        Giohen = giodat,
+                        Phuongthucthanhtoan = paymentMethod,
+                        Idloaipin = int.Parse(idloaipin),
+                        Ngayhen = ngayhen,
+                        Trangthai = "Đang xử lý",
+                        Trangthaithanhtoan = "Chờ thanh toán",
+                        Idtram = idtram
+                    };
+
+                }
+                _context.Add(db);
+                await _context.SaveChangesAsync();
+                return Ok(new {  message = "Lưu thành công!" });
+
+            }
+            
+            catch (Exception ex)
+            {
+                
+                return BadRequest(new {  message = ex.Message });
+            }
+        }
+        // API cho driver - Lấy lịch sử booking của mình
+        [HttpGet("mybookings")]
+        [Authorize(Roles = "driver")]
+        public async Task<IActionResult> GetMyBookings()
+        {
+            try
+            {
+                var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+                int iduser = int.Parse(userId);
+
+                var bookings = await _context.Bookings
+                    .Where(b => b.Iduser == iduser)
+                    .OrderByDescending(b => b.Ngaydat)
+                    .ThenByDescending(b => b.Giohen)
+                    .Select(b => new
+                    {
+                        id = b.Id,
+                        idloaipin = b.Idloaipin,
+                        idtram = b.Idtram,
+                        ngaydat = b.Ngaydat,
+                        ngayhen = b.Ngayhen,
+                        giohen = b.Giohen,
+                        chiphi = b.Chiphi,
+                        trangthaithanhtoan = b.Trangthaithanhtoan,
+                        trangthai = b.Trangthai,
+                        phuongthucthanhtoan = b.Phuongthucthanhtoan
+                    })
+                    .ToListAsync();
+
+                return Ok(bookings);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi lấy lịch sử booking: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
     }
 }

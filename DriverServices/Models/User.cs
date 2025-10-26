@@ -21,6 +21,8 @@ public partial class User
 
     public string? GioiTinh { get; set; }
 
+    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
     public virtual ICollection<DangKyDichVu> DangKyDichVus { get; set; } = new List<DangKyDichVu>();
 
     public virtual ICollection<PhuongTien> PhuongTiens { get; set; } = new List<PhuongTien>();
