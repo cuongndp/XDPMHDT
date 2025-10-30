@@ -1,0 +1,82 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_battery_swap
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - backend-net
+
+  apigateway:
+    build: ./ApiGateway
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:5000
+    ports:
+      - "5000:5000"
+    networks:
+      - backend-net
+
+  fontend:
+    build: ./Fontend
+    depends_on:
+      - apigateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:5001
+    ports:
+      - "5001:5001"
+    networks:
+      - backend-net
+
+  
+
+  driverpaymentservice:
+    build: ./DriverPaymentService
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:5003
+    ports:
+      - "5003:5003"
+    networks:
+      - backend-net
+
+  
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - backend-net
+    volumes:
+      - pgadmindata:/var/lib/pgadmin
+
+volumes:
+  pgdata:
+  pgadmindata:
+
+networks:
+  backend-net:
+    driver: bridge
