@@ -93,6 +93,27 @@ builder.Services
 
 var app = builder.Build();
 
+// Tự động tạo database/bảng nếu chưa có (chạy trong container Docker)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<StationService.Models.StationServiceContext>();
+    var retries = 0;
+    while (true)
+    {
+        try
+        {
+            db.Database.Migrate();
+            db.Database.EnsureCreated();
+            break;
+        }
+        catch
+        {
+            if (retries++ >= 5) throw;
+            Thread.Sleep(3000);
+        }
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -107,4 +128,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+app.Run("http://0.0.0.0:5002");

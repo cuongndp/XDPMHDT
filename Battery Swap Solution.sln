@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DriverServices", "DriverSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationService", "StationService\StationService.csproj", "{2FEB332A-AD92-4481-A47C-C2AB5F1716B4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BatteryAdminService", "BatteryAdminService\BatteryAdminService.csproj", "{7E2D4FD7-6972-4489-A279-2838B5734A84}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{2FEB332A-AD92-4481-A47C-C2AB5F1716B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FEB332A-AD92-4481-A47C-C2AB5F1716B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FEB332A-AD92-4481-A47C-C2AB5F1716B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E2D4FD7-6972-4489-A279-2838B5734A84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E2D4FD7-6972-4489-A279-2838B5734A84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E2D4FD7-6972-4489-A279-2838B5734A84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E2D4FD7-6972-4489-A279-2838B5734A84}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

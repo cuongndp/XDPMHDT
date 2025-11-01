@@ -40,6 +40,17 @@ services:
     networks:
       - backend-net
 
+  stationservice:
+    build: ./StationService
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:5002
+    ports:
+      - "5002:5002"
+    networks:
+      - backend-net
   
 
   driverpaymentservice:

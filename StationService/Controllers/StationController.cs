@@ -23,7 +23,7 @@ namespace StationService.Controllers
             var dsPin = _context.LoaiPins.ToList();
             return Ok(dsPin);
         }
-        [Authorize]
+        // Bỏ [Authorize] để cho phép internal service calls từ BatteryAdminService
         [HttpGet("check/{Idloaipin}")]
         public async Task<IActionResult> Check(int Idloaipin)
         {
@@ -56,7 +56,7 @@ namespace StationService.Controllers
         [HttpGet("map/{lat}/{lng}")]
         public async Task<IActionResult> GetStations(double lat, double lng)
         {
-            var apiKey = "rtjfgjh"; // hoặc lấy từ cấu hình
+            var apiKey = ""; // hoặc lấy từ cấu hình
             var stations = await _context.TramDoiPins
                 .Where(t => t.Latitude != null && t.Longitude != null)
                 .ToListAsync();

@@ -1,5 +1,5 @@
 // Staff Dashboard JavaScript
-const API_BASE_URL = 'https://localhost:5000/gateway/driver';
+const API_BASE_URL = 'http://localhost:5000/gateway/driver';
 let currentUser = null;
 let batteryInventory = [];
 let recentTransactions = [];
@@ -45,7 +45,6 @@ function initializeDashboard() {
     
     // Load initial data
     loadBatteryInventory();
-    loadRecentTransactions();
     updateStationStatus();
 }
 
@@ -83,27 +82,347 @@ function setupEventListeners() {
 function loadDashboardData() {
     updateOverviewCards();
     loadBatteryInventory();
-    loadRecentTransactions();
+    loadBookings(); // Load bookings từ API
     updateStationStatus();
 }
 
-// Update overview cards
-function updateOverviewCards() {
-    // Simulate real-time data updates
-    const overviewData = {
-        availableBatteries: 15,
-        chargingBatteries: 8,
-        maintenanceBatteries: 2,
-        todaySwaps: 24
-    };
+// Load bookings từ API
+async function loadBookings() {
+    try {
+        const staffToken = localStorage.getItem('staffToken');
+        
+        if (!staffToken) {
+            showNotification('Vui lòng đăng nhập lại', 'error');
+            setTimeout(() => {
+                window.location.href = 'staff-login.html';
+            }, 2000);
+            return;
+        }
 
-    // Update card numbers
-    const cardNumbers = document.querySelectorAll('.card-number');
-    if (cardNumbers.length >= 4) {
-        cardNumbers[0].textContent = overviewData.availableBatteries;
-        cardNumbers[1].textContent = overviewData.chargingBatteries;
-        cardNumbers[2].textContent = overviewData.maintenanceBatteries;
-        cardNumbers[3].textContent = overviewData.todaySwaps;
+        const response = await fetch("http://localhost:5000/gateway/driver/bookings", {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${staffToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include' // Gửi cookies
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Bookings loaded:', data); // Debug
+            allBookings = data;
+            renderBookingsTable(allBookings);
+            
+            if (allBookings.length === 0) {
+                showNotification('Chưa có đặt lịch nào', 'info');
+            }
+        } else if (response.status === 401) {
+            showNotification('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại', 'error');
+            localStorage.clear();
+            setTimeout(() => {
+                window.location.href = 'staff-login.html';
+            }, 2000);
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Lỗi API:', errorData);
+            showNotification(errorData.message || 'Không thể tải danh sách đặt lịch', 'error');
+            renderBookingsTable([]); // Hiển thị bảng trống
+        }
+    } catch (error) {
+        console.error('Lỗi khi tải bookings:', error);
+        showNotification('Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.', 'error');
+        renderBookingsTable([]); // Hiển thị bảng trống thay vì dữ liệu mẫu
+    }
+}
+
+// Không dùng dữ liệu mẫu nữa - sẽ lấy từ API thực
+
+// Render bảng bookings
+function renderBookingsTable(bookings) {        
+    const tbody = document.getElementById('bookingsTableBody');
+    if (!tbody) return;
+
+    if (bookings.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="11" style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; display: block;"></i>
+                    Không có đặt lịch nào
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = bookings.map(booking => `
+        <tr>
+            <td><strong>#${booking.id}</strong></td>
+            <td>${booking.username || 'N/A'}</td>
+            <td>${booking.loaipin || `Loại ${booking.idloaipin}`}</td>
+            <td>${formatDate(booking.ngaydat)}</td>
+            <td>${formatDate(booking.ngayhen)}</td>
+            <td>${formatTime(booking.giohen)}</td>
+            <td><strong>${formatCurrency(booking.chiphi)}</strong></td>
+            <td>${getPaymentStatusBadge(booking.trangthaithanhtoan)}</td>
+            <td>${booking.phuongthucthanhtoan || '-'}</td>
+            <td>${getStatusBadge(booking.trangthai)}</td>
+            <td>
+                <button class="btn btn-primary btn-sm" onclick="openUpdateStatusModal(${booking.id})">
+                    <i class="fas fa-edit"></i> Xử lý
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Format date
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
+}
+
+// Format time
+function formatTime(timeString) {
+    if (!timeString) return '-';
+    // Xử lý cả format HH:mm:ss và HH:mm
+    return timeString.substring(0, 5); // Lấy HH:mm
+}
+
+// Get status badge HTML
+function getStatusBadge(status) {
+    const statusClass = {
+        'Đã đặt': 'status-pending',
+        'Đang xử lý': 'status-processing',
+        'Hoàn thành': 'status-completed'
+    };
+    return `<span class="status-badge ${statusClass[status] || ''}">${status}</span>`;
+}
+
+// Get payment status badge HTML
+function getPaymentStatusBadge(status) {
+    const statusClass = {
+        'Đã thanh toán': 'status-paid',
+        'Chưa thanh toán': 'status-unpaid',
+        'Chờ thanh toán': 'status-pending'
+    };
+    return `<span class="status-badge ${statusClass[status] || ''}">${status}</span>`;
+}
+
+// Filter bookings
+function filterBookings(status) {
+    if (status === 'all') {
+        renderBookingsTable(allBookings);
+    } else {
+        const filtered = allBookings.filter(b => b.trangthai === status);
+        renderBookingsTable(filtered);
+    }
+}
+
+// Mở modal cập nhật trạng thái
+function openUpdateStatusModal(bookingId) {
+    currentBookingId = bookingId;
+    const booking = allBookings.find(b => b.id === bookingId);
+    
+    if (!booking) {
+        showNotification('Không tìm thấy booking!', 'error');
+        return;
+    }
+
+    // Hiển thị thông tin booking
+    const bookingDetails = document.getElementById('bookingDetails');
+    bookingDetails.innerHTML = `
+        <div class="detail-row">
+            <span class="label">ID Booking:</span>
+            <span class="value">#${booking.id}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Khách hàng:</span>
+            <span class="value">${booking.username || 'N/A'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Loại pin:</span>
+            <span class="value">${booking.loaipin || `Loại ${booking.idloaipin}`}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Ngày hẹn:</span>
+            <span class="value">${formatDate(booking.ngayhen)} - ${formatTime(booking.giohen)}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Chi phí:</span>
+            <span class="value">${formatCurrency(booking.chiphi)}</span>
+        </div>
+    `;
+
+    // Set giá trị hiện tại
+    document.getElementById('newStatus').value = booking.trangthai;
+    document.getElementById('paymentStatus').value = booking.trangthaithanhtoan;
+    document.getElementById('staffNotes').value = '';
+
+    // Hiển thị modal
+    document.getElementById('updateStatusModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+// Xác nhận cập nhật trạng thái
+async function confirmUpdateStatus() {
+    if (!currentBookingId) return;
+
+    const newStatus = document.getElementById('newStatus').value;
+    const paymentStatus = document.getElementById('paymentStatus').value;
+    const notes = document.getElementById('staffNotes').value;
+
+    try {
+        const staffToken = localStorage.getItem('staffToken');
+        
+        // Bước 1: Cập nhật trạng thái booking
+        const response = await fetch(`${API_BASE_URL}/bookings/${currentBookingId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${staffToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                trangthai: newStatus,
+                trangthaithanhtoan: paymentStatus,
+                notes: notes
+            })
+        });
+
+        if (response.ok) {
+            showNotification('Cập nhật trạng thái thành công!', 'success');
+            
+            // Cập nhật local data
+            const booking = allBookings.find(b => b.id === currentBookingId);
+            if (booking) {
+                booking.trangthai = newStatus;
+                booking.trangthaithanhtoan = paymentStatus;
+            }
+            
+            // Bước 2: Nếu hoàn thành + đã thanh toán → Tạo hóa đơn
+            if (newStatus === 'Hoàn thành' && paymentStatus === 'Đã thanh toán' && booking) {
+                await createHoaDon(booking);
+            }
+            
+            // Refresh table
+            const currentFilter = document.getElementById('bookingStatusFilter').value;
+            filterBookings(currentFilter);
+            
+            closeModal('updateStatusModal');
+        } else if (response.status === 401) {
+            showNotification('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại', 'error');
+            localStorage.clear();
+            setTimeout(() => {
+                window.location.href = 'staff-login.html';
+            }, 2000);
+        } else {
+            const error = await response.json().catch(() => ({}));
+            console.error('Lỗi API:', error);
+            showNotification(error.message || 'Không thể cập nhật trạng thái', 'error');
+        }
+    } catch (error) {
+        console.error('Lỗi khi cập nhật trạng thái:', error);
+        showNotification('Lỗi kết nối đến server. Không thể cập nhật trạng thái.', 'error');
+    }
+}
+
+// Tạo hóa đơn sau khi hoàn thành đổi pin
+async function createHoaDon(booking) {
+    try {
+        const staffToken = localStorage.getItem('staffToken');
+        const PAYMENT_API_URL = 'http://localhost:5000/gateway/payment';
+        
+        console.log('Đang tạo hóa đơn cho booking:', booking);
+        
+        // ✅ Lấy idtram từ booking (ID trạm THẬT)
+        const idtram = booking.idtram || 1; // Nếu null thì default 1
+        
+        const response = await fetch(`${PAYMENT_API_URL}/hoadon`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${staffToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                idbooking: booking.id.toString(),
+                iduser: booking.iduser.toString(),
+                idloaipin: booking.idloaipin.toString(),
+                chiphi: booking.chiphi.toString(),
+                idtramdoipin: idtram.toString() // ✅ Lấy từ booking - ID THẬT
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Hóa đơn đã tạo:', result);
+            showNotification(`Đã tạo hóa đơn #${result.hoadonId} thành công!`, 'success');
+        } else {
+            const error = await response.json().catch(() => ({}));
+            console.error('Lỗi tạo hóa đơn:', error);
+            showNotification('Cập nhật thành công nhưng không thể tạo hóa đơn', 'warning');
+        }
+    } catch (error) {
+        console.error('Lỗi khi tạo hóa đơn:', error);
+        showNotification('Cập nhật thành công nhưng lỗi khi tạo hóa đơn', 'warning');
+    }
+}
+
+// Update overview cards
+async function updateOverviewCards() {
+    try {
+        const staffToken = localStorage.getItem('staffToken');
+        
+        if (!staffToken) {
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/bookings/stats`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${staffToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include' // Gửi cookies
+        });
+
+        if (response.ok) {
+            const stats = await response.json();
+            console.log('Stats loaded:', stats); // Debug
+            
+            // Update card numbers
+            const cardNumbers = document.querySelectorAll('.card-number');
+            if (cardNumbers.length >= 4) {
+                cardNumbers[0].textContent = stats.pending || 0; // Đặt lịch chờ xử lý
+                cardNumbers[1].textContent = stats.processing || 0; // Đang xử lý
+                cardNumbers[2].textContent = stats.completed || 0; // Hoàn thành hôm nay
+                cardNumbers[3].textContent = stats.totalToday || 0; // Tổng lượt hôm nay
+            }
+        } else if (response.status === 401) {
+            console.error('Unauthorized - token hết hạn');
+        } else {
+            console.error('Không thể tải thống kê');
+            // Hiển thị 0 thay vì dữ liệu mẫu
+            const cardNumbers = document.querySelectorAll('.card-number');
+            if (cardNumbers.length >= 4) {
+                cardNumbers[0].textContent = 0;
+                cardNumbers[1].textContent = 0;
+                cardNumbers[2].textContent = 0;
+                cardNumbers[3].textContent = 0;
+            }
+        }
+    } catch (error) {
+        console.error('Lỗi khi lấy thống kê:', error);
+        // Hiển thị 0 thay vì dữ liệu mẫu
+        const cardNumbers = document.querySelectorAll('.card-number');
+        if (cardNumbers.length >= 4) {
+            cardNumbers[0].textContent = 0;
+            cardNumbers[1].textContent = 0;
+            cardNumbers[2].textContent = 0;
+            cardNumbers[3].textContent = 0;
+        }
     }
 }
 
