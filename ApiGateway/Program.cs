@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://localhost:7210", "http://localhost:5000", "https://localhost:5000") // Thêm HTTPS cho API Gateway
+        policy.WithOrigins("https://localhost:7210", "http://localhost:5000", "https://localhost:5000", "http://localhost:5001")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -42,4 +42,4 @@ app.MapControllers();
 
 await app.UseOcelot();
 
-app.Run();
+app.Run("http://0.0.0.0:5000");

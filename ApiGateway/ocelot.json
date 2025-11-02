@@ -49,19 +49,14 @@
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     },
     {
-      "DownstreamPathTemplate": "/api/admin/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7005
-        }
-      ],
-      "UpstreamPathTemplate": "/gateway/admin/{everything}",
+      "DownstreamPathTemplate": "/api/Admin/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "batteryadminservice", "Port": 5006 } ],
+      "UpstreamPathTemplate": "/gateway/batteryadmin/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:5000"
+    "BaseUrl": "http://localhost:5000"
   }
 }

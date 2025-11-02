@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập Admin - EV Battery Swap</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-width: 1000px;
+            width: 100%;
+            display: flex;
+        }
+
+        .login-left {
+            flex: 1;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            padding: 60px 40px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .login-left i {
+            font-size: 80px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .login-left h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .login-left p {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .login-right {
+            flex: 1;
+            padding: 60px 40px;
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .forgot-password {
+            font-size: 14px;
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            position: relative;
+            background: white;
+            padding: 0 15px;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-home a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-home a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left {
+                padding: 40px 20px;
+            }
+
+            .login-right {
+                padding: 40px 20px;
+            }
+
+            .login-left h1 {
+                font-size: 24px;
+            }
+
+            .login-left i {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-left">
+            <i class="fas fa-user-crown"></i>
+            <h1>Cổng Quản Trị</h1>
+            <p>Hệ thống quản lý trạm đổi pin thông minh. Đăng nhập để truy cập vào bảng điều khiển quản trị viên.</p>
+        </div>
+        
+        <div class="login-right">
+            <div class="login-header">
+                <h2>Đăng nhập Admin</h2>
+                <p>Chào mừng trở lại! Vui lòng đăng nhập để tiếp tục.</p>
+            </div>
+
+            <div id="alertBox" class="alert"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" placeholder="admin@evswap.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember">
+                        <span>Ghi nhớ đăng nhập</span>
+                    </label>
+                    <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>hoặc</span>
+            </div>
+
+            <div class="back-home">
+                <a href="index.html">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chủ
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const alertBox = document.getElementById('alertBox');
+        const loginBtn = document.getElementById('loginBtn');
+
+        // Hiển thị thông báo
+        function showAlert(message, type = 'error') {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type}`;
+            alertBox.style.display = 'block';
+            
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
+
+        // Xử lý đăng nhập
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Validation cơ bản
+            if (!email || !password) {
+                showAlert('Vui lòng điền đầy đủ thông tin!', 'error');
+                return;
+            }
+
+            // Disable button và hiển thị loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...';
+
+            try {
+                // Gọi API đăng nhập ADMIN qua BatteryAdminService
+                // Pattern: /gateway/batteryadmin/{everything} -> /api/Admin/{everything}
+                const response = await fetch('http://localhost:5000/gateway/batteryadmin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Để gửi và nhận cookies
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+
+                // Kiểm tra response có phải JSON không
+                let data;
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    console.error('Response không phải JSON:', text);
+                    showAlert('Lỗi server: ' + (text || 'Không thể kết nối đến server'), 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập';
+                    return;
+                }
+
+                if (response.ok) {
+                    // Lưu thông tin admin vào localStorage
+                    if (data.token) {
+                        localStorage.setItem('adminToken', data.token);
+                        if (data.user) {
+                            localStorage.setItem('adminEmail', data.user.email || email);
+                            localStorage.setItem('adminName', data.user.name || 'Admin');
+                            localStorage.setItem('adminId', data.user.id || '');
+                        }
+                        
+                        showAlert('Đăng nhập admin thành công!', 'success');
+                        
+                        // Chuyển hướng đến admin dashboard
+                        setTimeout(() => {
+                            window.location.href = 'admin-dashboard.html';
+                        }, 1000);
+                    } else {
+                        showAlert('Không nhận được token từ server!', 'error');
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập';
+                    }
+                } else {
+                    showAlert(data.message || 'Email hoặc mật khẩu không đúng!', 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập';
+                }
+            } catch (error) {
+                console.error('Lỗi đăng nhập:', error);
+                showAlert('Không thể kết nối đến server. Vui lòng thử lại!', 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập';
+            }
+        });
+
+        // Kiểm tra nếu đã đăng nhập
+        window.addEventListener('DOMContentLoaded', function() {
+            const adminToken = localStorage.getItem('adminToken');
+            if (adminToken) {
+                // Có thể kiểm tra token còn hạn không
+                // Nếu còn hạn, chuyển hướng luôn
+                window.location.href = 'admin-dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>
+

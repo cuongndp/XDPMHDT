@@ -66,6 +66,17 @@ services:
       - backend-net
 
   
+  batteryadminservice:
+    build: ./BatteryAdminService
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:5006
+    ports:
+      - "5006:5006"
+    networks:
+      - backend-net
 
   pgadmin:
     image: dpage/pgadmin4
