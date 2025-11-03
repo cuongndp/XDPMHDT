@@ -4,12 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - EV Battery Swap System</title>
+    <script>
+        // Kiểm tra authentication NGAY LẬP TỨC - trước khi load bất kỳ thứ gì
+        (function() {
+            // Block toàn bộ HTML ngay lập tức
+            if (document.documentElement) {
+                document.documentElement.style.display = 'none';
+            }
+            if (document.body) {
+                document.body.style.display = 'none';
+            }
+            
+            // Kiểm tra token
+            const adminToken = localStorage.getItem('adminToken');
+            if (!adminToken || adminToken.trim() === '') {
+                // Redirect NGAY - không cho xem bất kỳ nội dung nào
+                window.location.replace('admin-login.html');
+                // Force redirect nếu replace không work
+                setTimeout(function() {
+                    window.location.href = 'admin-login.html';
+                }, 100);
+                return;
+            }
+            
+            // Nếu có token, cho phép hiển thị (sẽ được admin.js kiểm tra lại)
+            if (document.documentElement) {
+                document.documentElement.style.display = '';
+            }
+        })();
+    </script>
+    <style>
+        /* Ẩn toàn bộ trang cho đến khi đã xác thực */
+        html, body { 
+            display: none !important; 
+            visibility: hidden !important;
+        }
+        html.authenticated, body.authenticated { 
+            display: block !important; 
+            visibility: visible !important;
+        }
+        
+        /* Loading screen khi đang check - luôn hiển thị cho đến khi authenticated */
+        #auth-check {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+        #auth-check.hidden {
+            display: none !important;
+        }
+    </style>
     <link rel="stylesheet" href="css/admin.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Loading screen khi đang kiểm tra authentication -->
+    <div id="auth-check">
+        <div style="text-align: center;">
+            <div style="font-size: 24px; margin-bottom: 20px;">Đang kiểm tra quyền truy cập...</div>
+            <div style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+        </div>
+    </div>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
@@ -383,16 +453,20 @@
         <section id="batteries" class="content-section">
             <div class="section-header">
                 <h2>Quản lý pin</h2>
-                <div class="header-actions">
-                    <button class="btn btn-outline">
-                        <i class="fas fa-sync"></i> Đồng bộ dữ liệu
-                    </button>
-                    <button class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Thêm pin mới
+                    <div class="header-actions">
+                    <button class="btn btn-outline" onclick="loadStationsList()" id="backToStationsBtn" style="display: none;">
+                        <i class="fas fa-arrow-left"></i> Quay lại danh sách trạm
                     </button>
                 </div>
             </div>
             
+            <!-- Danh sách trạm -->
+            <div id="stationsListSection" class="stations-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px;">
+                <!-- Stations sẽ được load ở đây -->
+            </div>
+            
+            <!-- Chi tiết pin của trạm -->
+            <div id="batteriesDetailSection" style="display: none;">
             <div class="batteries-overview">
                 <div class="overview-card">
                     <h4>Tổng quan pin</h4>
@@ -415,14 +489,9 @@
                         </div>
                     </div>
                 </div>
-                
-                <div class="battery-health-chart">
-                    <h4>Tình trạng sức khỏe pin (SoH)</h4>
-                    <canvas id="batteryHealthChart"></canvas>
-                </div>
             </div>
             
-            <div class="batteries-table-container">
+            <div class="batteries-table-container" style="margin-top: 20px;">
                 <div class="table-filters">
                     <div class="filter-group">
                         <label>Trạng thái:</label>
@@ -434,15 +503,6 @@
                             <option value="faulty">Lỗi</option>
                         </select>
                     </div>
-                    <div class="filter-group">
-                        <label>Dung lượng:</label>
-                        <select id="batteryCapacityFilter">
-                            <option value="all">Tất cả</option>
-                            <option value="50kwh">50kWh</option>
-                            <option value="75kwh">75kWh</option>
-                            <option value="100kwh">100kWh</option>
-                        </select>
-                    </div>
                 </div>
                 
                 <div class="table-responsive">
@@ -450,13 +510,14 @@
                         <thead>
                             <tr>
                                 <th>ID Pin</th>
-                                <th>Trạm</th>
-                                <th>Dung lượng</th>
-                                <th>SoH</th>
+                                <th>Loại pin</th>
+                                <th>Điện áp</th>
+                                <th>Công suất</th>
+                                <th>Giá đổi pin</th>
+                                <th>SoH (%)</th>
+                                <th>SoC (%)</th>
                                 <th>Trạng thái</th>
-                                <th>Lần sạc</th>
-                                <th>Ngày tạo</th>
-                                <th>Hành động</th>
+                                <th>Cập nhật tình trạng</th>
                             </tr>
                         </thead>
                         <tbody id="batteriesTableBody">
@@ -687,6 +748,41 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-outline" onclick="closeModal('addPackageModal')">Hủy</button>
                     <button type="submit" class="btn btn-primary">Tạo gói</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Update Battery Status Modal -->
+    <div id="updateBatteryStatusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Cập nhật tình trạng pin</h2>
+                <span class="close" onclick="closeModal('updateBatteryStatusModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="updateBatteryStatusForm" onsubmit="handleUpdateBatteryStatus(event); return false;">
+                <input type="hidden" id="updateBatteryId">
+                <div class="form-group">
+                    <label for="updateBatteryStatus">Tình trạng:</label>
+                    <select id="updateBatteryStatus" required>
+                        <option value="Đang chờ">Đang chờ</option>
+                        <option value="Đang sạc">Đang sạc</option>
+                    </select>
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Chọn tình trạng mới cho pin</small>
+                </div>
+                <div class="form-group">
+                    <label for="updateBatterySoH">SoH (State of Health) %:</label>
+                    <input type="number" id="updateBatterySoH" min="0" max="100" step="0.1">
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Tình trạng sức khỏe pin (0-100%)</small>
+                </div>
+                <div class="form-group">
+                    <label for="updateBatterySoC">SoC (State of Charge) %:</label>
+                    <input type="number" id="updateBatterySoC" min="0" max="100" step="0.1">
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Mức pin hiện tại (0-100%)</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('updateBatteryStatusModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
                 </div>
             </form>
         </div>

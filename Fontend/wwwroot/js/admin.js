@@ -8,7 +8,26 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadDashboardData();
     initializeCharts();
+    loadAdminInfo();
 });
+
+// Load thông tin admin
+function loadAdminInfo() {
+    const adminName = localStorage.getItem('adminName') || 'Admin User';
+    const adminEmail = localStorage.getItem('adminEmail') || 'admin@evswap.com';
+    
+    // Cập nhật UI với thông tin admin
+    const userNameElements = document.querySelectorAll('.user-name');
+    userNameElements.forEach(el => {
+        el.textContent = adminName;
+    });
+    
+    // Cập nhật avatar nếu có
+    // const userAvatar = document.querySelector('.user-avatar');
+    // if (userAvatar) {
+    //     userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName)}&background=3b82f6&color=fff`;
+    // }
+}
 
 // Initialize dashboard
 function initializeDashboard() {
@@ -99,7 +118,12 @@ function showSection(sectionId) {
         if (pageTitle) {
             pageTitle.textContent = getSectionTitle(sectionId);
         }
+        
+        // Load data khi vào section batteries
+        if (sectionId === 'batteries') {
+            loadStationsList(); // Load danh sách trạm trước
     }
+}
 }
 
 // Get section title
@@ -613,7 +637,13 @@ function getStatusText(status) {
         'offline': 'Offline',
         'available': 'Có sẵn',
         'charging': 'Đang sạc',
-        'faulty': 'Lỗi'
+        'faulty': 'Lỗi',
+        'in-use': 'Đang sử dụng',
+        'Khả dụng': 'Khả dụng',
+        'Đang sử dụng': 'Đang sử dụng',
+        'Đang sạc': 'Đang sạc',
+        'Bảo trì': 'Bảo trì',
+        'Lỗi': 'Lỗi'
     };
     return statusMap[status] || status;
 }
