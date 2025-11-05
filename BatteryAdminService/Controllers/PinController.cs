@@ -190,5 +190,144 @@ public class PinController : ControllerBase
         }
     }
 
+    // GET: api/Pin/{id} - Lấy thông tin chi tiết 1 pin
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetPinById(int id)
+    {
+        try
+        {
+            var pin = await _context.Pins.FindAsync(id);
+            if (pin == null)
+            {
+                return NotFound(new { message = "Không tìm thấy pin" });
+            }
+
+            return Ok(new
+            {
+                idpin = pin.Idpin,
+                idloaipin = pin.Idloaipin,
+                idtram = pin.Idtram,
+                soh = pin.Soh ?? 100,
+                soc = pin.Soc ?? 100,
+                tinhtrang = pin.Tinhtrang ?? "Khả dụng"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy thông tin pin {Id}", id);
+            return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+        }
+    }
+
+    // PUT: api/Pin/{id}/status - Cập nhật tình trạng pin
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdatePinStatus(int id, [FromBody] JsonElement jsonElement)
+    {
+        try
+        {
+            var pin = await _context.Pins.FindAsync(id);
+            if (pin == null)
+            {
+                return NotFound(new { message = "Không tìm thấy pin" });
+            }
+
+            bool hasUpdate = false;
+
+            // Đọc và cập nhật tinhtrang từ JSON
+            if (jsonElement.TryGetProperty("tinhtrang", out var tinhtrangElement))
+            {
+                var tinhtrangValue = tinhtrangElement.GetString();
+                if (!string.IsNullOrEmpty(tinhtrangValue))
+                {
+                    pin.Tinhtrang = tinhtrangValue;
+                    hasUpdate = true;
+                }
+            }
+
+            // Đọc và cập nhật SoH từ JSON
+            if (jsonElement.TryGetProperty("soh", out var sohElement))
+            {
+                if (sohElement.ValueKind == JsonValueKind.Number && sohElement.TryGetSingle(out float sohValue))
+                {
+                    pin.Soh = sohValue;
+                    hasUpdate = true;
+                }
+                else if (sohElement.ValueKind == JsonValueKind.String && float.TryParse(sohElement.GetString(), out float sohParsed))
+                {
+                    pin.Soh = sohParsed;
+                    hasUpdate = true;
+                }
+            }
+
+            // Đọc và cập nhật SoC từ JSON
+            if (jsonElement.TryGetProperty("soc", out var socElement))
+            {
+                if (socElement.ValueKind == JsonValueKind.Number && socElement.TryGetSingle(out float socValue))
+                {
+                    pin.Soc = socValue;
+                    hasUpdate = true;
+                }
+                else if (socElement.ValueKind == JsonValueKind.String && float.TryParse(socElement.GetString(), out float socParsed))
+                {
+                    pin.Soc = socParsed;
+                    hasUpdate = true;
+                }
+            }
+
+            if (!hasUpdate)
+            {
+                return BadRequest(new { message = "Không có dữ liệu nào để cập nhật" });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Cập nhật tình trạng pin thành công",
+                pin = new
+                {
+                    idpin = pin.Idpin,
+                    idloaipin = pin.Idloaipin,
+                    idtram = pin.Idtram,
+                    soh = pin.Soh,
+                    soc = pin.Soc,
+                    tinhtrang = pin.Tinhtrang
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi cập nhật pin {Id}", id);
+            return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+        }
+    }
+
+    // GET: api/Pin/stats - Lấy thống kê pin
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetPinStats()
+    {
+        try
+        {
+            var totalPins = await _context.Pins.CountAsync();
+            var availablePins = await _context.Pins.CountAsync(p => p.Tinhtrang == "Khả dụng");
+            var chargingPins = await _context.Pins.CountAsync(p => p.Tinhtrang == "Đang sạc");
+            var maintenancePins = await _context.Pins.CountAsync(p => p.Tinhtrang == "Bảo trì" || p.Tinhtrang == "Bảo trì");
+            var inUsePins = await _context.Pins.CountAsync(p => p.Tinhtrang == "Đang sử dụng");
+
+            return Ok(new
+            {
+                total = totalPins,
+                available = availablePins,
+                inUse = inUsePins,
+                charging = chargingPins,
+                maintenance = maintenancePins
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy thống kê pin");
+            return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+        }
+    }
 }
 
