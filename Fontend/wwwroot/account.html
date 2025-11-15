@@ -185,6 +185,23 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Support Request Card -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-life-ring"></i> Yêu cầu hỗ trợ</h2>
+                        <button class="btn btn-primary btn-small" onclick="showSupportRequestModal()">
+                            <i class="fas fa-plus"></i> Gửi yêu cầu
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div id="supportRequestsList" style="min-height: 100px;">
+                            <div style="text-align: center; padding: 20px; color: #64748b;">
+                                <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -308,6 +325,43 @@
                 <div class="form-footer">
                     <p>Danh sách loại pin sẽ được tải từ hệ thống sau</p>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Support Request Modal -->
+    <div id="supportRequestModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-life-ring"></i> Gửi yêu cầu hỗ trợ</h2>
+                <span class="close" onclick="closeModal('supportRequestModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="supportRequestForm" onsubmit="handleSubmitSupportRequest(event); return false;">
+                <div class="form-group">
+                    <label for="supportStation">Trạm liên quan (nếu có):</label>
+                    <select id="supportStation" name="idtramdoipin">
+                        <option value="">-- Chọn trạm (tùy chọn) --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="supportBooking">Booking liên quan (nếu có):</label>
+                    <input type="number" id="supportBooking" name="idbooking" placeholder="Nhập ID booking">
+                </div>
+                <div class="form-group">
+                    <label for="supportPriority">Độ ưu tiên:</label>
+                    <select id="supportPriority" name="do_uu_tien" required>
+                        <option value="Thấp">Thấp</option>
+                        <option value="Trung bình" selected>Trung bình</option>
+                        <option value="Cao">Cao</option>
+                        <option value="Khẩn cấp">Khẩn cấp</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="supportDescription">Mô tả sự cố *</label>
+                    <textarea id="supportDescription" name="mo_ta" rows="5" required 
+                              placeholder="Mô tả chi tiết sự cố bạn gặp phải..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Gửi yêu cầu</button>
             </form>
         </div>
     </div>

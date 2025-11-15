@@ -447,7 +447,36 @@ async function showInvoiceModal(invoice, bookingId) {
     const tenTram = await getTenTram(invoice.idtramdoipin);
     console.log('Tên trạm đổi pin:', tenTram);
 
+    // Lấy tên loại pin từ booking hoặc từ API
+    let tenLoaiPin = booking?.loaipin || null;
 
+    // Nếu không có trong booking, gọi API để lấy tên loại pin
+    if (!tenLoaiPin && invoice.idloaipin) {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await gatewayFetch(`/gateway/station/check/${invoice.idloaipin}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (res.ok) {
+                const loaiPinData = await res.json();
+                tenLoaiPin = loaiPinData.tenloaipin || loaiPinData.Tenloaipin || null;
+                console.log('Tên loại pin từ API:', tenLoaiPin);
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy tên loại pin:', error);
+        }
+    }
+    
+    // Fallback nếu vẫn không có tên
+    if (!tenLoaiPin) {
+        tenLoaiPin = `Pin ${invoice.idloaipin}kWh`;
+    }
 
     const invoiceContent = document.getElementById('invoiceContent');
     if (invoiceContent) {
@@ -467,15 +496,15 @@ async function showInvoiceModal(invoice, bookingId) {
                 </div>
                 <div class="invoice-row">
                     <span class="label">Trạm đổi pin:</span>
-                    <span class="value">Trạm ID: ${tenTram || 'N/A'}</span>
+                    <span class="value">${tenTram || 'N/A'}</span>
                 </div>
                 <div class="invoice-row">
                     <span class="label">Loại pin:</span>
-                    <span class="value">Pin ${invoice.idloaipin}kWh</span>
+                    <span class="value">${tenLoaiPin}</span>
                 </div>
                 <div class="invoice-row">
                     <span class="label">Phương thức thanh toán:</span>
-                    <span class="value">${booking?.phuongthucthanhtoan || 'N/A'}</span>
+                    <span class="value">${booking?.phuongthucthanhtoan || invoice.phuongthucthanhtoan || 'N/A'}</span>
                 </div>
                 <div class="invoice-divider"></div>
                 <div class="invoice-row invoice-total">
@@ -537,8 +566,20 @@ function getStatusText(status) {
 }
 
 function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        return 'N/A';
+    }
 }
 
 function formatCurrency(amount) {
