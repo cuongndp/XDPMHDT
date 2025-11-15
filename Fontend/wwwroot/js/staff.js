@@ -1,10 +1,14 @@
 // Staff Dashboard JavaScript
 const API_BASE_URL = 'http://localhost:5000/gateway/driver';
+const STATION_API_URL = 'http://localhost:5000/gateway/station';
 let currentUser = null;
 let batteryInventory = [];
 let recentTransactions = [];
 let allBookings = [];
+let allStations = [];
 let currentBookingId = null;
+let selectedStationId = 'all';
+let selectedStatus = 'all';
 
 // Initialize the staff dashboard
 document.addEventListener('DOMContentLoaded', function() {
@@ -210,14 +214,51 @@ function getPaymentStatusBadge(status) {
     return `<span class="status-badge ${statusClass[status] || ''}">${status}</span>`;
 }
 
-// Filter bookings
-function filterBookings(status) {
-    if (status === 'all') {
-        renderBookingsTable(allBookings);
+// Load danh sách trạm
+async function loadStations() {
+    try {
+        // Ocelot đã map /gateway/station/{everything} -> /api/Station/{everything}
+        // Nên chỉ cần gọi /danhsach, không cần /Station/danhsach
+        const url = `${STATION_API_URL}/danhsach`;
+        console.log('Đang load danh sách trạm từ:', url);
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('Response status:', response.status);
+
+        if (response.ok) {
+            const stations = await response.json();
+            console.log('Danh sách trạm nhận được:', stations);
+            console.log('Số lượng trạm:', stations?.length || 0);
+            
+            if (stations && Array.isArray(stations) && stations.length > 0) {
+                allStations = stations;
+                populateStationFilter(stations);
     } else {
-        const filtered = allBookings.filter(b => b.trangthai === status);
+                console.warn('Không có trạm nào trong danh sách');
+                showNotification('Không có trạm nào trong hệ thống', 'warning');
+            }
+        } else {
+            const errorText = await response.text();
+            console.error('Lỗi khi tải danh sách trạm:', response.status, errorText);
+            showNotification('Không thể tải danh sách trạm', 'error');
+        }
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách trạm:', error);
+        showNotification('Lỗi kết nối khi tải danh sách trạm', 'error');
+    }
+}
         renderBookingsTable(filtered);
     }
+
+// Filter bookings (kept for backward compatibility)
+function filterBookings(status) {
+    selectedStatus = status;
+    applyFilters();
 }
 
 // Mở modal cập nhật trạng thái

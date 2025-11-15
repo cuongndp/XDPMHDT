@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using StationService.Models;
+using System.Text;
+using System.Text.Json;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace StationService.Controllers
@@ -12,9 +14,14 @@ namespace StationService.Controllers
     public class StationController : ControllerBase
     {
         public readonly StationServiceContext _context;
-        public StationController(StationServiceContext context)
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        
+        public StationController(StationServiceContext context, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _context = context;
+            _httpClient = httpClientFactory.CreateClient();
+            _configuration = configuration;
         }
         [Authorize]
         [HttpGet("themxe")]
@@ -106,7 +113,12 @@ namespace StationService.Controllers
         public async Task<IActionResult> GetStationInvoice(int id)
         {
             var stationInvoice = await _context.TramDoiPins.FirstOrDefaultAsync(d=>d.Id==id);
-            return Ok(stationInvoice.Tentram);
+            if (stationInvoice == null)
+            {
+                return NotFound(new { message = "Không tìm thấy trạm" });
+            }
+            return Ok(stationInvoice.Tentram ?? "");
+        }
         }
 
     }
