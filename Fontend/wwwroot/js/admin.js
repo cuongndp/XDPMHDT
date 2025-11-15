@@ -153,6 +153,11 @@ function showSection(sectionId) {
         if (sectionId === 'batteries') {
             loadStationsList(); // Load danh sách trạm trước
         }
+        
+        // Load data khi vào section complaints
+        if (sectionId === 'complaints') {
+            loadComplaints();
+        }
     }
 }
 
@@ -165,6 +170,7 @@ function getSectionTitle(sectionId) {
         'packages': 'Gói thuê',
         'batteries': 'Quản lý pin',
         'reports': 'Báo cáo',
+        'complaints': 'Xử lý khiếu nại',
         'settings': 'Cài đặt'
     };
     return titles[sectionId] || 'Dashboard';
@@ -600,6 +606,11 @@ function loadUsersData() {
 
 // Load danh sách trạm (bước đầu tiên)
 let currentStationId = null;
+let batteriesDataCache = []; // Cache dữ liệu pin để sắp xếp
+let batteriesDataOriginal = []; // Dữ liệu pin gốc (chưa filter)
+let currentSortColumn = null;
+let currentSortDirection = 'asc'; // 'asc' or 'desc'
+let currentStatusFilter = 'all'; // Filter trạng thái hiện tại
 
 async function loadStationsList() {
     try {
@@ -642,6 +653,10 @@ async function loadStationsList() {
         }
         if (refreshBatteriesBtn) {
             refreshBatteriesBtn.style.display = 'none';
+        }
+        const coordinationBtn = document.getElementById('coordinationBtn');
+        if (coordinationBtn) {
+            coordinationBtn.style.display = 'none';
         }
 
         if (stationsListSection) {
@@ -702,6 +717,7 @@ async function viewStationBatteries(stationId) {
     const batteriesDetailSection = document.getElementById('batteriesDetailSection');
     const backToStationsBtn = document.getElementById('backToStationsBtn');
     const refreshBatteriesBtn = document.getElementById('refreshBatteriesBtn');
+    const coordinationBtn = document.getElementById('coordinationBtn');
 
     if (stationsListSection) {
         stationsListSection.style.display = 'none';
@@ -714,6 +730,9 @@ async function viewStationBatteries(stationId) {
     }
     if (refreshBatteriesBtn) {
         refreshBatteriesBtn.style.display = 'inline-block';
+    }
+    if (coordinationBtn) {
+        coordinationBtn.style.display = 'inline-block';
     }
 
     // Load pin của trạm
@@ -787,12 +806,153 @@ async function loadBatteriesData(stationId = null) {
         if (tableBody) {
             if (!batteriesData || batteriesData.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Chưa có pin nào trong trạm này</td></tr>';
+                batteriesDataCache = [];
+                batteriesDataOriginal = [];
                 return;
             }
 
-            // Load thông tin chi tiết loại pin - đã được PinController gọi từ backend
-            // PinController đã gọi StationService và trả về đầy đủ thông tin (dienap, congsuat, giadoipin)
-            tableBody.innerHTML = batteriesData.map((battery) => {
+            // Lưu cache dữ liệu để sắp xếp và filter
+            batteriesDataCache = batteriesData;
+            batteriesDataOriginal = batteriesData; // Lưu dữ liệu gốc
+            
+            // Áp dụng filter hiện tại (nếu có)
+            applyBatteryFilter();
+        }
+    } catch (error) {
+        console.error('Lỗi khi load dữ liệu pin:', error);
+        const tableBody = document.getElementById('batteriesTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: red;">Lỗi khi tải dữ liệu pin</td></tr>';
+        }
+        batteriesDataCache = [];
+        batteriesDataOriginal = [];
+    }
+}
+
+// Filter pin theo trạng thái
+function filterBatteriesByStatus() {
+    const filterSelect = document.getElementById('batteryStatusFilter');
+    if (!filterSelect) return;
+    
+    currentStatusFilter = filterSelect.value;
+    applyBatteryFilter();
+}
+
+// Áp dụng filter và render lại bảng
+function applyBatteryFilter() {
+    if (!batteriesDataOriginal || batteriesDataOriginal.length === 0) {
+        return;
+    }
+    
+    let filteredData = [...batteriesDataOriginal];
+    
+    // Lọc theo trạng thái nếu không phải "all"
+    if (currentStatusFilter !== 'all') {
+        filteredData = filteredData.filter(battery => {
+            const status = (battery.tinhtrang || '').trim();
+            return status === currentStatusFilter;
+        });
+    }
+    
+    // Áp dụng sắp xếp nếu có
+    if (currentSortColumn) {
+        filteredData = sortBatteryData(filteredData, currentSortColumn, currentSortDirection);
+    }
+    
+    // Cập nhật cache và render
+    batteriesDataCache = filteredData;
+    renderBatteriesTable(filteredData);
+}
+
+// Sắp xếp dữ liệu pin (hàm riêng để tái sử dụng)
+function sortBatteryData(data, column, direction) {
+    return [...data].sort((a, b) => {
+        let aValue, bValue;
+
+        switch (column) {
+            case 'idpin':
+                aValue = a.idpin || 0;
+                bValue = b.idpin || 0;
+                break;
+            case 'loaipin':
+                aValue = (a.loaipin || '').toLowerCase();
+                bValue = (b.loaipin || '').toLowerCase();
+                break;
+            case 'dienap':
+                aValue = a.dienap || 0;
+                bValue = b.dienap || 0;
+                break;
+            case 'congsuat':
+                aValue = a.congsuat || 0;
+                bValue = b.congsuat || 0;
+                break;
+            case 'giadoipin':
+                aValue = a.giadoipin || 0;
+                bValue = b.giadoipin || 0;
+                break;
+            case 'soh':
+                aValue = a.soh || 0;
+                bValue = b.soh || 0;
+                break;
+            case 'soc':
+                aValue = a.soc || 0;
+                bValue = b.soc || 0;
+                break;
+            case 'tinhtrang':
+                // Sắp xếp theo thứ tự ưu tiên: Pin đang sạc -> Pin đầy -> các trạng thái khác
+                const getStatusPriority = (status) => {
+                    const statusLower = (status || '').toLowerCase();
+                    if (statusLower.includes('đang sạc') || statusLower.includes('đang chờ')) {
+                        return 1; // Ưu tiên cao nhất
+                    } else if (statusLower.includes('đầy')) {
+                        return 2; // Ưu tiên thứ hai
+                    } else {
+                        return 3; // Các trạng thái khác
+                    }
+                };
+                aValue = getStatusPriority(a.tinhtrang);
+                bValue = getStatusPriority(b.tinhtrang);
+                
+                // Nếu cùng mức ưu tiên, sắp xếp theo tên trạng thái
+                if (aValue === bValue) {
+                    aValue = (a.tinhtrang || '').toLowerCase();
+                    bValue = (b.tinhtrang || '').toLowerCase();
+                    if (direction === 'asc') {
+                        return aValue.localeCompare(bValue);
+                    } else {
+                        return bValue.localeCompare(aValue);
+                    }
+                }
+                break;
+            default:
+                return 0;
+        }
+
+        // So sánh
+        if (typeof aValue === 'string') {
+            if (direction === 'asc') {
+                return aValue.localeCompare(bValue);
+            } else {
+                return bValue.localeCompare(aValue);
+            }
+        } else {
+            if (direction === 'asc') {
+                return aValue - bValue;
+            } else {
+                return bValue - aValue;
+            }
+        }
+    });
+}
+
+// Render bảng pin
+function renderBatteriesTable(batteriesData) {
+    const tableBody = document.getElementById('batteriesTableBody');
+    if (!tableBody) return;
+
+    // Load thông tin chi tiết loại pin - đã được PinController gọi từ backend
+    // PinController đã gọi StationService và trả về đầy đủ thông tin (dienap, congsuat, giadoipin)
+    tableBody.innerHTML = batteriesData.map((battery) => {
                 // Dữ liệu đã có sẵn từ backend (PinController đã gọi StationService)
                 let loaiPinInfo = {
                     tenloaipin: battery.loaipin || `Pin ${battery.idloaipin}`,
@@ -836,13 +996,59 @@ async function loadBatteriesData(stationId = null) {
                         </td>
                     </tr>
                 `;
-            }).join('');
-        }
-    } catch (error) {
-        console.error('Lỗi khi load dữ liệu pin:', error);
-        const tableBody = document.getElementById('batteriesTableBody');
-        if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: red;">Lỗi khi tải dữ liệu pin</td></tr>';
+    }).join('');
+}
+
+// Sắp xếp danh sách pin
+function sortBatteries(column) {
+    if (!batteriesDataCache || batteriesDataCache.length === 0) {
+        return;
+    }
+
+    // Đảo ngược hướng sắp xếp nếu click vào cùng một cột
+    if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortColumn = column;
+        currentSortDirection = 'asc';
+    }
+
+    // Áp dụng filter trước khi sắp xếp
+    let dataToSort = currentStatusFilter === 'all' 
+        ? [...batteriesDataOriginal] 
+        : batteriesDataOriginal.filter(b => (b.tinhtrang || '').trim() === currentStatusFilter);
+    
+    // Sắp xếp dữ liệu
+    const sortedData = sortBatteryData(dataToSort, column, currentSortDirection);
+
+    // Cập nhật icon sắp xếp
+    updateSortIcons(column, currentSortDirection);
+
+    // Render lại bảng với dữ liệu đã sắp xếp
+    renderBatteriesTable(sortedData);
+    
+    // Cập nhật cache với dữ liệu đã sắp xếp
+    batteriesDataCache = sortedData;
+}
+
+// Cập nhật icon sắp xếp
+function updateSortIcons(activeColumn, direction) {
+    // Reset tất cả icon
+    const allSortIcons = document.querySelectorAll('[id^="sort-"]');
+    allSortIcons.forEach(icon => {
+        icon.className = 'fas fa-sort';
+        icon.style.color = '';
+    });
+
+    // Cập nhật icon của cột đang được sắp xếp
+    const activeIcon = document.getElementById(`sort-${activeColumn}`);
+    if (activeIcon) {
+        if (direction === 'asc') {
+            activeIcon.className = 'fas fa-sort-up';
+            activeIcon.style.color = '#3b82f6';
+        } else {
+            activeIcon.className = 'fas fa-sort-down';
+            activeIcon.style.color = '#3b82f6';
         }
     }
 }
@@ -855,12 +1061,13 @@ function getStatusText(status) {
         'maintenance': 'Bảo trì',
         'offline': 'Offline',
         'available': 'Có sẵn',
-        'charging': 'Đang sạc',
+        'charging': 'Pin đang sạc',
         'faulty': 'Lỗi',
         'in-use': 'Đang sử dụng',
         'Khả dụng': 'Khả dụng',
         'Đang sử dụng': 'Đang sử dụng',
-        'Đang sạc': 'Đang sạc',
+        'Pin đầy': 'Pin đầy',
+        'Pin đang sạc': 'Pin đang sạc',
         'Bảo trì': 'Bảo trì',
         'Lỗi': 'Lỗi'
     };
@@ -999,8 +1206,8 @@ function editUser(id) {
 // Mở modal cập nhật tình trạng pin
 function updateBatteryStatus(id, currentStatus, currentSoH, currentSoC) {
     document.getElementById('updateBatteryId').value = id;
-    // Nếu currentStatus không phải "Đang chờ" hoặc "Đang sạc", mặc định là "Đang chờ"
-    const validStatus = (currentStatus === 'Đang chờ' || currentStatus === 'Đang sạc') ? currentStatus : 'Đang chờ';
+    // Nếu currentStatus không phải "Pin đầy" hoặc "Pin đang sạc", mặc định là "Pin đầy"
+    const validStatus = (currentStatus === 'Pin đầy' || currentStatus === 'Pin đang sạc') ? currentStatus : 'Pin đầy';
     document.getElementById('updateBatteryStatus').value = validStatus;
     if (document.getElementById('updateBatterySoH')) {
         document.getElementById('updateBatterySoH').value = currentSoH || 100;
@@ -1141,6 +1348,248 @@ function deleteBattery(id) {
     }
 }
 
+// Hiển thị modal điều phối pin
+async function showBatteryCoordinationModal() {
+    const modal = document.getElementById('batteryCoordinationModal');
+    if (!modal) return;
+
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        // Load danh sách trạm với tồn kho
+        const response = await fetch('http://localhost:5000/gateway/batteryadmin/Pin/coordination/stations', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            showNotification('Không thể lấy danh sách trạm', 'error');
+            return;
+        }
+
+        const stations = await response.json();
+        
+        // Populate dropdowns
+        const fromStationSelect = document.getElementById('fromStationSelect');
+        const toStationSelect = document.getElementById('toStationSelect');
+        
+        if (fromStationSelect && toStationSelect) {
+            // Clear existing options except first
+            fromStationSelect.innerHTML = '<option value="">-- Chọn trạm nguồn --</option>';
+            toStationSelect.innerHTML = '<option value="">-- Chọn trạm đích --</option>';
+            
+            stations.forEach(station => {
+                const option1 = document.createElement('option');
+                option1.value = station.id;
+                // Đếm số pin đầy có thể chuyển
+                const fullBatteriesCount = station.inventory?.full || 0;
+                option1.textContent = `${station.tentram} (${fullBatteriesCount} pin đầy)`;
+                fromStationSelect.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = station.id;
+                option2.textContent = `${station.tentram} (${station.inventory?.total || 0} pin)`;
+                toStationSelect.appendChild(option2);
+            });
+        }
+
+        // Reset battery list
+        const batteryList = document.getElementById('availableBatteriesList');
+        if (batteryList) {
+            batteryList.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">Vui lòng chọn trạm nguồn để xem danh sách pin</p>';
+        }
+
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    } catch (error) {
+        console.error('Lỗi khi mở modal điều phối:', error);
+        showNotification('Không thể mở modal điều phối', 'error');
+    }
+}
+
+// Load danh sách pin của trạm nguồn
+async function loadStationBatteries(type) {
+    if (type !== 'from') return;
+
+    const fromStationId = document.getElementById('fromStationSelect')?.value;
+    if (!fromStationId) {
+        const batteryList = document.getElementById('availableBatteriesList');
+        if (batteryList) {
+            batteryList.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">Vui lòng chọn trạm nguồn</p>';
+        }
+        return;
+    }
+
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const response = await fetch(`http://localhost:5000/gateway/batteryadmin/Pin/coordination/inventory/${fromStationId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            showNotification('Không thể lấy danh sách pin', 'error');
+            return;
+        }
+
+        const data = await response.json();
+        const batteryList = document.getElementById('availableBatteriesList');
+        
+        if (!batteryList) return;
+
+        if (!data.pins || data.pins.length === 0) {
+            batteryList.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">Trạm này không có pin nào</p>';
+            return;
+        }
+
+        // Filter chỉ pin có thể chuyển (chỉ Pin đầy mới có thể chuyển trạm)
+        const transferablePins = data.pins.filter(pin => 
+            pin.tinhtrang === 'Pin đầy'
+        );
+
+        if (transferablePins.length === 0) {
+            batteryList.innerHTML = '<p style="color: #f59e0b; text-align: center; padding: 20px;">Không có pin nào có thể chuyển (chỉ pin "Pin đầy" mới có thể chuyển trạm)</p>';
+            return;
+        }
+
+        batteryList.innerHTML = `
+            <div style="margin-bottom: 10px; padding: 10px; background: #f3f4f6; border-radius: 6px;">
+                <strong>Tổng: ${transferablePins.length} pin có thể chuyển</strong>
+            </div>
+            <div style="display: grid; gap: 10px;">
+                ${transferablePins.map(pin => `
+                    <label style="display: flex; align-items: center; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: background 0.2s;" 
+                           onmouseover="this.style.background='#f9fafb'" 
+                           onmouseout="this.style.background='white'">
+                        <input type="checkbox" name="batteryIds" value="${pin.idpin}" style="margin-right: 12px; width: 18px; height: 18px; cursor: pointer;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; color: #1f2937;">Pin #${pin.idpin} - ${pin.loaipin}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                                SoH: ${pin.soh?.toFixed(1) || 100}% | SoC: ${pin.soc?.toFixed(1) || 100}% | 
+                                <span class="status-badge status-${pin.tinhtrang === 'Pin đầy' ? 'available' : 'charging'}" style="margin-left: 4px;">
+                                    ${pin.tinhtrang}
+                                </span>
+                            </div>
+                        </div>
+                    </label>
+                `).join('')}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Lỗi khi load pin:', error);
+        showNotification('Không thể tải danh sách pin', 'error');
+    }
+}
+
+// Xử lý điều phối pin
+async function handleBatteryCoordination(event) {
+    event.preventDefault();
+    
+    const fromStationId = document.getElementById('fromStationSelect')?.value;
+    const toStationId = document.getElementById('toStationSelect')?.value;
+    const batteryCheckboxes = document.querySelectorAll('input[name="batteryIds"]:checked');
+    
+    if (!fromStationId || !toStationId) {
+        showNotification('Vui lòng chọn cả trạm nguồn và trạm đích', 'error');
+        return;
+    }
+    
+    if (fromStationId === toStationId) {
+        showNotification('Trạm nguồn và trạm đích không thể giống nhau', 'error');
+        return;
+    }
+    
+    if (batteryCheckboxes.length === 0) {
+        showNotification('Vui lòng chọn ít nhất một pin để chuyển', 'error');
+        return;
+    }
+    
+    const batteryIds = Array.from(batteryCheckboxes).map(cb => parseInt(cb.value));
+    
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+
+        const response = await fetch('http://localhost:5000/gateway/batteryadmin/Pin/coordination/transfer', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                fromStationId: parseInt(fromStationId),
+                toStationId: parseInt(toStationId),
+                batteryIds: batteryIds
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showNotification(data.message || 'Điều phối thất bại', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            return;
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        // Hiển thị kết quả
+        const successCount = data.summary?.success || 0;
+        const failedCount = data.summary?.failed || 0;
+        
+        if (successCount > 0) {
+            showNotification(data.message || `Đã chuyển ${successCount} pin thành công`, 'success');
+            closeModal('batteryCoordinationModal');
+            
+            // Reload lại danh sách pin nếu đang xem trạm
+            if (currentStationId) {
+                await loadBatteriesData(currentStationId);
+            }
+        } else {
+            showNotification('Không có pin nào được chuyển thành công', 'error');
+        }
+
+        if (failedCount > 0 && data.failed && data.failed.length > 0) {
+            const failedReasons = data.failed.map(f => `Pin #${f.idpin}: ${f.reason}`).join('\n');
+            alert(`Các pin không thể chuyển:\n${failedReasons}`);
+        }
+    } catch (error) {
+        console.error('Lỗi khi điều phối pin:', error);
+        showNotification('Không thể kết nối đến server', 'error');
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Xác nhận điều phối';
+    }
+}
+
 // Logout function
 async function logout() {
     if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
@@ -1170,6 +1619,413 @@ async function logout() {
             window.location.href = 'admin-login.html';
         }
     }
+}
+
+// ==================== COMPLAINTS MANAGEMENT ====================
+
+let currentComplaintsPage = 1;
+let currentComplaintsPageSize = 10;
+let allComplaintsData = [];
+let filteredComplaintsData = [];
+
+// Load danh sách khiếu nại
+async function loadComplaints(page = 1, pageSize = 10) {
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const statusFilter = document.getElementById('complaintStatusFilter')?.value || '';
+        const url = `http://localhost:5000/gateway/batteryadmin/xu-ly-khieu-nai?page=${page}&pageSize=${pageSize}${statusFilter ? `&trangThai=${encodeURIComponent(statusFilter)}` : ''}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Không thể tải danh sách khiếu nại');
+        }
+
+        const data = await response.json();
+        allComplaintsData = data.data || [];
+        currentComplaintsPage = data.page || 1;
+        currentComplaintsPageSize = data.pageSize || 10;
+
+        renderComplaintsTable(allComplaintsData);
+        renderComplaintsPagination(data);
+    } catch (error) {
+        console.error('Lỗi khi load khiếu nại:', error);
+        const tableBody = document.getElementById('complaintsTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 40px; color: red;">
+                        <i class="fas fa-exclamation-triangle"></i> Lỗi khi tải danh sách khiếu nại
+                    </td>
+                </tr>
+            `;
+        }
+        showNotification('Không thể tải danh sách khiếu nại', 'error');
+    }
+}
+
+// Render bảng khiếu nại
+function renderComplaintsTable(complaints) {
+    const tableBody = document.getElementById('complaintsTableBody');
+    if (!tableBody) return;
+
+    if (!complaints || complaints.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-inbox"></i> Chưa có khiếu nại nào
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tableBody.innerHTML = complaints.map(complaint => {
+        const user = complaint.user || {};
+        const moTa = (complaint.mo_ta || complaint.moTa || '').substring(0, 50) + ((complaint.mo_ta || complaint.moTa || '').length > 50 ? '...' : '');
+        const ngayTao = formatDate(complaint.ngay_tao || complaint.ngayTao);
+        const trangThai = complaint.trang_thai || complaint.trangThai || 'Chờ xử lý';
+        const doUuTien = complaint.do_uu_tien || complaint.doUuTien || 'Trung bình';
+        
+        const priorityColors = {
+            'Khẩn cấp': '#ef4444',
+            'Cao': '#f59e0b',
+            'Trung bình': '#3b82f6',
+            'Thấp': '#64748b'
+        };
+        const priorityColor = priorityColors[doUuTien] || '#64748b';
+        
+        const statusClass = trangThai === 'Đã xử lý' ? 'active' : 
+                           trangThai === 'Đang xử lý' ? 'warning' : 'info';
+
+        return `
+            <tr>
+                <td>#${complaint.id}</td>
+                <td>${user.name || 'Không xác định'}</td>
+                <td>${user.email || '--'}</td>
+                <td>${user.sodienthoai || '--'}</td>
+                <td title="${complaint.mo_ta || complaint.moTa || ''}">${moTa}</td>
+                <td>
+                    <span style="padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 500; background: ${priorityColor}15; color: ${priorityColor};">
+                        <i class="fas fa-flag"></i> ${doUuTien}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge status-${statusClass}">${trangThai}</span>
+                </td>
+                <td>${ngayTao}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="viewComplaintDetail(${complaint.id})">
+                        <i class="fas fa-eye"></i> Xem chi tiết
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Render pagination
+function renderComplaintsPagination(data) {
+    const pagination = document.getElementById('complaintsPagination');
+    if (!pagination) return;
+
+    const totalPages = data.totalPages || 1;
+    const currentPage = data.page || 1;
+
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let paginationHTML = '';
+
+    // Previous button
+    paginationHTML += `
+        <button class="btn btn-outline btn-sm" ${currentPage === 1 ? 'disabled' : ''} 
+                onclick="loadComplaints(${currentPage - 1}, ${currentComplaintsPageSize})">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    `;
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            paginationHTML += `
+                <button class="btn ${i === currentPage ? 'btn-primary' : 'btn-outline'} btn-sm" 
+                        onclick="loadComplaints(${i}, ${currentComplaintsPageSize})">
+                    ${i}
+                </button>
+            `;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            paginationHTML += `<span style="padding: 8px;">...</span>`;
+        }
+    }
+
+    // Next button
+    paginationHTML += `
+        <button class="btn btn-outline btn-sm" ${currentPage === totalPages ? 'disabled' : ''} 
+                onclick="loadComplaints(${currentPage + 1}, ${currentComplaintsPageSize})">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    `;
+
+    pagination.innerHTML = paginationHTML;
+}
+
+// Filter complaints
+function filterComplaints() {
+    const statusFilter = document.getElementById('complaintStatusFilter')?.value || '';
+    const searchTerm = (document.getElementById('complaintSearch')?.value || '').toLowerCase();
+    
+    loadComplaints(1, currentComplaintsPageSize);
+    
+    // Apply search filter on client side
+    if (searchTerm) {
+        setTimeout(() => {
+            const rows = document.querySelectorAll('#complaintsTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }, 100);
+    }
+}
+
+// Refresh complaints
+function refreshComplaints() {
+    loadComplaints(currentComplaintsPage, currentComplaintsPageSize);
+}
+
+// View complaint detail
+async function viewComplaintDetail(complaintId) {
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const response = await fetch(`http://localhost:5000/gateway/batteryadmin/xu-ly-khieu-nai/${complaintId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Không thể tải chi tiết khiếu nại');
+        }
+
+        const complaint = await response.json();
+        
+        // Fill modal với dữ liệu
+        document.getElementById('complaintDetailId').textContent = complaint.id;
+        document.getElementById('complaintResponseId').value = complaint.id;
+        
+        // Thông tin khách hàng
+        const user = complaint.user || {};
+        document.getElementById('complaintCustomerName').textContent = user.name || 'Không xác định';
+        document.getElementById('complaintCustomerEmail').textContent = user.email || '--';
+        document.getElementById('complaintCustomerPhone').textContent = user.sodienthoai || '--';
+        document.getElementById('complaintCustomerAge').textContent = user.age ? `${user.age} tuổi` : '--';
+        
+        // Thông tin khiếu nại
+        document.getElementById('complaintDetailStatus').innerHTML = `
+            <span class="status-badge status-${(complaint.trang_thai || complaint.trangThai) === 'Đã xử lý' ? 'active' : 'info'}">
+                ${complaint.trang_thai || complaint.trangThai || 'Chờ xử lý'}
+            </span>
+        `;
+        document.getElementById('complaintDetailPriority').innerHTML = `
+            <span style="padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 500; background: #3b82f615; color: #3b82f6;">
+                ${complaint.do_uu_tien || complaint.doUuTien || 'Trung bình'}
+            </span>
+        `;
+        document.getElementById('complaintDetailDate').textContent = formatDate(complaint.ngay_tao || complaint.ngayTao);
+        document.getElementById('complaintDetailProcessedDate').textContent = complaint.ngay_xu_ly || complaint.ngayXuLy ? formatDate(complaint.ngay_xu_ly || complaint.ngayXuLy) : 'Chưa xử lý';
+        document.getElementById('complaintDetailDescription').textContent = complaint.mo_ta || complaint.moTa || 'Không có mô tả';
+        
+        // Tin nhắn - sắp xếp theo thời gian và tách riêng admin/user
+        const messages = complaint.messages || [];
+        const messagesList = document.getElementById('complaintMessagesList');
+        if (messagesList) {
+            if (messages.length === 0) {
+                messagesList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Chưa có tin nhắn nào</p>';
+            } else {
+                // Sắp xếp tin nhắn theo thời gian (từ cũ đến mới) - hiển thị tất cả theo thứ tự thời gian
+                const sortedMessages = [...messages].sort((a, b) => {
+                    const dateA = new Date(a.ngay_gui || a.ngayGui || 0);
+                    const dateB = new Date(b.ngay_gui || b.ngayGui || 0);
+                    return dateA - dateB;
+                });
+                
+                // Render tất cả tin nhắn theo thứ tự thời gian (không tách riêng user và admin)
+                let html = '';
+                
+                sortedMessages.forEach(msg => {
+                    const msgUser = msg.user || {};
+                    const isAdmin = msgUser.role === 'admin' || (msgUser.email && msgUser.email.includes('admin'));
+                    
+                    // Style cho tin nhắn của admin
+                    if (isAdmin) {
+                        html += `
+                            <div style="margin-bottom: 15px; padding: 16px; background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); border-radius: 12px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="fas fa-user-shield" style="color: #3b82f6; margin-right: 10px; font-size: 18px;"></i>
+                                        <strong style="color: #1e293b; font-size: 14px; font-weight: 600;">${msgUser.name || 'Admin'}</strong>
+                                        <span style="margin-left: 10px; padding: 3px 8px; background: #3b82f6; color: white; border-radius: 5px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">ADMIN</span>
+                                    </div>
+                                    <span style="color: #64748b; font-size: 12px; background: #f1f5f9; padding: 5px 10px; border-radius: 6px; font-weight: 500;">${formatDate(msg.ngay_gui || msg.ngayGui)}</span>
+                                </div>
+                                <p style="margin: 0; color: #475569; line-height: 1.7; white-space: pre-wrap; font-size: 14px; padding-left: 28px;">${msg.noi_dung || msg.noiDung || ''}</p>
+                            </div>
+                        `;
+                    } else {
+                        // Style cho tin nhắn của user (khách hàng)
+                        html += `
+                            <div style="margin-bottom: 15px; padding: 16px; background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border-radius: 12px; border-left: 4px solid #10b981; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="fas fa-user-circle" style="color: #10b981; margin-right: 10px; font-size: 18px;"></i>
+                                        <strong style="color: #1e293b; font-size: 14px; font-weight: 600;">${msgUser.name || 'Khách hàng'}</strong>
+                                    </div>
+                                    <span style="color: #64748b; font-size: 12px; background: #f1f5f9; padding: 5px 10px; border-radius: 6px; font-weight: 500;">${formatDate(msg.ngay_gui || msg.ngayGui)}</span>
+                                </div>
+                                <p style="margin: 0; color: #475569; line-height: 1.7; white-space: pre-wrap; font-size: 14px; padding-left: 28px;">${msg.noi_dung || msg.noiDung || ''}</p>
+                            </div>
+                        `;
+                    }
+                });
+                
+                messagesList.innerHTML = html;
+                
+                // Scroll xuống cuối cùng
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
+        }
+        
+        // Reset form
+        document.getElementById('complaintResponseText').value = '';
+        const currentStatus = complaint.trang_thai || complaint.trangThai || 'Chờ xử lý';
+        // Set giá trị dropdown theo trạng thái hiện tại
+        const statusSelect = document.getElementById('complaintResponseStatus');
+        if (statusSelect) {
+            // Giữ nguyên trạng thái hiện tại, hoặc nếu là "Chờ xử lý" thì chuyển sang "Đang xử lý"
+            if (currentStatus === 'Chờ xử lý') {
+                statusSelect.value = 'Đang xử lý';
+            } else if (currentStatus === 'Đang xử lý') {
+                statusSelect.value = 'Đang xử lý';
+            } else if (currentStatus === 'Đã xử lý') {
+                statusSelect.value = 'Đã xử lý';
+            } else {
+                // Nếu trạng thái không khớp, mặc định là "Đang xử lý"
+                statusSelect.value = 'Đang xử lý';
+            }
+        }
+        
+        // Show modal
+        const modal = document.getElementById('complaintDetailModal');
+        if (modal) {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    } catch (error) {
+        console.error('Lỗi khi load chi tiết khiếu nại:', error);
+        showNotification('Không thể tải chi tiết khiếu nại', 'error');
+    }
+}
+
+// Handle complaint response
+async function handleComplaintResponse(event) {
+    event.preventDefault();
+    
+    const complaintId = document.getElementById('complaintResponseId').value;
+    const phanHoi = document.getElementById('complaintResponseText').value.trim();
+    const trangThai = document.getElementById('complaintResponseStatus').value;
+    
+    if (!phanHoi) {
+        showNotification('Vui lòng nhập nội dung phản hồi', 'error');
+        return;
+    }
+    
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+
+        const response = await fetch(`http://localhost:5000/gateway/batteryadmin/xu-ly-khieu-nai/${complaintId}/tra-loi`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                phan_hoi: phanHoi,
+                trang_thai: trangThai
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Không thể gửi phản hồi');
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        showNotification('Gửi phản hồi thành công!', 'success');
+        
+        // Reload danh sách và đóng modal
+        setTimeout(() => {
+            closeModal('complaintDetailModal');
+            loadComplaints(currentComplaintsPage, currentComplaintsPageSize);
+        }, 1000);
+    } catch (error) {
+        console.error('Lỗi khi gửi phản hồi:', error);
+        showNotification(error.message || 'Không thể gửi phản hồi', 'error');
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi phản hồi';
+        }
+    }
+}
+
+// Format date helper
+function formatDate(dateString) {
+    if (!dateString) return '--';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${hours}:${minutes} ${day}/${month}/${year}`;
 }
 
 // Add CSS animations
@@ -1217,6 +2073,16 @@ style.textContent = `
     .status-maintenance {
         background: #fef3c7;
         color: #92400e;
+    }
+    
+    .status-warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-info {
+        background: #dbeafe;
+        color: #1e40af;
     }
     
     .status-offline {

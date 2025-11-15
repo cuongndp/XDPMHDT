@@ -4,12 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using BatteryAdminService.Models;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Linq;
 
 namespace BatteryAdminService.Controllers;
 
 [Route("api/Admin/[controller]")]
 [ApiController]
-[Authorize(Roles = "admin")]
+// Authorization được đặt riêng cho từng endpoint
 public class PinController : ControllerBase
 {
     private readonly BatteryAdminDbContext _context;
@@ -29,8 +30,105 @@ public class PinController : ControllerBase
         _logger = logger;
     }
 
+    // GET: api/Pin/staff - Lấy danh sách pin theo trạm (cho staff)
+    [HttpGet("staff")]
+    [Authorize(Roles = "staff")]
+    public async Task<IActionResult> GetPinsForStaff([FromQuery] int? idtram = null)
+    {
+        try
+        {
+            // Debug: Log thông tin user và claims
+            _logger.LogInformation("GetPinsForStaff called with idtram={Idtram}", idtram);
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                _logger.LogInformation("User is authenticated. Claims: {Claims}", 
+                    string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
+            }
+            else
+            {
+                _logger.LogWarning("User is NOT authenticated!");
+            }
+
+            if (!idtram.HasValue || idtram.Value <= 0)
+            {
+                return BadRequest(new { message = "Vui lòng cung cấp idtram" });
+            }
+
+            var query = _context.Pins.Where(p => p.Idtram == idtram.Value);
+            
+            var pins = await query
+                .OrderByDescending(p => p.Idpin)
+                .ToListAsync();
+
+            var result = pins.Select(pin => new
+            {
+                idpin = pin.Idpin,
+                idloaipin = pin.Idloaipin,
+                idtram = pin.Idtram ?? 0,
+                soh = pin.Soh ?? 100,
+                soc = pin.Soc ?? 100,
+                tinhtrang = pin.Tinhtrang ?? "Khả dụng"
+            }).ToList();
+
+            _logger.LogInformation("Returning {Count} pins for station {Idtram}", result.Count, idtram.Value);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy danh sách pin cho staff");
+            return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+        }
+    }
+
+    // POST: api/Pin/staff - Tạo pin mới (cho staff)
+    [HttpPost("staff")]
+    [Authorize(Roles = "staff")]
+    public async Task<IActionResult> CreatePinForStaff([FromBody] JsonElement jsonElement)
+    {
+        try
+        {
+            if (!jsonElement.TryGetProperty("idloaipin", out var idloaipinEl) ||
+                !jsonElement.TryGetProperty("idtram", out var idtramEl) ||
+                !jsonElement.TryGetProperty("soh", out var sohEl) ||
+                !jsonElement.TryGetProperty("soc", out var socEl))
+            {
+                return BadRequest(new { message = "Thiếu thông tin bắt buộc: idloaipin, idtram, soh, soc" });
+            }
+
+            var newPin = new Pin
+            {
+                Idloaipin = idloaipinEl.GetInt32(),
+                Idtram = idtramEl.GetInt32(),
+                Soh = sohEl.GetSingle(),
+                Soc = socEl.GetSingle(),
+                Tinhtrang = jsonElement.TryGetProperty("tinhtrang", out var tinhtrangEl) 
+                    ? tinhtrangEl.GetString() 
+                    : "Pin đang sạc"
+            };
+
+            _context.Pins.Add(newPin);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                idpin = newPin.Idpin,
+                idloaipin = newPin.Idloaipin,
+                idtram = newPin.Idtram,
+                soh = newPin.Soh,
+                soc = newPin.Soc,
+                tinhtrang = newPin.Tinhtrang
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tạo pin mới cho staff");
+            return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+        }
+    }
+
     // GET: api/Pin - Lấy danh sách tất cả pin hoặc theo trạm
     [HttpGet]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetAllPins([FromQuery] int? idtram = null)
     {
         try
@@ -192,6 +290,7 @@ public class PinController : ControllerBase
 
     // GET: api/Pin/{id} - Lấy thông tin chi tiết 1 pin
     [HttpGet("{id}")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetPinById(int id)
     {
         try
@@ -221,6 +320,7 @@ public class PinController : ControllerBase
 
     // PUT: api/Pin/{id}/status - Cập nhật tình trạng pin
     [HttpPut("{id}/status")]
+    [Authorize(Roles = "admin,staff")]
     public async Task<IActionResult> UpdatePinStatus(int id, [FromBody] JsonElement jsonElement)
     {
         try
@@ -304,6 +404,7 @@ public class PinController : ControllerBase
 
     // GET: api/Pin/stats - Lấy thống kê pin
     [HttpGet("stats")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetPinStats()
     {
         try

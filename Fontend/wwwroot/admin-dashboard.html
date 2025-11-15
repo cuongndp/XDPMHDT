@@ -114,6 +114,10 @@
                     <i class="fas fa-chart-bar"></i>
                     <span>Báo cáo</span>
                 </li>
+                <li class="nav-item" data-section="complaints">
+                    <i class="fas fa-life-ring"></i>
+                    <span>Xử lý khiếu nại</span>
+                </li>
                 <li class="nav-item" data-section="settings">
                     <i class="fas fa-cog"></i>
                     <span>Cài đặt</span>
@@ -454,6 +458,9 @@
             <div class="section-header">
                 <h2>Quản lý pin</h2>
                     <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showBatteryCoordinationModal()" id="coordinationBtn" style="display: none;">
+                        <i class="fas fa-exchange-alt"></i> Điều phối pin
+                    </button>
                     <button class="btn btn-outline" onclick="loadStationsList()" id="backToStationsBtn" style="display: none;">
                         <i class="fas fa-arrow-left"></i> Quay lại danh sách trạm
                     </button>
@@ -495,12 +502,10 @@
                 <div class="table-filters">
                     <div class="filter-group">
                         <label>Trạng thái:</label>
-                        <select id="batteryStatusFilter">
+                        <select id="batteryStatusFilter" onchange="filterBatteriesByStatus()">
                             <option value="all">Tất cả</option>
-                            <option value="available">Có sẵn</option>
-                            <option value="charging">Đang sạc</option>
-                            <option value="maintenance">Bảo trì</option>
-                            <option value="faulty">Lỗi</option>
+                            <option value="Pin đang sạc">Pin đang sạc</option>
+                            <option value="Pin đầy">Pin đầy</option>
                         </select>
                     </div>
                 </div>
@@ -509,14 +514,30 @@
                     <table class="batteries-table">
                         <thead>
                             <tr>
-                                <th>ID Pin</th>
-                                <th>Loại pin</th>
-                                <th>Điện áp</th>
-                                <th>Công suất</th>
-                                <th>Giá đổi pin</th>
-                                <th>SoH (%)</th>
-                                <th>SoC (%)</th>
-                                <th>Trạng thái</th>
+                                <th onclick="sortBatteries('idpin')" style="cursor: pointer; user-select: none;">
+                                    ID Pin <i class="fas fa-sort" id="sort-idpin"></i>
+                                </th>
+                                <th onclick="sortBatteries('loaipin')" style="cursor: pointer; user-select: none;">
+                                    Loại pin <i class="fas fa-sort" id="sort-loaipin"></i>
+                                </th>
+                                <th onclick="sortBatteries('dienap')" style="cursor: pointer; user-select: none;">
+                                    Điện áp <i class="fas fa-sort" id="sort-dienap"></i>
+                                </th>
+                                <th onclick="sortBatteries('congsuat')" style="cursor: pointer; user-select: none;">
+                                    Công suất <i class="fas fa-sort" id="sort-congsuat"></i>
+                                </th>
+                                <th onclick="sortBatteries('giadoipin')" style="cursor: pointer; user-select: none;">
+                                    Giá đổi pin <i class="fas fa-sort" id="sort-giadoipin"></i>
+                                </th>
+                                <th onclick="sortBatteries('soh')" style="cursor: pointer; user-select: none;">
+                                    SoH (%) <i class="fas fa-sort" id="sort-soh"></i>
+                                </th>
+                                <th onclick="sortBatteries('soc')" style="cursor: pointer; user-select: none;">
+                                    SoC (%) <i class="fas fa-sort" id="sort-soc"></i>
+                                </th>
+                                <th onclick="sortBatteries('tinhtrang')" style="cursor: pointer; user-select: none;">
+                                    Trạng thái <i class="fas fa-sort" id="sort-tinhtrang"></i>
+                                </th>
                                 <th>Cập nhật tình trạng</th>
                             </tr>
                         </thead>
@@ -605,6 +626,64 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Complaints Management Section -->
+        <section id="complaints" class="content-section">
+            <div class="section-header">
+                <h2>Xử lý khiếu nại</h2>
+                <div class="header-actions">
+                    <button class="btn btn-outline" onclick="refreshComplaints()">
+                        <i class="fas fa-sync-alt"></i> Làm mới
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-filters" style="margin-bottom: 20px;">
+                <div class="filter-group">
+                    <label>Lọc theo trạng thái:</label>
+                    <select id="complaintStatusFilter" onchange="filterComplaints()">
+                        <option value="">Tất cả</option>
+                        <option value="Chờ xử lý">Chờ xử lý</option>
+                        <option value="Đang xử lý">Đang xử lý</option>
+                        <option value="Đã xử lý">Đã xử lý</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Tìm kiếm:</label>
+                    <input type="text" id="complaintSearch" placeholder="Tìm theo ID, tên khách hàng..." onkeyup="filterComplaints()">
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Khách hàng</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Mô tả</th>
+                            <th>Độ ưu tiên</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complaintsTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination" id="complaintsPagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+                <!-- Pagination sẽ được thêm bởi JavaScript -->
             </div>
         </section>
 
@@ -765,8 +844,8 @@
                 <div class="form-group">
                     <label for="updateBatteryStatus">Tình trạng:</label>
                     <select id="updateBatteryStatus" required>
-                        <option value="Đang chờ">Đang chờ</option>
-                        <option value="Đang sạc">Đang sạc</option>
+                        <option value="Pin đầy">Pin đầy</option>
+                        <option value="Pin đang sạc">Pin đang sạc</option>
                     </select>
                     <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Chọn tình trạng mới cho pin</small>
                 </div>
@@ -783,6 +862,151 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-outline" onclick="closeModal('updateBatteryStatusModal')">Hủy</button>
                     <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Complaint Detail Modal -->
+    <div id="complaintDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-life-ring"></i> Chi tiết khiếu nại #<span id="complaintDetailId"></span></h2>
+                <span class="close" onclick="closeModal('complaintDetailModal')">&times;</span>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding: 25px;">
+                <!-- Thông tin khách hàng -->
+                <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 18px;">
+                        <i class="fas fa-user"></i> Thông tin khách hàng
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div>
+                            <label style="color: #64748b; font-size: 13px; font-weight: 500;">Tên:</label>
+                            <p style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;" id="complaintCustomerName">--</p>
+                        </div>
+                        <div>
+                            <label style="color: #64748b; font-size: 13px; font-weight: 500;">Email:</label>
+                            <p style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;" id="complaintCustomerEmail">--</p>
+                        </div>
+                        <div>
+                            <label style="color: #64748b; font-size: 13px; font-weight: 500;">Số điện thoại:</label>
+                            <p style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;" id="complaintCustomerPhone">--</p>
+                        </div>
+                        <div>
+                            <label style="color: #64748b; font-size: 13px; font-weight: 500;">Tuổi:</label>
+                            <p style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;" id="complaintCustomerAge">--</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Thông tin khiếu nại -->
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 18px; display: flex; align-items: center;">
+                        <i class="fas fa-info-circle" style="margin-right: 10px; color: #3b82f6;"></i> Thông tin khiếu nại
+                    </h3>
+                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="color: #64748b; font-size: 13px; font-weight: 500;">Trạng thái:</label>
+                                <p style="margin: 5px 0 0 0;" id="complaintDetailStatus">--</p>
+                            </div>
+                            <div>
+                                <label style="color: #64748b; font-size: 13px; font-weight: 500;">Độ ưu tiên:</label>
+                                <p style="margin: 5px 0 0 0;" id="complaintDetailPriority">--</p>
+                            </div>
+                            <div>
+                                <label style="color: #64748b; font-size: 13px; font-weight: 500;">Ngày tạo:</label>
+                                <p style="margin: 5px 0 0 0; color: #1e293b;" id="complaintDetailDate">--</p>
+                            </div>
+                            <div>
+                                <label style="color: #64748b; font-size: 13px; font-weight: 500;">Ngày xử lý:</label>
+                                <p style="margin: 5px 0 0 0; color: #1e293b;" id="complaintDetailProcessedDate">--</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="color: #64748b; font-size: 13px; font-weight: 500;">Mô tả:</label>
+                            <p style="margin: 5px 0 0 0; color: #1e293b; white-space: pre-wrap; line-height: 1.6;" id="complaintDetailDescription">--</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lịch sử tin nhắn -->
+                <div style="margin-bottom: 25px;" id="complaintMessagesSection">
+                    <h3 style="margin: 0 0 18px 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; font-weight: 600;">
+                        <i class="fas fa-comments" style="margin-right: 10px; color: #3b82f6;"></i> Lịch sử trò chuyện
+                    </h3>
+                    <div id="complaintMessagesList" style="max-height: 400px; overflow-y: auto; background: #f8fafc; border-radius: 12px; padding: 25px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <p style="text-align: center; color: #64748b; padding: 20px;">Đang tải tin nhắn...</p>
+                    </div>
+                </div>
+                
+                <!-- Form trả lời -->
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-top: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <h3 style="margin: 0 0 20px 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; font-weight: 600;">
+                        <i class="fas fa-edit" style="margin-right: 10px; color: #3b82f6;"></i> Trả lời khiếu nại
+                    </h3>
+                    <form id="complaintResponseForm" onsubmit="handleComplaintResponse(event); return false;">
+                        <input type="hidden" id="complaintResponseId">
+                        <div class="form-group" style="margin-bottom: 18px;">
+                            <label for="complaintResponseText" style="display: block; margin-bottom: 8px; color: #475569; font-weight: 500; font-size: 14px;">Nội dung phản hồi *</label>
+                            <textarea id="complaintResponseText" rows="5" required 
+                                      placeholder="Nhập nội dung phản hồi cho khách hàng..." 
+                                      style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; resize: vertical; transition: border-color 0.3s;"
+                                      onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                                      onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';"></textarea>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label for="complaintResponseStatus" style="display: block; margin-bottom: 8px; color: #475569; font-weight: 500; font-size: 14px;">Cập nhật trạng thái:</label>
+                            <select id="complaintResponseStatus" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; background: white; cursor: pointer; transition: border-color 0.3s;"
+                                    onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                                    onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';">
+                                <option value="Chờ xử lý">Chờ xử lý</option>
+                                <option value="Đang xử lý">Đang xử lý</option>
+                                <option value="Đã xử lý">Đã xử lý</option>
+                            </select>
+                        </div>
+                        <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                            <button type="button" class="btn btn-outline" onclick="closeModal('complaintDetailModal')" style="padding: 10px 20px;">Đóng</button>
+                            <button type="submit" class="btn btn-primary" style="padding: 10px 24px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-paper-plane"></i> Gửi phản hồi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Battery Coordination Modal -->
+    <div id="batteryCoordinationModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Điều phối pin giữa các trạm</h2>
+                <span class="close" onclick="closeModal('batteryCoordinationModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="batteryCoordinationForm" onsubmit="handleBatteryCoordination(event); return false;">
+                <div class="form-group">
+                    <label for="fromStationSelect">Trạm nguồn:</label>
+                    <select id="fromStationSelect" required onchange="loadStationBatteries('from')">
+                        <option value="">-- Chọn trạm nguồn --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="toStationSelect">Trạm đích:</label>
+                    <select id="toStationSelect" required>
+                        <option value="">-- Chọn trạm đích --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Chọn pin cần chuyển (từ trạm nguồn):</label>
+                    <div id="availableBatteriesList" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-top: 10px;">
+                        <p style="color: #6b7280; text-align: center; padding: 20px;">Vui lòng chọn trạm nguồn để xem danh sách pin</p>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('batteryCoordinationModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Xác nhận điều phối</button>
                 </div>
             </form>
         </div>

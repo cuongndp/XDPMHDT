@@ -1022,3 +1022,54 @@ tr:hover {
         flex-direction: column;
     }
 }
+
+/* Custom scrollbar cho phần tin nhắn */
+#complaintMessagesList::-webkit-scrollbar {
+    width: 8px;
+}
+
+#complaintMessagesList::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+#complaintMessagesList::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    transition: background 0.3s;
+}
+
+#complaintMessagesList::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Style cho tin nhắn */
+.complaint-message-user {
+    animation: slideInLeft 0.3s ease-out;
+}
+
+.complaint-message-admin {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
