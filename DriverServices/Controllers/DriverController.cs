@@ -139,6 +139,82 @@ namespace DriverServices.Controllers
             }
 
         }
+
+        // API Login cho Nhân viên (Staff)
+        [HttpPost("staff/login")]
+        public async Task<IActionResult> StaffLogin([FromBody] Dictionary<string, string> data)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(p => p.Email == data["email"]);
+                
+                if (user == null)
+                {
+                    return BadRequest(new { message = "Email không tồn tại" });
+                }
+                
+                // Kiểm tra role phải là staff
+                if (user.Role != "staff")
+                {
+                    return BadRequest(new { message = "Tài khoản không có quyền nhân viên" });
+                }
+                
+                if (!BCrypt.Net.BCrypt.Verify(data["password"], user.Password))
+                {
+                    return BadRequest(new { message = "Mật khẩu không đúng" });
+                }
+                
+                // Tạo token JWT cho staff
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.ASCII.GetBytes("xay_dung_phan_men_huong_doi_tuong");
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                        new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                        new Claim(JwtRegisteredClaimNames.UniqueName, user.Name),
+                        new Claim(ClaimTypes.Role, "staff"),
+                        new Claim("role", "staff")
+                    }),
+                    Expires = DateTime.UtcNow.AddHours(8), // Staff session dài hơn
+                    Issuer = "ApiGateway",
+                    Audience = "DriveService",
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                };
+
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenString = tokenHandler.WriteToken(token);
+                
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddHours(8)
+                };
+                Response.Cookies.Append("staff_token", tokenString, cookieOptions);
+
+                return Ok(new 
+                { 
+                    message = "Đăng nhập nhân viên thành công", 
+                    token = tokenString,
+                    user = new
+                    {
+                        id = user.Id,
+                        name = user.Name,
+                        email = user.Email,
+                        role = user.Role
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi staff login: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
         [HttpPost("logoutdriver")]
         [Authorize(Roles = "driver")]
         public IActionResult Logout()
@@ -146,6 +222,15 @@ namespace DriverServices.Controllers
             // Xóa cookie chứa token
             Response.Cookies.Delete("access_token");
             return Ok(new { message = "Đăng xuất thành công" });
+        }
+
+        [HttpPost("staff/logout")]
+        [Authorize(Roles = "staff")]
+        public IActionResult StaffLogout()
+        {
+            // Xóa cookie staff token
+            Response.Cookies.Delete("staff_token");
+            return Ok(new { message = "Đăng xuất nhân viên thành công" });
         }
 
 

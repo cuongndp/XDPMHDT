@@ -1,53 +1,53 @@
 // Sample station data
-const stationsData = [
-    {
-        id: 1,
-        name: "Trạm đổi pin Quận 1",
-        address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
-        distance: "0.5 km",
-        status: "available",
-        batteries: 15,
-        charging: 8,
-        maintenance: 2,
-        rating: 4.8,
-        phone: "028-1234-5678"
-    },
-    {
-        id: 2,
-        name: "Trạm đổi pin Quận 2",
-        address: "456 Võ Văn Tần, Quận 2, TP.HCM",
-        distance: "1.2 km",
-        status: "charging",
-        batteries: 5,
-        charging: 12,
-        maintenance: 1,
-        rating: 4.6,
-        phone: "028-2345-6789"
-    },
-    {
-        id: 3,
-        name: "Trạm đổi pin Quận 3",
-        address: "789 Lê Văn Sỹ, Quận 3, TP.HCM",
-        distance: "2.1 km",
-        status: "maintenance",
-        batteries: 0,
-        charging: 0,
-        maintenance: 20,
-        rating: 4.9,
-        phone: "028-3456-7890"
-    },
-    {
-        id: 4,
-        name: "Trạm đổi pin Quận 7",
-        address: "321 Nguyễn Thị Thập, Quận 7, TP.HCM",
-        distance: "3.5 km",
-        status: "available",
-        batteries: 20,
-        charging: 5,
-        maintenance: 0,
-        rating: 4.7,
-        phone: "028-4567-8901"
-    }
+let stationsData = [
+    //{
+    //    id: 1,
+    //    name: "Trạm đổi pin Quận 1",
+    //    address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
+    //    distance: "0.5 km",
+    //    status: "available",
+    //    batteries: 15,
+    //    charging: 8,
+    //    maintenance: 2,
+    //    rating: 4.8,
+    //    phone: "028-1234-5678"
+    //},
+    //{
+    //    id: 2,
+    //    name: "Trạm đổi pin Quận 2",
+    //    address: "456 Võ Văn Tần, Quận 2, TP.HCM",
+    //    distance: "1.2 km",
+    //    status: "charging",
+    //    batteries: 5,
+    //    charging: 12,
+    //    maintenance: 1,
+    //    rating: 4.6,
+    //    phone: "028-2345-6789"
+    //},
+    //{
+    //    id: 3,
+    //    name: "Trạm đổi pin Quận 3",
+    //    address: "789 Lê Văn Sỹ, Quận 3, TP.HCM",
+    //    distance: "2.1 km",
+    //    status: "maintenance",
+    //    batteries: 0,
+    //    charging: 0,
+    //    maintenance: 20,
+    //    rating: 4.9,
+    //    phone: "028-3456-7890"
+    //},
+    //{
+    //    id: 4,
+    //    name: "Trạm đổi pin Quận 7",
+    //    address: "321 Nguyễn Thị Thập, Quận 7, TP.HCM",
+    //    distance: "3.5 km",
+    //    status: "available",
+    //    batteries: 20,
+    //    charging: 5,
+    //    maintenance: 0,
+    //    rating: 4.7,
+    //    phone: "028-4567-8901"
+    //}
 ];
 
 // DOM Elements
@@ -55,7 +55,7 @@ let currentFilter = 'all';
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
-    loadStations();
+    Stationds();
     setupEventListeners();
     getPackagesFromAPI();
     setupMobileMenu();
@@ -131,22 +131,26 @@ function loadStations() {
     if (currentFilter !== 'all') {
         filteredStations = stationsData.filter(station => station.status === currentFilter);
     }
+//<span class="station-status status-${station.status}">
+//                    ${getStatusText(station.status)}
+//                </span>
+
+//<p><i class="fas fa-battery-full"></i> Điện thoại: ${station.phone}</p>
+
 
     stationsGrid.innerHTML = filteredStations.map(station => `
         <div class="station-card">
             <div class="station-header">
                 <h3 class="station-name">${station.name}</h3>
-                <span class="station-status status-${station.status}">
-                    ${getStatusText(station.status)}
-                </span>
+                
             </div>
             <div class="station-info">
                 <p><i class="fas fa-map-marker-alt"></i> ${station.address}</p>
-                <p><i class="fas fa-route"></i> Cách đây ${station.distance}</p>
-                <p><i class="fas fa-battery-full"></i> Pin có sẵn: ${station.batteries}</p>
-                <p><i class="fas fa-charging-station"></i> Đang sạc: ${station.charging}</p>
-                <p><i class="fas fa-tools"></i> Bảo trì: ${station.maintenance}</p>
-                <p><i class="fas fa-star"></i> Đánh giá: ${station.rating}/5</p>
+                <p><i class="fas fa-route"></i> Cách đây ${station.khoangcach}</p>
+                
+                <p><i class="fas fa-charging-station"></i> Giờ mở cửa: ${station.openTime}</p>
+                <p><i class="fas fa-tools"></i> Giờ đóng cửa: ${station.closeTime}</p>
+                <p><i class="fas fa-star"></i> Thời gian đến: ${station.thoigianden}</p>
                 <p><i class="fas fa-phone"></i> ${station.phone}</p>
             </div>
             <div class="station-actions">
@@ -159,6 +163,7 @@ function loadStations() {
             </div>
         </div>
     `).join('');
+    
 }
 
 // Get status text in Vietnamese
@@ -172,57 +177,60 @@ function getStatusText(status) {
 }
 
 // Search stations
-function searchStations() {
-    const locationInput = document.getElementById('locationInput');
-    const query = locationInput.value.toLowerCase();
+//function searchStations() {
+//    const locationInput = document.getElementById('locationInput');
+//    const query = locationInput.value.toLowerCase();
     
-    if (query.trim() === '') {
-        loadStations();
-        return;
-    }
+//    if (query.trim() === '') {
+//        loadStations();
+//        return;
+//    }
 
-    const filteredStations = stationsData.filter(station => 
-        station.name.toLowerCase().includes(query) ||
-        station.address.toLowerCase().includes(query)
-    );
+//    const filteredStations = stationsData.filter(station => 
+//        station.name.toLowerCase().includes(query) ||
+//        station.address.toLowerCase().includes(query)
+//    );
 
-    const stationsGrid = document.getElementById('stationsGrid');
-    if (!stationsGrid) return;
+//    const stationsGrid = document.getElementById('stationsGrid');
+//    if (!stationsGrid) return;
 
-    stationsGrid.innerHTML = filteredStations.map(station => `
-        <div class="station-card">
-            <div class="station-header">
-                <h3 class="station-name">${station.name}</h3>
-                <span class="station-status status-${station.status}">
-                    ${getStatusText(station.status)}
-                </span>
-            </div>
-            <div class="station-info">
-                <p><i class="fas fa-map-marker-alt"></i> ${station.address}</p>
-                <p><i class="fas fa-route"></i> Cách đây ${station.distance}</p>
-                <p><i class="fas fa-battery-full"></i> Pin có sẵn: ${station.batteries}</p>
-                <p><i class="fas fa-charging-station"></i> Đang sạc: ${station.charging}</p>
-                <p><i class="fas fa-tools"></i> Bảo trì: ${station.maintenance}</p>
-                <p><i class="fas fa-star"></i> Đánh giá: ${station.rating}/5</p>
-                <p><i class="fas fa-phone"></i> ${station.phone}</p>
-            </div>
-            <div class="station-actions">
-                <button class="btn btn-primary" onclick="bookStation(${station.id})">
-                    <i class="fas fa-calendar-check"></i> Đặt chỗ
-                </button>
-                <button class="btn btn-outline" onclick="getDirections(${station.id})">
-                    <i class="fas fa-directions"></i> Chỉ đường
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
+
+
+
+//    stationsGrid.innerHTML = filteredStations.map(station => `
+//        <div class="station-card">
+//            <div class="station-header">
+//                <h3 class="station-name">${station.name}</h3>
+//                <span class="station-status status-${station.status}">
+//                    ${getStatusText(station.status)}
+//                </span>
+//            </div>
+//            <div class="station-info">
+//                <p><i class="fas fa-map-marker-alt"></i> ${station.address}</p>
+//                <p><i class="fas fa-route"></i> Cách đây ${station.distance}</p>
+//                <p><i class="fas fa-battery-full"></i> Pin có sẵn: ${station.batteries}</p>
+//                <p><i class="fas fa-charging-station"></i> Đang sạc: ${station.charging}</p>
+//                <p><i class="fas fa-tools"></i> Bảo trì: ${station.maintenance}</p>
+//                <p><i class="fas fa-star"></i> Đánh giá: ${station.rating}/5</p>
+//                <p><i class="fas fa-phone"></i> ${station.phone}</p>
+//            </div>
+//            <div class="station-actions">
+//                <button class="btn btn-primary" onclick="bookStation(${station.id})">
+//                    <i class="fas fa-calendar-check"></i> Đặt chỗ
+//                </button>
+//                <button class="btn btn-outline" onclick="getDirections(${station.id})">
+//                    <i class="fas fa-directions"></i> Chỉ đường
+//                </button>
+//            </div>
+//        </div>
+//    `).join('');
+//}
 
 // Book a station - placeholder
-function bookStation(stationId) {
-    // Logic xử lý sẽ được implement ở backend
-    console.log('Book station:', stationId);
-}
+//function bookStation(stationId) {
+//    // Logic xử lý sẽ được implement ở backend
+//    console.log('Book station:', stationId);
+//}
 
 // Get directions to station
 function getDirections(stationId) {
