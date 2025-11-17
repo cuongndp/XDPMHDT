@@ -16,23 +16,12 @@
                 <i class="fas fa-battery-full"></i>
                 <span>EV Swap Staff</span>
             </div>
-            <div class="station-info">
-                <span class="station-name">Trạm Quận 1</span>
-                <span class="station-status status-active">Hoạt động</span>
-            </div>
         </div>
         <div class="header-right">
-            <div class="notifications">
-                <button class="notification-btn">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">2</span>
-                </button>
-            </div>
             <div class="user-info">
-                <img src="https://via.placeholder.com/40" alt="Staff" class="user-avatar">
                 <span class="user-name">Nguyễn Văn A</span>
                 <button class="logout-btn" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
                 </button>
             </div>
         </div>
@@ -49,7 +38,7 @@
                     </div>
                     <div class="card-content">
                         <h3>Chờ xử lý</h3>
-                        <p class="card-number">0</p>
+                        <p class="card-number" id="pendingCount">0</p>
                         <span class="card-change">Đặt lịch chờ xác nhận</span>
                     </div>
                 </div>
@@ -59,7 +48,7 @@
                     </div>
                     <div class="card-content">
                         <h3>Đang xử lý</h3>
-                        <p class="card-number">0</p>
+                        <p class="card-number" id="processingCount">0</p>
                         <span class="card-change">Đang thực hiện đổi pin</span>
                     </div>
                 </div>
@@ -69,7 +58,7 @@
                     </div>
                     <div class="card-content">
                         <h3>Hoàn thành hôm nay</h3>
-                        <p class="card-number">0</p>
+                        <p class="card-number" id="completedCount">0</p>
                         <span class="card-change">Đã hoàn tất</span>
                     </div>
                 </div>
@@ -79,147 +68,8 @@
                     </div>
                     <div class="card-content">
                         <h3>Tổng lượt hôm nay</h3>
-                        <p class="card-number">0</p>
+                        <p class="card-number" id="totalTodayCount">0</p>
                         <span class="card-change">Tất cả trạng thái</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Quick Actions -->
-        <section class="quick-actions">
-            <h2>Thao tác nhanh</h2>
-            <div class="actions-grid">
-                <button class="action-btn" onclick="showSwapModal()">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Xử lý đổi pin</span>
-                </button>
-                <button class="action-btn" onclick="showPaymentModal()">
-                    <i class="fas fa-credit-card"></i>
-                    <span>Thanh toán</span>
-                </button>
-                <button class="action-btn" onclick="showBatteryCheckModal()">
-                    <i class="fas fa-search"></i>
-                    <span>Kiểm tra pin</span>
-                </button>
-                <button class="action-btn" onclick="showMaintenanceModal()">
-                    <i class="fas fa-wrench"></i>
-                    <span>Bảo trì</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- Battery Inventory -->
-        <section class="battery-inventory">
-            <div class="section-header">
-                <h2>Quản lý kho pin</h2>
-                <div class="inventory-filters">
-                    <select id="batteryFilter">
-                        <option value="all">Tất cả</option>
-                        <option value="available">Có sẵn</option>
-                        <option value="charging">Đang sạc</option>
-                        <option value="maintenance">Bảo trì</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="inventory-grid">
-                <div class="battery-card available">
-                    <div class="battery-header">
-                        <h4>BAT-001</h4>
-                        <span class="battery-status">Có sẵn</span>
-                    </div>
-                    <div class="battery-info">
-                        <div class="info-item">
-                            <span class="label">Dung lượng:</span>
-                            <span class="value">75kWh</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">SoH:</span>
-                            <span class="value">95%</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Lần sạc:</span>
-                            <span class="value">150</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Ngày tạo:</span>
-                            <span class="value">15/01/2024</span>
-                        </div>
-                    </div>
-                    <div class="battery-actions">
-                        <button class="btn btn-outline btn-sm" onclick="viewBatteryDetails('BAT-001')">
-                            <i class="fas fa-eye"></i> Chi tiết
-                        </button>
-                        <button class="btn btn-primary btn-sm" onclick="useBattery('BAT-001')">
-                            <i class="fas fa-check"></i> Sử dụng
-                        </button>
-                    </div>
-                </div>
-
-                <div class="battery-card charging">
-                    <div class="battery-header">
-                        <h4>BAT-002</h4>
-                        <span class="battery-status">Đang sạc</span>
-                    </div>
-                    <div class="battery-info">
-                        <div class="info-item">
-                            <span class="label">Dung lượng:</span>
-                            <span class="value">50kWh</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">SoH:</span>
-                            <span class="value">78%</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Tiến độ sạc:</span>
-                            <span class="value">65%</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Thời gian còn lại:</span>
-                            <span class="value">25 phút</span>
-                        </div>
-                    </div>
-                    <div class="battery-actions">
-                        <button class="btn btn-outline btn-sm" onclick="viewBatteryDetails('BAT-002')">
-                            <i class="fas fa-eye"></i> Chi tiết
-                        </button>
-                        <button class="btn btn-warning btn-sm" onclick="stopCharging('BAT-002')">
-                            <i class="fas fa-pause"></i> Dừng sạc
-                        </button>
-                    </div>
-                </div>
-
-                <div class="battery-card maintenance">
-                    <div class="battery-header">
-                        <h4>BAT-003</h4>
-                        <span class="battery-status">Bảo trì</span>
-                    </div>
-                    <div class="battery-info">
-                        <div class="info-item">
-                            <span class="label">Dung lượng:</span>
-                            <span class="value">100kWh</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">SoH:</span>
-                            <span class="value">45%</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Lỗi:</span>
-                            <span class="value">Cell 3, Cell 7</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Ngày bảo trì:</span>
-                            <span class="value">20/01/2024</span>
-                        </div>
-                    </div>
-                    <div class="battery-actions">
-                        <button class="btn btn-outline btn-sm" onclick="viewBatteryDetails('BAT-003')">
-                            <i class="fas fa-eye"></i> Chi tiết
-                        </button>
-                        <button class="btn btn-success btn-sm" onclick="completeMaintenance('BAT-003')">
-                            <i class="fas fa-check"></i> Hoàn thành
-                        </button>
                     </div>
                 </div>
             </div>

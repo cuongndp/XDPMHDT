@@ -86,6 +86,7 @@ function setupEventListeners() {
 function loadDashboardData() {
     updateOverviewCards();
     loadBatteryInventory();
+    loadStations(); // Load danh sách trạm trước
     loadBookings(); // Load bookings từ API
     updateStationStatus();
 }
@@ -116,7 +117,8 @@ async function loadBookings() {
             const data = await response.json();
             console.log('Bookings loaded:', data); // Debug
             allBookings = data;
-            renderBookingsTable(allBookings);
+            // Apply current filters after loading
+            applyFilters();
             
             if (allBookings.length === 0) {
                 showNotification('Chưa có đặt lịch nào', 'info');
@@ -238,7 +240,7 @@ async function loadStations() {
             if (stations && Array.isArray(stations) && stations.length > 0) {
                 allStations = stations;
                 populateStationFilter(stations);
-    } else {
+            } else {
                 console.warn('Không có trạm nào trong danh sách');
                 showNotification('Không có trạm nào trong hệ thống', 'warning');
             }
@@ -252,8 +254,64 @@ async function loadStations() {
         showNotification('Lỗi kết nối khi tải danh sách trạm', 'error');
     }
 }
-        renderBookingsTable(filtered);
+
+// Populate station filter dropdown
+function populateStationFilter(stations) {
+    const stationFilter = document.getElementById('stationFilter');
+    if (!stationFilter) {
+        console.error('Không tìm thấy element stationFilter');
+        return;
     }
+
+    // Giữ option "Tất cả trạm"
+    stationFilter.innerHTML = '<option value="all">Tất cả trạm</option>';
+    
+    if (!stations || !Array.isArray(stations) || stations.length === 0) {
+        console.warn('Danh sách trạm rỗng hoặc không hợp lệ');
+        return;
+    }
+    
+    stations.forEach((station, index) => {
+        // Xử lý cả camelCase và PascalCase
+        const stationId = station.id ?? station.Id ?? station.idtram ?? station.Idtram;
+        const stationName = station.tentram ?? station.Tentram ?? station.tenTram ?? `Trạm ${stationId}`;
+        
+        console.log(`Trạm ${index + 1}:`, { id: stationId, name: stationName, raw: station });
+        
+        if (stationId) {
+            const option = document.createElement('option');
+            option.value = stationId.toString();
+            option.textContent = stationName;
+            stationFilter.appendChild(option);
+        }
+    });
+    
+    console.log(`Đã thêm ${stationFilter.options.length - 1} trạm vào dropdown`);
+}
+
+// Apply filters (both station and status)
+function applyFilters() {
+    const stationFilter = document.getElementById('stationFilter');
+    const statusFilter = document.getElementById('bookingStatusFilter');
+    
+    selectedStationId = stationFilter ? stationFilter.value : 'all';
+    selectedStatus = statusFilter ? statusFilter.value : 'all';
+    
+    let filtered = [...allBookings];
+    
+    // Filter by station
+    if (selectedStationId !== 'all') {
+        const stationId = parseInt(selectedStationId);
+        filtered = filtered.filter(b => b.idtram === stationId);
+    }
+    
+    // Filter by status
+    if (selectedStatus !== 'all') {
+        filtered = filtered.filter(b => b.trangthai === selectedStatus);
+    }
+    
+    renderBookingsTable(filtered);
+}
 
 // Filter bookings (kept for backward compatibility)
 function filterBookings(status) {
@@ -262,7 +320,7 @@ function filterBookings(status) {
 }
 
 // Mở modal cập nhật trạng thái
-function openUpdateStatusModal(bookingId) {
+async function openUpdateStatusModal(bookingId) {
     currentBookingId = bookingId;
     const booking = allBookings.find(b => b.id === bookingId);
     
@@ -299,11 +357,126 @@ function openUpdateStatusModal(bookingId) {
     // Set giá trị hiện tại
     document.getElementById('newStatus').value = booking.trangthai;
     document.getElementById('paymentStatus').value = booking.trangthaithanhtoan;
-    document.getElementById('staffNotes').value = '';
+    
+    // Reset pin fields
+    const pinDoiSelect = document.getElementById('pinDoi');
+    if (pinDoiSelect) {
+        pinDoiSelect.innerHTML = '<option value="">-- Đang tải...</option>';
+    }
+    document.getElementById('pinDoiInfo').style.display = 'none';
+    document.getElementById('pinNhanVeSoh').value = '';
+    document.getElementById('pinNhanVeSoc').value = '';
+
+    // Load danh sách pin từ BatteryAdminService (JS gọi trực tiếp)
+    const stationId = booking.idtram;
+    console.log('Booking idtram:', stationId);
+    if (stationId) {
+        await loadPinsForStation(stationId);
+    } else {
+        console.error('Booking không có idtram');
+        if (pinDoiSelect) {
+            pinDoiSelect.innerHTML = '<option value="">-- Không có thông tin trạm --</option>';
+        }
+    }
 
     // Hiển thị modal
     document.getElementById('updateStatusModal').style.display = 'block';
     document.body.style.overflow = 'hidden';
+}
+
+// Load danh sách pin từ BatteryAdminService theo trạm (JS gọi trực tiếp)
+async function loadPinsForStation(stationId) {
+    if (!stationId) {
+        console.error('Không có thông tin trạm!');
+        return;
+    }
+
+    try {
+        const staffToken = localStorage.getItem('staffToken');
+        if (!staffToken) {
+            showNotification('Vui lòng đăng nhập lại', 'error');
+            return;
+        }
+
+        console.log('Đang load pin cho trạm:', stationId);
+
+        // Gọi trực tiếp BatteryAdminService qua gateway (endpoint cho staff)
+        const response = await fetch(`http://localhost:5000/gateway/batteryadmin/Pin/staff?idtram=${stationId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${staffToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Lỗi khi lấy danh sách pin:', response.status, errorText);
+            showNotification('Không thể tải danh sách pin. Vui lòng kiểm tra quyền truy cập.', 'error');
+            return;
+        }
+
+        const pins = await response.json();
+        console.log('Danh sách pin nhận được:', pins);
+        
+        const pinDoiSelect = document.getElementById('pinDoi');
+        if (!pinDoiSelect) {
+            console.error('Không tìm thấy element pinDoi');
+            return;
+        }
+        
+        // Clear existing options except first one
+        pinDoiSelect.innerHTML = '<option value="">-- Chọn pin đổi --</option>';
+        
+        if (!pins || pins.length === 0) {
+            pinDoiSelect.innerHTML += '<option value="" disabled>Không có pin nào trong trạm</option>';
+            console.log('Không có pin nào trong trạm');
+            return;
+        }
+
+        // Filter chỉ pin có thể đổi (Pin đầy hoặc Khả dụng)
+        const availablePins = pins.filter(pin => 
+            pin.tinhtrang === 'Pin đầy' || pin.tinhtrang === 'Khả dụng'
+        );
+
+        console.log('Pin có thể đổi:', availablePins);
+
+               // Populate dropdown
+               availablePins.forEach(pin => {
+                   const option = document.createElement('option');
+                   option.value = JSON.stringify({
+                       idpin: pin.idpin,
+                       idloaipin: pin.idloaipin || 0,
+                       idtram: pin.idtram || 0,
+                       soh: pin.soh || 0,
+                       soc: pin.soc || 0
+                   });
+                   option.textContent = `ID: ${pin.idpin} - SoH: ${pin.soh || 0}% - SoC: ${pin.soc || 0}%`;
+                   pinDoiSelect.appendChild(option);
+               });
+
+        // Event listener để hiển thị thông tin pin khi chọn
+        pinDoiSelect.onchange = function() {
+            const selectedValue = this.value;
+            const pinDoiInfo = document.getElementById('pinDoiInfo');
+            
+            if (selectedValue) {
+                const pinData = JSON.parse(selectedValue);
+                document.getElementById('pinDoiId').textContent = pinData.idpin;
+                document.getElementById('pinDoiSoh').textContent = pinData.soh;
+                document.getElementById('pinDoiSoc').textContent = pinData.soc;
+                pinDoiInfo.style.display = 'block';
+            } else {
+                pinDoiInfo.style.display = 'none';
+            }
+        };
+    } catch (error) {
+        console.error('Lỗi khi load pin:', error);
+        showNotification('Lỗi khi tải danh sách pin: ' + error.message, 'error');
+    }
 }
 
 // Xác nhận cập nhật trạng thái
@@ -312,24 +485,107 @@ async function confirmUpdateStatus() {
 
     const newStatus = document.getElementById('newStatus').value;
     const paymentStatus = document.getElementById('paymentStatus').value;
-    const notes = document.getElementById('staffNotes').value;
+    
+    // Lấy thông tin pin đổi
+    const pinDoiValue = document.getElementById('pinDoi').value;
+    let pinDoiData = null;
+    if (pinDoiValue) {
+        pinDoiData = JSON.parse(pinDoiValue);
+    }
+    
+    // Lấy thông tin pin nhận về (không cần ID, hệ thống tự tạo)
+    const pinNhanVeSoh = document.getElementById('pinNhanVeSoh').value.trim();
+    const pinNhanVeSoc = document.getElementById('pinNhanVeSoc').value.trim();
+
+    // Nếu có chọn pin đổi, BẮT BUỘC phải nhập SoH và SoC của pin nhận về
+    if (pinDoiValue) {
+        // Kiểm tra SoH
+        if (!pinNhanVeSoh || pinNhanVeSoh === '') {
+            showNotification('Vui lòng nhập SoH của pin nhận về!', 'error');
+            document.getElementById('pinNhanVeSoh').focus();
+            return;
+        }
+        
+        // Kiểm tra SoC
+        if (!pinNhanVeSoc || pinNhanVeSoc === '') {
+            showNotification('Vui lòng nhập SoC của pin nhận về!', 'error');
+            document.getElementById('pinNhanVeSoc').focus();
+            return;
+        }
+        
+        // Validate giá trị hợp lệ (0-100)
+        const sohValue = parseFloat(pinNhanVeSoh);
+        const socValue = parseFloat(pinNhanVeSoc);
+        
+        if (isNaN(sohValue)) {
+            showNotification('SoH phải là số hợp lệ!', 'error');
+            document.getElementById('pinNhanVeSoh').focus();
+            return;
+        }
+        
+        if (sohValue < 0 || sohValue > 100) {
+            showNotification('SoH phải là số từ 0 đến 100!', 'error');
+            document.getElementById('pinNhanVeSoh').focus();
+            return;
+        }
+        
+        if (isNaN(socValue)) {
+            showNotification('SoC phải là số hợp lệ!', 'error');
+            document.getElementById('pinNhanVeSoc').focus();
+            return;
+        }
+        
+        if (socValue < 0 || socValue > 100) {
+            showNotification('SoC phải là số từ 0 đến 100!', 'error');
+            document.getElementById('pinNhanVeSoc').focus();
+            return;
+        }
+    }
+    
+    // Nếu trạng thái là "Hoàn thành" nhưng chưa chọn pin đổi
+    if (newStatus === 'Hoàn thành' && !pinDoiValue) {
+        showNotification('Vui lòng chọn pin đổi khi hoàn thành đơn!', 'error');
+        document.getElementById('pinDoi').focus();
+        return;
+    }
 
     try {
         const staffToken = localStorage.getItem('staffToken');
         
-        // Bước 1: Cập nhật trạng thái booking
-        const response = await fetch(`${API_BASE_URL}/bookings/${currentBookingId}/status`, {
+        // Gửi thông tin pin đổi và pin nhận về lên StationService
+        const requestBody = {
+            trangthai: newStatus,
+            trangthaithanhtoan: paymentStatus
+        };
+        
+        // Thêm thông tin pin nếu có
+        if (pinDoiData) {
+            requestBody.pinDoi = {
+                idpin: pinDoiData.idpin,
+                idloaipin: pinDoiData.idloaipin || 0,
+                idtram: pinDoiData.idtram || 0,
+                soh: pinDoiData.soh,
+                soc: pinDoiData.soc
+            };
+        }
+        
+        // Chỉ thêm pin nhận về nếu đã chọn pin đổi (đã validate ở trên)
+        if (pinDoiValue && pinNhanVeSoh && pinNhanVeSoc) {
+            requestBody.pinNhanVe = {
+                soh: parseFloat(pinNhanVeSoh),
+                soc: parseFloat(pinNhanVeSoc)
+            };
+        }
+        
+        // Gọi StationService (StationService sẽ gọi DriverService và BatteryAdminService)
+        const response = await fetch(`http://localhost:5000/gateway/station/bookings/${currentBookingId}/status`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${staffToken}`,
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({
-                trangthai: newStatus,
-                trangthaithanhtoan: paymentStatus,
-                notes: notes
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (response.ok) {
@@ -433,37 +689,52 @@ async function updateOverviewCards() {
             const stats = await response.json();
             console.log('Stats loaded:', stats); // Debug
             
-            // Update card numbers
-            const cardNumbers = document.querySelectorAll('.card-number');
-            if (cardNumbers.length >= 4) {
-                cardNumbers[0].textContent = stats.pending || 0; // Đặt lịch chờ xử lý
-                cardNumbers[1].textContent = stats.processing || 0; // Đang xử lý
-                cardNumbers[2].textContent = stats.completed || 0; // Hoàn thành hôm nay
-                cardNumbers[3].textContent = stats.totalToday || 0; // Tổng lượt hôm nay
-            }
+            // Update card numbers bằng ID cụ thể để đảm bảo chính xác
+            const pendingEl = document.getElementById('pendingCount');
+            const processingEl = document.getElementById('processingCount');
+            const completedEl = document.getElementById('completedCount');
+            const totalTodayEl = document.getElementById('totalTodayCount');
+            
+            if (pendingEl) pendingEl.textContent = stats.pending || 0;
+            if (processingEl) processingEl.textContent = stats.processing || 0;
+            if (completedEl) completedEl.textContent = stats.completed || 0;
+            if (totalTodayEl) totalTodayEl.textContent = stats.totalToday || 0;
         } else if (response.status === 401) {
             console.error('Unauthorized - token hết hạn');
+            // Reset về 0
+            const pendingEl = document.getElementById('pendingCount');
+            const processingEl = document.getElementById('processingCount');
+            const completedEl = document.getElementById('completedCount');
+            const totalTodayEl = document.getElementById('totalTodayCount');
+            if (pendingEl) pendingEl.textContent = 0;
+            if (processingEl) processingEl.textContent = 0;
+            if (completedEl) completedEl.textContent = 0;
+            if (totalTodayEl) totalTodayEl.textContent = 0;
         } else {
-            console.error('Không thể tải thống kê');
-            // Hiển thị 0 thay vì dữ liệu mẫu
-            const cardNumbers = document.querySelectorAll('.card-number');
-            if (cardNumbers.length >= 4) {
-                cardNumbers[0].textContent = 0;
-                cardNumbers[1].textContent = 0;
-                cardNumbers[2].textContent = 0;
-                cardNumbers[3].textContent = 0;
-            }
+            console.error('Không thể tải thống kê. Status:', response.status);
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            // Reset về 0
+            const pendingEl = document.getElementById('pendingCount');
+            const processingEl = document.getElementById('processingCount');
+            const completedEl = document.getElementById('completedCount');
+            const totalTodayEl = document.getElementById('totalTodayCount');
+            if (pendingEl) pendingEl.textContent = 0;
+            if (processingEl) processingEl.textContent = 0;
+            if (completedEl) completedEl.textContent = 0;
+            if (totalTodayEl) totalTodayEl.textContent = 0;
         }
     } catch (error) {
         console.error('Lỗi khi lấy thống kê:', error);
-        // Hiển thị 0 thay vì dữ liệu mẫu
-        const cardNumbers = document.querySelectorAll('.card-number');
-        if (cardNumbers.length >= 4) {
-            cardNumbers[0].textContent = 0;
-            cardNumbers[1].textContent = 0;
-            cardNumbers[2].textContent = 0;
-            cardNumbers[3].textContent = 0;
-        }
+        // Reset về 0
+        const pendingEl = document.getElementById('pendingCount');
+        const processingEl = document.getElementById('processingCount');
+        const completedEl = document.getElementById('completedCount');
+        const totalTodayEl = document.getElementById('totalTodayCount');
+        if (pendingEl) pendingEl.textContent = 0;
+        if (processingEl) processingEl.textContent = 0;
+        if (completedEl) completedEl.textContent = 0;
+        if (totalTodayEl) totalTodayEl.textContent = 0;
     }
 }
 

@@ -27,6 +27,17 @@ builder.Services.AddDbContext<StationServiceContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+// Add HttpClient để gọi DriverService và BatteryAdminService
+builder.Services.AddHttpClient();
+
+// Cấu hình URL các service
+// Trong Docker, dùng hostname "apigateway", ngoài Docker dùng "localhost"
+var gatewayHost = Environment.GetEnvironmentVariable("GATEWAY_HOST") ?? "localhost";
+var gatewayUrl = $"http://{gatewayHost}:5000/gateway";
+builder.Configuration["DriverServiceUrl"] = $"{gatewayUrl}/driver";
+builder.Configuration["BatteryAdminServiceUrl"] = $"{gatewayUrl}/batteryadmin";
+builder.Configuration["PaymentServiceUrl"] = $"{gatewayUrl}/payment";
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
