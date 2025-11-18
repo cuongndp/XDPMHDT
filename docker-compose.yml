@@ -12,7 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - backend-net
 
@@ -44,14 +43,15 @@ services:
     build: ./StationService
     depends_on:
       - postgres
+      - apigateway
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://0.0.0.0:5002
+      - GATEWAY_HOST=apigateway
     ports:
       - "5002:5002"
     networks:
       - backend-net
-  
 
   driverpaymentservice:
     build: ./DriverPaymentService
@@ -65,7 +65,18 @@ services:
     networks:
       - backend-net
 
-  
+  driverservices:
+    build: ./DriverServices
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:5004
+    ports:
+      - "5004:5004"
+    networks:
+      - backend-net
+
   batteryadminservice:
     build: ./BatteryAdminService
     depends_on:

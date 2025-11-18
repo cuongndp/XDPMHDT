@@ -2,7 +2,7 @@
 // PAYMENT.JS - PRODUCTION MODE
 // ==============================
 
-const API_BASE_URL = 'https://localhost:5000';
+const API_BASE_URL = 'http://localhost:5000';
 
 // Biến lưu trữ
 let selectedPackageData = null;

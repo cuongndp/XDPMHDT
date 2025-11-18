@@ -1,8 +1,10 @@
 ﻿var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-// cho phép phục vụ file tĩnh từ wwwroot
-app.UseDefaultFiles();   // tự tìm index.html
+// Cho phép truy cập trực tiếp vào các file HTML (phải đặt TRƯỚC UseStaticFiles)
+app.UseDefaultFiles();
+
+// Cho phép phục vụ file tĩnh từ wwwroot
 app.UseStaticFiles();
 
-app.Run();
+app.Run("http://0.0.0.0:5001");
