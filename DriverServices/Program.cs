@@ -28,7 +28,7 @@ builder.Services.AddAuthentication(opstion =>
         ValidateIssuerSigningKey = true,
 
         ValidIssuer = "ApiGateway",     // microservice cấp token
-        ValidAudience = "DriveService",    // audience là client/gateway
+        ValidAudiences = new[] { "DriveService", "BatteryAdminService" },    // chấp nhận cả DriveService và BatteryAdminService
         IssuerSigningKey = new SymmetricSecurityKey(key),
         NameClaimType = JwtRegisteredClaimNames.UniqueName,
         RoleClaimType = "role"
@@ -37,9 +37,21 @@ builder.Services.AddAuthentication(opstion =>
     {
         OnMessageReceived = context =>
         {
-            if (context.Request.Cookies.ContainsKey("access_token"))
+            // 1. Ưu tiên đọc từ Authorization Header (Bearer token)
+            var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+            {
+                context.Token = authHeader.Substring("Bearer ".Length).Trim();
+            }
+            // 2. Nếu không có header, đọc từ cookie access_token (cho driver)
+            else if (context.Request.Cookies.ContainsKey("access_token"))
             {
                 context.Token = context.Request.Cookies["access_token"];
+            }
+            // 3. Nếu không có, đọc từ cookie staff_token (cho staff)
+            else if (context.Request.Cookies.ContainsKey("staff_token"))
+            {
+                context.Token = context.Request.Cookies["staff_token"];
             }
             return Task.CompletedTask;
         }
@@ -73,10 +85,36 @@ builder.Services
     {
         policy.RequireAuthenticatedUser();
         policy.RequireRole("driver"); // trùng giá trị claim "role" trong JWT
+    })
+    .AddPolicy("staff", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("staff"); // policy cho nhân viên
     });
 
 
 var app = builder.Build();
+
+// Tự tạo DB nếu chưa có, thêm retry chờ Postgres sẵn sàng
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DriverServices.Models.DriverServiceDbContext>();
+    var retries = 0;
+    while (true)
+    {
+        try
+        {
+            db.Database.Migrate();
+            db.Database.EnsureCreated();
+            break;
+        }
+        catch
+        {
+            if (retries++ >= 5) throw;
+            Thread.Sleep(3000);
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -92,4 +130,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+app.Run("http://0.0.0.0:5004");

@@ -443,13 +443,12 @@ async function showInvoiceModal(invoice, bookingId) {
         return showInvoiceModal(invoice, bookingId);
     }
 
-
     const tenTram = await getTenTram(invoice.idtramdoipin);
     console.log('Tên trạm đổi pin:', tenTram);
 
     // Lấy tên loại pin từ booking hoặc từ API
     let tenLoaiPin = booking?.loaipin || null;
-
+    
     // Nếu không có trong booking, gọi API để lấy tên loại pin
     if (!tenLoaiPin && invoice.idloaipin) {
         try {
@@ -462,7 +461,7 @@ async function showInvoiceModal(invoice, bookingId) {
                 },
                 credentials: 'include'
             });
-
+            
             if (res.ok) {
                 const loaiPinData = await res.json();
                 tenLoaiPin = loaiPinData.tenloaipin || loaiPinData.Tenloaipin || null;
@@ -568,7 +567,7 @@ function getStatusText(status) {
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
     try {
-    const date = new Date(dateString);
+        const date = new Date(dateString);
         if (isNaN(date.getTime())) return 'N/A';
         return date.toLocaleDateString('vi-VN', {
             year: 'numeric',
@@ -1056,12 +1055,480 @@ async function checkUserVehicle() {
 
 
 
+// Load support requests
+async function loadSupportRequests() {
+    const requestsList = document.getElementById('supportRequestsList');
+    if (!requestsList) return;
+
+    try {
+        const res = await gatewayFetch('/gateway/payment/yeu-cau-ho-tro/my');
+        
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({ message: 'Lỗi không xác định' }));
+            console.error('API Error:', res.status, errorData);
+            throw new Error(errorData.message || `Lỗi ${res.status}: Không thể tải yêu cầu hỗ trợ`);
+        }
+
+        const data = await res.json();
+        console.log('Support requests data:', data);
+
+        if (!data.data || data.data.length === 0) {
+            requestsList.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p>Bạn chưa có yêu cầu hỗ trợ nào.</p>
+                    <p style="font-size: 12px; margin-top: 10px; color: #94a3b8;">Nhấn nút "Gửi yêu cầu" để tạo yêu cầu hỗ trợ mới</p>
+                </div>
+            `;
+            return;
+        }
+
+        requestsList.innerHTML = data.data.map(request => {
+            // Xử lý trạng thái với fallback
+            const trangThai = request.trang_thai || request.TrangThai || 'Chờ xử lý';
+            const statusClass = trangThai === 'Đã xử lý' ? 'success' : 
+                              trangThai === 'Đang xử lý' ? 'warning' : 'info';
+            
+            // Xử lý ngày với fallback
+            const ngayTao = request.ngay_tao || request.NgayTao;
+            const ngayTaoFormatted = ngayTao ? formatDate(ngayTao) : 'N/A';
+            
+            // Xử lý mô tả với fallback
+            const moTa = request.mo_ta || request.MoTa || 'Không có mô tả';
+            
+            // Xử lý độ ưu tiên
+            const doUuTien = request.do_uu_tien || request.DoUuTien || 'Trung bình';
+            const priorityColors = {
+                'Khẩn cấp': '#ef4444',
+                'Cao': '#f59e0b',
+                'Trung bình': '#3b82f6',
+                'Thấp': '#64748b'
+            };
+            const priorityColor = priorityColors[doUuTien] || '#64748b';
+            const requestId = request.id || request.Id;
+            
+            return `
+                <div id="request-card-${requestId}" style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s;" 
+                     onclick="toggleChat(${requestId})" 
+                     onmouseover="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 2px 8px rgba(59,130,246,0.2)'" 
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
+                                <strong style="font-size: 16px; color: #1e293b;">Yêu cầu</strong>
+                                <span class="status-badge status-${statusClass}" style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500;">
+                                    ${trangThai}
+                                </span>
+                                <span style="padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 500; background: ${priorityColor}15; color: ${priorityColor};">
+                                    <i class="fas fa-flag"></i> ${doUuTien}
+                                </span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 13px;">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>${ngayTaoFormatted}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; color: #3b82f6; font-size: 13px;">
+                            <i class="fas fa-comments"></i>
+                            <span id="chat-toggle-${requestId}">Nhấn để nhắn tin</span>
+                        </div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-top: 12px; border-left: 3px solid #3b82f6;">
+                        <p style="color: #475569; margin: 0; line-height: 1.6; white-space: pre-wrap;">${moTa}</p>
+                    </div>
+                    ${request.phan_hoi || request.PhanHoi ? `
+                        <div style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-top: 12px; border-left: 3px solid #3b82f6;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-reply" style="color: #3b82f6;"></i>
+                                <strong style="color: #1e40af; font-size: 14px;">Phản hồi từ nhân viên:</strong>
+                            </div>
+                            <p style="color: #1e293b; margin: 0; line-height: 1.6; white-space: pre-wrap;">${request.phan_hoi || request.PhanHoi}</p>
+                        </div>
+                    ` : ''}
+                    <!-- Chat section (hidden by default) -->
+                    <div id="chat-${requestId}" style="display: none; margin-top: 20px; border-top: 2px solid #e2e8f0; padding-top: 20px;">
+                        <div style="margin-bottom: 18px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-comments" style="color: #3b82f6; font-size: 18px;"></i>
+                            <strong style="color: #1e293b; font-size: 18px; font-weight: 600;">Lịch sử trò chuyện</strong>
+                        </div>
+                        <div id="chat-messages-${requestId}" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; padding: 20px; background: #f8fafc; border-radius: 12px; min-height: 200px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: block !important; visibility: visible !important;">
+                            <div style="text-align: center; color: #64748b; padding: 20px;">
+                                <i class="fas fa-spinner fa-spin"></i> Đang tải tin nhắn...
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; padding: 20px; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <div style="display: flex; gap: 12px; align-items: flex-start;">
+                                <textarea id="chat-input-${requestId}" 
+                                          placeholder="Nhập tin nhắn của bạn tại đây..." 
+                                          rows="4"
+                                          style="flex: 1; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; background: #ffffff; color: #1e293b; box-sizing: border-box; resize: vertical; font-family: inherit; display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 80px; max-height: 200px; width: 100%; position: relative; z-index: 11; line-height: 1.6; transition: border-color 0.3s, box-shadow 0.3s;"
+                                          onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); event.stopPropagation(); sendMessage(${requestId}); }"
+                                          onclick="event.stopPropagation();"
+                                          onmousedown="event.stopPropagation();"
+                                          onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                                          onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';"></textarea>
+                                <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); sendMessage(${requestId})" 
+                                        style="padding: 14px 28px; font-size: 14px; white-space: nowrap; height: fit-content; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; border-radius: 10px; background: #3b82f6; color: #ffffff; border: none; cursor: pointer; position: relative; z-index: 11; transition: all 0.2s; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);"
+                                        onmouseover="this.style.background='#2563eb'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.4)';"
+                                        onmouseout="this.style.background='#3b82f6'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(59, 130, 246, 0.3)';">
+                                    <i class="fas fa-paper-plane"></i> <span>Gửi</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading support requests:', error);
+        if (requestsList) {
+            requestsList.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #ef4444;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <p><strong>Không thể tải yêu cầu hỗ trợ</strong></p>
+                    <p style="font-size: 12px; margin-top: 10px; color: #94a3b8;">${error.message || 'Vui lòng thử lại sau'}</p>
+                    <button class="btn btn-outline btn-small" onclick="loadSupportRequests()" style="margin-top: 15px;">
+                        <i class="fas fa-redo"></i> Thử lại
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+// Show support request modal
+function showSupportRequestModal() {
+    const modal = document.getElementById('supportRequestModal');
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        // Load danh sách trạm vào dropdown (nếu cần)
+        loadStationsForSupport();
+    }
+}
+
+// Load stations for support request dropdown
+async function loadStationsForSupport() {
+    try {
+        const res = await gatewayFetch('/gateway/station/danhsach');
+        if (res.ok) {
+            const stations = await res.json();
+            const stationSelect = document.getElementById('supportStation');
+            if (stationSelect && stations && stations.length > 0) {
+                // Clear existing options except first
+                stationSelect.innerHTML = '<option value="">-- Chọn trạm (tùy chọn) --</option>';
+                stations.forEach(station => {
+                    const option = document.createElement('option');
+                    option.value = station.id;
+                    option.textContent = station.tentram || `Trạm ${station.id}`;
+                    stationSelect.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading stations for support:', error);
+    }
+}
+
+// Handle submit support request
+async function handleSubmitSupportRequest(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const data = {
+        mo_ta: formData.get('mo_ta'),
+        do_uu_tien: formData.get('do_uu_tien')
+    };
+    
+    const idtramdoipin = formData.get('idtramdoipin');
+    if (idtramdoipin) data.idtramdoipin = parseInt(idtramdoipin);
+    
+    const idbooking = formData.get('idbooking');
+    if (idbooking) data.idbooking = parseInt(idbooking);
+
+    try {
+        const res = await gatewayFetch('/gateway/payment/yeu-cau-ho-tro', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Không thể gửi yêu cầu');
+        }
+
+        const result = await res.json();
+        alert('Gửi yêu cầu hỗ trợ thành công!');
+        closeModal('supportRequestModal');
+        form.reset();
+        loadSupportRequests();
+    } catch (error) {
+        console.error('Error submitting support request:', error);
+        alert('Lỗi: ' + error.message);
+    }
+}
+
+// Helper function để lấy thông tin user từ DriverService
+async function getUserInfo(userId) {
+    try {
+        const res = await gatewayFetch(`/gateway/driver/user/${userId}`);
+        if (res.ok) {
+            const userData = await res.json();
+            return {
+                name: userData.name || `User ${userId}`,
+                role: userData.role || 'driver'
+            };
+        }
+    } catch (error) {
+        console.error(`Error getting user info for ${userId}:`, error);
+    }
+    return {
+        name: `User ${userId}`,
+        role: 'driver'
+    };
+}
+
+// Toggle chat section - Mở/đóng chat khi click vào card yêu cầu
+function toggleChat(requestId) {
+    const chatSection = document.getElementById(`chat-${requestId}`);
+    const toggleText = document.getElementById(`chat-toggle-${requestId}`);
+    const requestCard = document.getElementById(`request-card-${requestId}`);
+    
+    if (!chatSection || !toggleText) return;
+    
+    // Đóng tất cả các chat khác trước
+    const allChats = document.querySelectorAll('[id^="chat-"]');
+    allChats.forEach(chat => {
+        if (chat.id !== `chat-${requestId}`) {
+            chat.style.display = 'none';
+        }
+    });
+    
+    // Cập nhật text cho tất cả các toggle
+    const allToggles = document.querySelectorAll('[id^="chat-toggle-"]');
+    allToggles.forEach(toggle => {
+        if (toggle.id !== `chat-toggle-${requestId}`) {
+            toggle.textContent = 'Nhấn để nhắn tin';
+        }
+    });
+    
+    if (chatSection.style.display === 'none' || !chatSection.style.display) {
+        chatSection.style.display = 'block';
+        chatSection.style.visibility = 'visible';
+        toggleText.textContent = 'Ẩn trò chuyện';
+        if (requestCard) {
+            requestCard.style.borderColor = '#3b82f6';
+            requestCard.style.boxShadow = '0 2px 8px rgba(59,130,246,0.2)';
+        }
+        
+        // Đảm bảo container tin nhắn hiển thị
+        const messagesContainer = document.getElementById(`chat-messages-${requestId}`);
+        if (messagesContainer) {
+            messagesContainer.style.display = 'block';
+            messagesContainer.style.visibility = 'visible';
+            messagesContainer.style.opacity = '1';
+        }
+        
+        // Load tin nhắn
+        loadChatMessages(requestId);
+        
+        // Focus vào textarea sau khi load xong (delay một chút để đảm bảo DOM đã render)
+        setTimeout(() => {
+            const textarea = document.getElementById(`chat-input-${requestId}`);
+            if (textarea) {
+                textarea.focus();
+                textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                console.error(`Không tìm thấy textarea với id: chat-input-${requestId}`);
+            }
+        }, 500);
+    } else {
+        chatSection.style.display = 'none';
+        toggleText.textContent = 'Nhấn để nhắn tin';
+        if (requestCard) {
+            requestCard.style.borderColor = '#e2e8f0';
+            requestCard.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        }
+    }
+}
+
+// Load chat messages - Frontend gọi DriverService để lấy thông tin user
+async function loadChatMessages(requestId) {
+    const messagesContainer = document.getElementById(`chat-messages-${requestId}`);
+    if (!messagesContainer) return;
+
+    try {
+        // Bước 1: Lấy danh sách tin nhắn từ PaymentService (chỉ có id_user)
+        const res = await gatewayFetch(`/gateway/payment/tin-nhan-ho-tro/${requestId}`);
+        if (!res.ok) {
+            throw new Error('Không thể tải tin nhắn');
+        }
+
+        const data = await res.json();
+        
+        if (!data.data || data.data.length === 0) {
+            messagesContainer.innerHTML = `
+                <div style="text-align: center; color: #64748b; padding: 30px;">
+                    <i class="fas fa-comments" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5; color: #cbd5e1;"></i>
+                    <p style="font-size: 15px; margin: 0; font-weight: 500;">Chưa có tin nhắn nào</p>
+                    <p style="font-size: 13px; margin-top: 8px; color: #94a3b8;">Hãy bắt đầu cuộc trò chuyện!</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Bước 2: Với mỗi tin nhắn, gọi DriverService để lấy thông tin user (name, role)
+        const messagesWithUserInfo = await Promise.all(
+            data.data.map(async (msg) => {
+                const userInfo = await getUserInfo(msg.id_user);
+                return {
+                    ...msg,
+                    ten_nguoi_gui: userInfo.name,
+                    role: userInfo.role
+                };
+            })
+        );
+
+        // Bước 3: Sắp xếp tin nhắn theo thời gian (từ cũ đến mới)
+        messagesWithUserInfo.sort((a, b) => {
+            const dateA = new Date(a.ngay_gui || a.ngayGui || 0);
+            const dateB = new Date(b.ngay_gui || b.ngayGui || 0);
+            return dateA - dateB;
+        });
+
+        // Bước 4: Lấy userId hiện tại để so sánh
+        const currentUserId = parseInt(localStorage.getItem('userId') || '0');
+
+        // Bước 5: Đảm bảo container hiển thị
+        messagesContainer.style.display = 'block';
+        messagesContainer.style.visibility = 'visible';
+        messagesContainer.style.opacity = '1';
+        
+        // Bước 6: Hiển thị tin nhắn với thông tin đầy đủ
+        messagesContainer.innerHTML = messagesWithUserInfo.map(msg => {
+            const isUser = msg.id_user === currentUserId || (msg.role === 'driver' && msg.id_user === currentUserId);
+            const isAdmin = msg.role === 'admin';
+            const ngayGui = formatDate(msg.ngay_gui || msg.ngayGui);
+            const tenNguoiGui = msg.ten_nguoi_gui || (isUser ? 'Bạn' : (isAdmin ? 'Admin' : 'Nhân viên'));
+            
+            // Style cho tin nhắn của user (bên phải, màu xanh)
+            if (isUser) {
+                return `
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                        <div style="max-width: 75%; padding: 12px 16px; border-radius: 12px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); border-bottom-right-radius: 4px;">
+                            <div style="font-size: 11px; opacity: 0.9; margin-bottom: 6px; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-user-circle"></i>
+                                <span>${tenNguoiGui}</span>
+                                <span style="opacity: 0.7;">•</span>
+                                <span>${ngayGui}</span>
+                            </div>
+                            <p style="margin: 0; line-height: 1.6; white-space: pre-wrap; font-size: 14px;">${msg.noi_dung || msg.noiDung || ''}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Style cho tin nhắn của admin (bên trái, màu xanh dương nhạt với badge ADMIN)
+            if (isAdmin) {
+                return `
+                    <div style="display: flex; justify-content: flex-start; margin-bottom: 15px;">
+                        <div style="max-width: 75%; padding: 12px 16px; border-radius: 12px; background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #3b82f6; border-bottom-left-radius: 4px;">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-user-shield" style="color: #3b82f6;"></i>
+                                <span>${tenNguoiGui}</span>
+                                <span style="padding: 2px 6px; background: #3b82f6; color: white; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px;">ADMIN</span>
+                                <span style="margin-left: auto;">${ngayGui}</span>
+                            </div>
+                            <p style="margin: 0; line-height: 1.6; white-space: pre-wrap; font-size: 14px; color: #475569;">${msg.noi_dung || msg.noiDung || ''}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Style cho tin nhắn của nhân viên khác (bên trái, màu trắng)
+            return `
+                <div style="display: flex; justify-content: flex-start; margin-bottom: 15px;">
+                    <div style="max-width: 75%; padding: 12px 16px; border-radius: 12px; background: #ffffff; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #94a3b8; border-bottom-left-radius: 4px;">
+                        <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-user-tie" style="color: #64748b;"></i>
+                            <span>${tenNguoiGui}</span>
+                            <span style="margin-left: auto;">${ngayGui}</span>
+                        </div>
+                        <p style="margin: 0; line-height: 1.6; white-space: pre-wrap; font-size: 14px; color: #475569;">${msg.noi_dung || msg.noiDung || ''}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Auto scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    } catch (error) {
+        console.error('Error loading chat messages:', error);
+        messagesContainer.innerHTML = `
+            <div style="text-align: center; color: #ef4444; padding: 20px;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Không thể tải tin nhắn. Vui lòng thử lại sau.</p>
+            </div>
+        `;
+    }
+}
+
+// Send message
+async function sendMessage(requestId) {
+    const input = document.getElementById(`chat-input-${requestId}`);
+    if (!input) {
+        console.error(`Không tìm thấy input với id: chat-input-${requestId}`);
+        alert('Không tìm thấy ô nhập tin nhắn. Vui lòng thử lại.');
+        return;
+    }
+
+    const noiDung = input.value.trim();
+    if (!noiDung) {
+        alert('Vui lòng nhập nội dung tin nhắn');
+        input.focus();
+        return;
+    }
+
+    try {
+        // Gửi tin nhắn đến PaymentService (không cần gửi name và role, chỉ cần id_yeu_cau_ho_tro và noi_dung)
+        const res = await gatewayFetch('/gateway/payment/tin-nhan-ho-tro', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id_yeu_cau_ho_tro: requestId,
+                noi_dung: noiDung
+            })
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Không thể gửi tin nhắn');
+        }
+
+        // Clear input
+        input.value = '';
+        
+        // Reload messages (sẽ tự động gọi DriverService để lấy thông tin user)
+        loadChatMessages(requestId);
+    } catch (error) {
+        console.error('Error sending message:', error);
+        alert('Lỗi: ' + error.message);
+    }
+}
+
 // Initialize account page
 document.addEventListener('DOMContentLoaded', function () {
     ensureAuthenticatedAndHydrate();
     checkUserVehicle(); // hàm này sẽ dc gọi khi load trang
     loadBookingHistory();
     checkUserDV();
+    loadSupportRequests(); // Load support requests when page loads
     //getPackagesFromAPI();
     setupEventListeners();
     setupBatteryTypeUI();

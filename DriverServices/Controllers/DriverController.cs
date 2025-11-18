@@ -538,7 +538,8 @@ namespace DriverServices.Controllers
                 {
                     Tenphuongtien = user.Tenphuongtien,
                     Bienso = user.Bienso,
-                    Idloaipin = user.Idloaipin
+                    Idloaipin = user.Idloaipin,
+                    Id=user.Id,
                 });
         }
 
@@ -707,6 +708,210 @@ namespace DriverServices.Controllers
                 return BadRequest(new {  message = ex.Message });
             }
         }
+
+        // API cho nhân viên - Lấy danh sách bookings
+        [HttpGet("bookings")]
+        [Authorize("staff")]
+        public async Task<IActionResult> GetBookings()
+        {
+            try
+            {
+                var bookings = await _context.Bookings
+                    .Include(b => b.IduserNavigation) // Include User để lấy tên
+                    .OrderByDescending(b => b.Ngaydat)
+                    .ThenByDescending(b => b.Giohen)
+                    .Select(b => new
+                    {
+                        id = b.Id,
+                        iduser = b.Iduser,
+                        username = b.IduserNavigation.Name,
+                        idloaipin = b.Idloaipin,
+                        loaipin = "Pin " + b.Idloaipin + "kWh", // Tùy chỉnh theo cấu trúc DB của bạn
+                        ngaydat = b.Ngaydat,
+                        ngayhen = b.Ngayhen,
+                        giohen = b.Giohen,
+                        chiphi = b.Chiphi,
+                        trangthaithanhtoan = b.Trangthaithanhtoan,
+                        trangthai = b.Trangthai,
+                        phuongthucthanhtoan = b.Phuongthucthanhtoan,
+                        idtram = b.Idtram // ✅ Thêm idtram
+                    })
+                    .ToListAsync();
+
+                return Ok(bookings);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi lấy bookings: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
+        // API cho nhân viên - Cập nhật trạng thái booking
+        [HttpPut("bookings/{id}/status")]
+        [Authorize(Roles = "staff")]
+        public async Task<IActionResult> UpdateBookingStatus(int id, [FromBody] Dictionary<string, string> data)
+        {
+            try
+            {
+                var booking = await _context.Bookings.FindAsync(id);
+                
+                if (booking == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy booking" });
+                }
+
+                // Cập nhật trạng thái
+                if (data.ContainsKey("trangthai"))
+                {
+                    booking.Trangthai = data["trangthai"];
+                }
+
+                if (data.ContainsKey("trangthaithanhtoan"))
+                {
+                    booking.Trangthaithanhtoan = data["trangthaithanhtoan"];
+                }
+
+                // Lưu ghi chú nếu cần (bạn có thể thêm trường Notes vào model Booking)
+                // if (data.ContainsKey("notes"))
+                // {
+                //     booking.Notes = data["notes"];
+                // }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Cập nhật trạng thái thành công" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi cập nhật booking: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
+        // API cho nhân viên và admin - Lấy thống kê
+        [HttpGet("bookings/stats")]
+        [Authorize(Roles = "staff,admin")]
+        public async Task<IActionResult> GetBookingStats()
+        {
+            try
+            {
+                var today = DateOnly.FromDateTime(DateTime.Now);
+                
+                // Tổng lượt hôm nay: đếm tất cả booking có ngày hẹn là hôm nay (không phân biệt trạng thái)
+                var totalToday = await _context.Bookings.CountAsync(b => b.Ngayhen.HasValue && b.Ngayhen.Value == today);
+                
+                // Hoàn thành hôm nay: đếm booking có trạng thái "Hoàn thành" và ngày hẹn là hôm nay
+                // (Booking hoàn thành trong ngày hôm nay dựa trên ngày hẹn)
+                var completed = await _context.Bookings.CountAsync(b => 
+                    b.Trangthai == "Hoàn thành" && 
+                    b.Ngayhen.HasValue && 
+                    b.Ngayhen.Value == today);
+                
+                // Đang xử lý: đếm tất cả booking có trạng thái "Đang xử lý" (không phân biệt ngày)
+                var processing = await _context.Bookings.CountAsync(b => b.Trangthai == "Đang xử lý");
+                
+                // Chờ xử lý: đếm booking có trạng thái "Đã đặt" (chờ xác nhận)
+                var pending = await _context.Bookings.CountAsync(b => b.Trangthai == "Đã đặt");
+                
+                // Doanh thu hôm nay: tổng chi phí của booking đã thanh toán có ngày hẹn hôm nay
+                var revenue = await _context.Bookings
+                    .Where(b => b.Ngayhen == today && b.Trangthaithanhtoan == "Đã thanh toán")
+                    .SumAsync(b => b.Chiphi ?? 0);
+                
+                var stats = new
+                {
+                    totalToday = totalToday,
+                    completed = completed,
+                    processing = processing,
+                    pending = pending,
+                    revenue = revenue
+                };
+
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi lấy thống kê: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
+        // API cho admin - Lấy dữ liệu booking theo thời gian cho biểu đồ
+        [HttpGet("bookings/chart")]
+        [Authorize(Roles = "admin,staff")]
+        public async Task<IActionResult> GetBookingsChartData([FromQuery] int days = 7)
+        {
+            try
+            {
+                var today = DateOnly.FromDateTime(DateTime.Now);
+                var startDate = today.AddDays(-days);
+
+                // Lấy danh sách booking trong khoảng thời gian
+                var bookings = await _context.Bookings
+                    .Where(b => b.Ngayhen.HasValue && b.Ngayhen.Value >= startDate && b.Ngayhen.Value <= today)
+                    .ToListAsync();
+
+                // Nhóm theo ngày
+                var groupedData = bookings
+                    .GroupBy(b => b.Ngayhen.Value)
+                    .Select(g => new
+                    {
+                        date = g.Key,
+                        count = g.Count()
+                    })
+                    .OrderBy(x => x.date)
+                    .ToList();
+
+                // Tạo mảng dữ liệu cho số ngày được chọn
+                var result = new List<int>();
+                var labels = new List<string>();
+
+                for (int i = days - 1; i >= 0; i--)
+                {
+                    var date = today.AddDays(-i);
+                    string label;
+                    
+                    // Nếu <= 7 ngày, hiển thị tên ngày trong tuần
+                    if (days <= 7)
+                    {
+                        label = date.DayOfWeek switch
+                        {
+                            DayOfWeek.Monday => "T2",
+                            DayOfWeek.Tuesday => "T3",
+                            DayOfWeek.Wednesday => "T4",
+                            DayOfWeek.Thursday => "T5",
+                            DayOfWeek.Friday => "T6",
+                            DayOfWeek.Saturday => "T7",
+                            DayOfWeek.Sunday => "CN",
+                            _ => ""
+                        };
+                    }
+                    // Nếu > 7 ngày, hiển thị ngày/tháng
+                    else
+                    {
+                        label = date.ToString("dd/MM");
+                    }
+                    
+                    labels.Add(label);
+
+                    var count = groupedData.FirstOrDefault(g => g.date == date)?.count ?? 0;
+                    result.Add(count);
+                }
+
+                return Ok(new
+                {
+                    labels = labels,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi lấy dữ liệu biểu đồ: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
         // API cho driver - Lấy lịch sử booking của mình
         [HttpGet("mybookings")]
         [Authorize(Roles = "driver")]
