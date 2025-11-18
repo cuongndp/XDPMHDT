@@ -421,7 +421,7 @@ function showGuestInterface() {
 // Logout function
 async function logout() {
     // 1️⃣ Gọi API để xóa cookie trên server
-    await fetch('https://localhost:5000/gateway/driver/logoutdriver', {
+    await fetch('http://localhost:5000/gateway/driver/logoutdriver', {
         method: 'POST',
         credentials: 'include'
     });
@@ -591,12 +591,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // gửi dữ liệu cho api
-const GATEWAY_BASE = 'https://localhost:5000';
+const GATEWAY_BASE = 'http://localhost:5000';
 
 function gatewayFetch(path, options = {}) {
     const url = new URL(path, GATEWAY_BASE);
-    // Force HTTPS to avoid ERR_EMPTY_RESPONSE when hitting TLS port with HTTP
-    url.protocol = 'https:';
     const finalOptions = {
         credentials: 'include',
         ...options
@@ -740,7 +738,7 @@ const profile = async () => {
     const token = localStorage.getItem('token');
     
 
-    const res = await fetch('https://localhost:5000/gateway/driver/profile', {
+    const res = await fetch('http://localhost:5000/gateway/driver/profile', {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -954,6 +952,13 @@ async function getPackagesFromAPI() {
         container.appendChild(card);
     });
 }
+function formatThoiGian(phut) {
+    if (phut < 60) return `${Math.round(phut)} phút`;
+    const gio = Math.floor(phut / 60);
+    const phutConLai = Math.round(phut % 60);
+    return `${gio} giờ ${phutConLai} phút`;
+}
+
 
 // Helper: format tiền VND
 function formatCurrencyVND(amount) {
@@ -1050,9 +1055,22 @@ async function initAutocomplete() {
 
 
         });
-        const data = res.json();
+        const data =await res.json();
         console.log("Battery info:", data);
 
+
+        stationsData = data.map(item => ({
+            id: item.tram.id,
+            name: item.tram.tentram,
+            address: item.tram.diachi,
+            phone: item.tram.sodienthoaitd,
+            openTime: item.tram.giomocua,
+            closeTime: item.tram.giodongcua,
+            khoangcach: `${item.khoangCachKm.toFixed(1)} km`,
+            thoigianden: formatThoiGian(parseFloat(item.thoiGianPhut)),
+        }));
+
+        loadStations();
 
 
     });
@@ -1070,3 +1088,94 @@ document.getElementById('btnSearch').addEventListener('click', function () {
     console.log("Gọi API với kinh độ, vĩ độ:", selectedLatLng);
     // TODO: Gọi API của bạn ở đây
 });
+
+
+
+
+
+function loaddanhsach() {
+    const stationsGrid = document.getElementById('stationsGrid');
+    if (!stationsGrid) return;
+
+    let filteredStations = stationsData;
+
+    if (currentFilter !== 'all') {
+        filteredStations = stationsData.filter(station => station.status === currentFilter);
+    }
+    //<span class="station-status status-${station.status}">
+    //                    ${getStatusText(station.status)}
+    //                </span>
+
+    //<p><i class="fas fa-battery-full"></i> Điện thoại: ${station.phone}</p>
+
+
+    stationsGrid.innerHTML = filteredStations.map(station => `
+        <div class="station-card">
+            <div class="station-header">
+                <h3 class="station-name">${station.name}</h3>
+                
+            </div>
+            <div class="station-info">
+                <p><i class="fas fa-map-marker-alt"></i> ${station.address}</p>
+                
+                <p><i class="fas fa-charging-station"></i> Giờ mở cửa: ${station.openTime}</p>
+                <p><i class="fas fa-tools"></i> Giờ đóng cửa: ${station.closeTime}</p>
+                <p><i class="fas fa-phone"></i> ${station.phone}</p>
+            </div>
+            <div class="station-actions">
+                <button class="btn btn-primary" onclick="bookStation(${station.id})">
+                    <i class="fas fa-calendar-check"></i> Đặt chỗ
+                </button>
+                <button class="btn btn-outline" onclick="getDirections(${station.id})">
+                    <i class="fas fa-directions"></i> Chỉ đường
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+}
+
+
+
+
+
+async function Stationds() {
+
+        const res = await gatewayFetch('/gateway/station/danhsach', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+
+
+        });
+        const data = await res.json();
+        console.log("Battery info:", data);
+
+
+        stationsData = data.map(item => ({
+            id: item.id,
+            name: item.tentram,
+            address: item.diachi,
+            phone: item.sodienthoaitd,
+            openTime: item.giomocua,
+            closeTime: item.giodongcua,
+        }));
+
+        loaddanhsach();
+
+
+  
+
+
+
+}
+
+
+function bookStation(stationId) {
+    // Chuyển hướng sang trang booking, kèm id trạm
+    window.location.href = `/booking.html?stationId=${stationId}`;
+
+}
+
+
+

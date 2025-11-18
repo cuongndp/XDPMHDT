@@ -698,3 +698,62 @@
         max-width: 100% !important;
     }
 }
+
+/* Chat Input Styles - Ensure textarea is always visible */
+[id^="chat-input-"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    min-height: 80px !important;
+    padding: 12px 16px !important;
+    border: 2px solid #3b82f6 !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-family: Arial, sans-serif !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    box-sizing: border-box !important;
+    resize: vertical !important;
+    line-height: 1.5 !important;
+    position: relative !important;
+    z-index: 11 !important;
+}
+
+[id^="chat-input-"]:focus {
+    outline: none !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+    background: #ffffff !important;
+}
+
+[id^="chat-input-"]::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+}
+
+/* Chat section container */
+[id^="chat-"] {
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* Custom scrollbar cho phần tin nhắn */
+[id^="chat-messages-"]::-webkit-scrollbar {
+    width: 8px;
+}
+
+[id^="chat-messages-"]::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+[id^="chat-messages-"]::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    transition: background 0.3s;
+}
+
+[id^="chat-messages-"]::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

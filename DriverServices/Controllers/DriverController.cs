@@ -252,6 +252,220 @@ namespace DriverServices.Controllers
             });
         }
 
+        // GET: api/Driver/user/{id} - Lấy thông tin user theo ID (dùng cho PaymentService hoặc frontend)
+        [HttpGet("user/{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy user" });
+                }
+
+                return Ok(new
+                {
+                    id = user.Id,
+                    name = user.Name,
+                    email = user.Email,
+                    role = user.Role,
+                    age = user.Age,
+                    sodienthoai = user.SoDienThoai,
+                    gioitinh = user.GioiTinh
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi lấy user: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
+        // GET: api/Driver/users/all - Lấy danh sách tất cả users (cho admin)
+        [HttpGet("users/all")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetAllUsers([FromQuery] string? role = null)
+        {
+            try
+            {
+                var query = _context.Users.AsQueryable();
+
+                // Filter theo role nếu có
+                if (!string.IsNullOrEmpty(role))
+                {
+                    query = query.Where(u => u.Role == role);
+                }
+
+                var users = await query.Select(u => new
+                {
+                    id = u.Id,
+                    name = u.Name,
+                    email = u.Email,
+                    role = u.Role,
+                    age = u.Age,
+                    sodienthoai = u.SoDienThoai,
+                    gioitinh = u.GioiTinh
+                }).ToListAsync();
+
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi lấy danh sách users: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
+        // POST: api/Driver/users - Tạo user mới (cho admin)
+        [HttpPost("users")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> CreateUser([FromBody] Dictionary<string, string> data)
+        {
+            try
+            {
+                // Validate
+                if (!data.ContainsKey("name") || !data.ContainsKey("email") || !data.ContainsKey("password"))
+                {
+                    return BadRequest(new { message = "Thiếu thông tin bắt buộc" });
+                }
+
+                // Kiểm tra email đã tồn tại
+                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == data["email"]);
+                if (existingUser != null)
+                {
+                    return BadRequest(new { message = "Email đã tồn tại" });
+                }
+
+                // Hash password
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(data["password"]);
+
+                var user = new User
+                {
+                    Name = data["name"],
+                    Email = data["email"],
+                    Password = hashedPassword,
+                    Role = data.ContainsKey("role") ? data["role"] : "driver",
+                    SoDienThoai = data.ContainsKey("sodienthoai") ? data["sodienthoai"] : null,
+                    Age = data.ContainsKey("age") && int.TryParse(data["age"], out int age) ? age : null,
+                    GioiTinh = data.ContainsKey("gioitinh") ? data["gioitinh"] : null
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "Tạo user thành công",
+                    id = user.Id,
+                    user = new
+                    {
+                        id = user.Id,
+                        name = user.Name,
+                        email = user.Email,
+                        role = user.Role,
+                        age = user.Age,
+                        sodienthoai = user.SoDienThoai,
+                        gioitinh = user.GioiTinh
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi tạo user: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
+        // PUT: api/Driver/users/{id} - Cập nhật user (cho admin)
+        [HttpPut("users/{id}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] Dictionary<string, string> data)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy user" });
+                }
+
+                // Cập nhật thông tin
+                if (data.ContainsKey("name"))
+                    user.Name = data["name"];
+                if (data.ContainsKey("email"))
+                {
+                    // Kiểm tra email trùng
+                    var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == data["email"] && u.Id != id);
+                    if (existingUser != null)
+                    {
+                        return BadRequest(new { message = "Email đã tồn tại" });
+                    }
+                    user.Email = data["email"];
+                }
+                if (data.ContainsKey("password") && !string.IsNullOrEmpty(data["password"]))
+                {
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(data["password"]);
+                }
+                if (data.ContainsKey("role"))
+                    user.Role = data["role"];
+                if (data.ContainsKey("sodienthoai"))
+                    user.SoDienThoai = data["sodienthoai"];
+                if (data.ContainsKey("age") && int.TryParse(data["age"], out int age))
+                    user.Age = age;
+                if (data.ContainsKey("gioitinh"))
+                    user.GioiTinh = data["gioitinh"];
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "Cập nhật user thành công",
+                    id = user.Id,
+                    user = new
+                    {
+                        id = user.Id,
+                        name = user.Name,
+                        email = user.Email,
+                        role = user.Role,
+                        age = user.Age,
+                        sodienthoai = user.SoDienThoai,
+                        gioitinh = user.GioiTinh
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi cập nhật user: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
+        // DELETE: api/Driver/users/{id} - Xóa user (cho admin)
+        [HttpDelete("users/{id}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy user" });
+                }
+
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Xóa user thành công" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi xóa user: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
+        }
+
         [HttpPost("formthemxe")]
         [Authorize]
         public async Task<IActionResult> formthemxe([FromBody] Dictionary<string, string> data)
@@ -391,6 +605,43 @@ namespace DriverServices.Controllers
                 return BadRequest();
             else
                 return Ok(logdichvu);
+        }
+
+        // GET: api/Driver/dangkydichvu/user/{userId} - Lấy đăng ký dịch vụ của user (cho admin)
+        [HttpGet("dangkydichvu/user/{userId}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetDangKyDichVuByUserId(int userId)
+        {
+            try
+            {
+                var dk = await _context.DangKyDichVus
+                    .Where(p => p.Iduser == userId)
+                    .OrderByDescending(p => p.Ngaydangky)
+                    .FirstOrDefaultAsync();
+
+                if (dk == null)
+                {
+                    return NotFound(new { message = "User chưa đăng ký dịch vụ" });
+                }
+
+                return Ok(new
+                {
+                    id = dk.Id,
+                    iduser = dk.Iduser,
+                    iddichvu = dk.Iddichvu,
+                    ngaydangky = dk.Ngaydangky,
+                    ngayketthuc = dk.Ngayketthuc,
+                    trangthai = dk.Trangthai,
+                    solandoipin = dk.Solandoipin,
+                    phuongthucthanhtoan = dk.Phuongthucthanhtoan,
+                    trangthaithanhtoan = dk.Trangthaithanhtoan
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi lấy đăng ký dịch vụ: {ex.Message}");
+                return StatusCode(500, new { message = $"Lỗi server: {ex.Message}" });
+            }
         }
         [Authorize("driver")]
         [HttpPost("datlich")]
