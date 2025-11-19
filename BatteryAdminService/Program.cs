@@ -34,11 +34,25 @@ builder.Services.AddDbContext<BatteryAdminDbContext>(options =>
 // Add HttpClient để gọi DriverService
 builder.Services.AddHttpClient();
 
-// Cấu hình URL DriverService
-builder.Configuration["DriverServiceUrl"] = "http://driverservices:5004";
+// Cấu hình URL các service
+// Kiểm tra xem có đang chạy trong Docker không
+var isRunningInDocker = File.Exists("/.dockerenv") 
+    || Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
 
-// Cấu hình URL StationService
-builder.Configuration["StationServiceUrl"] = "http://stationservice:5002";
+// Nếu chạy trong Docker, dùng Docker service name; nếu không, dùng localhost
+var driverServiceUrl = isRunningInDocker ? "http://driverservices:5004" : "http://localhost:5004";
+var stationServiceUrl = isRunningInDocker ? "http://stationservice:5002" : "http://localhost:5002";
+var paymentServiceUrl = isRunningInDocker ? "http://driverpaymentservice:5003" : "http://localhost:5003";
+
+builder.Configuration["DriverServiceUrl"] = driverServiceUrl;
+builder.Configuration["StationServiceUrl"] = stationServiceUrl;
+builder.Configuration["PaymentServiceUrl"] = paymentServiceUrl;
+
+// Log để debug
+Console.WriteLine($"[BatteryAdminService] Running in Docker: {isRunningInDocker}");
+Console.WriteLine($"[BatteryAdminService] DriverServiceUrl: {driverServiceUrl}");
+Console.WriteLine($"[BatteryAdminService] StationServiceUrl: {stationServiceUrl}");
+Console.WriteLine($"[BatteryAdminService] PaymentServiceUrl: {paymentServiceUrl}");
 
 // Authentication với JWT cho Admin Service
 builder.Services.AddAuthentication(options =>
@@ -59,7 +73,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
 
         ValidIssuer = "ApiGateway", // 👈 Issuer giống các service khác
-        ValidAudience = "BatteryAdminService", // 👈 Audience RIÊNG cho Admin Service
+        ValidAudiences = new[] { "BatteryAdminService", "DriveService" }, // 👈 Chấp nhận cả Admin và Staff token
         IssuerSigningKey = new SymmetricSecurityKey(key),
         NameClaimType = JwtRegisteredClaimNames.UniqueName,
         RoleClaimType = "role"
@@ -73,12 +87,29 @@ builder.Services.AddAuthentication(options =>
             if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
             {
                 context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                Console.WriteLine($"[BatteryAdminService] Token received from Authorization header: {context.Token?.Substring(0, Math.Min(20, context.Token?.Length ?? 0))}...");
             }
             // 2. Nếu không có header, đọc từ cookie admin_token (cho admin)
             else if (context.Request.Cookies.ContainsKey("admin_token"))
             {
                 context.Token = context.Request.Cookies["admin_token"];
+                Console.WriteLine("[BatteryAdminService] Token received from admin_token cookie");
             }
+            else
+            {
+                Console.WriteLine("[BatteryAdminService] No token found in Authorization header or cookies");
+            }
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"[BatteryAdminService] Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            var role = context.Principal?.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
+            Console.WriteLine($"[BatteryAdminService] Token validated. Role: {role}");
             return Task.CompletedTask;
         }
     };

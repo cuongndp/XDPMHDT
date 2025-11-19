@@ -94,10 +94,6 @@
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </li>
-                <li class="nav-item" data-section="stations">
-                    <i class="fas fa-charging-station"></i>
-                    <span>Quản lý trạm</span>
-                </li>
                 <li class="nav-item" data-section="users">
                     <i class="fas fa-users"></i>
                     <span>Quản lý người dùng</span>
@@ -118,10 +114,6 @@
                     <i class="fas fa-life-ring"></i>
                     <span>Xử lý khiếu nại</span>
                 </li>
-                <li class="nav-item" data-section="settings">
-                    <i class="fas fa-cog"></i>
-                    <span>Cài đặt</span>
-                </li>
             </ul>
         </nav>
     </div>
@@ -137,28 +129,9 @@
                 <h1 class="page-title">Dashboard</h1>
             </div>
             <div class="top-bar-right">
-                <div class="notifications">
-                    <button class="notification-btn">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">3</span>
-                    </button>
-                </div>
-                <div class="user-menu">
-                    <div class="user-info">
-                        <img src="https://via.placeholder.com/40" alt="Admin" class="user-avatar">
-                        <span class="user-name">Admin User</span>
-                    </div>
-                    <div class="user-dropdown">
-                        <button class="dropdown-toggle">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                        <div class="dropdown-menu">
-                            <a href="#"><i class="fas fa-user"></i> Hồ sơ</a>
-                            <a href="#"><i class="fas fa-cog"></i> Cài đặt</a>
-                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
-                        </div>
-                    </div>
-                </div>
+                <button class="btn btn-outline" onclick="logout()" style="margin-left: auto;">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </button>
             </div>
         </header>
 
@@ -226,99 +199,6 @@
                             <canvas id="swapsChart"></canvas>
                         </div>
                     </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>Trạng thái trạm</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="stationsStatusChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Activity -->
-                <div class="activity-section">
-                    <div class="section-header">
-                        <h3>Hoạt động gần đây</h3>
-                        <button class="btn btn-outline">Xem tất cả</button>
-                    </div>
-                    <div class="activity-list">
-                        <div class="activity-item">
-                            <div class="activity-icon success">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <div class="activity-content">
-                                <p><strong>Trạm Quận 1</strong> đã hoàn thành bảo trì</p>
-                                <span class="activity-time">2 phút trước</span>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="activity-content">
-                                <p><strong>Trạm Quận 3</strong> cần thay thế pin</p>
-                                <span class="activity-time">15 phút trước</span>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon info">
-                                <i class="fas fa-info"></i>
-                            </div>
-                            <div class="activity-content">
-                                <p><strong>Người dùng mới</strong> đăng ký gói tháng</p>
-                                <span class="activity-time">1 giờ trước</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Stations Management Section -->
-        <section id="stations" class="content-section">
-            <div class="section-header">
-                <h2>Quản lý trạm</h2>
-                <button class="btn btn-primary" onclick="showAddStationModal()">
-                    <i class="fas fa-plus"></i> Thêm trạm mới
-                </button>
-            </div>
-            
-            <div class="stations-table-container">
-                <div class="table-filters">
-                    <div class="filter-group">
-                        <label>Trạng thái:</label>
-                        <select id="stationStatusFilter">
-                            <option value="all">Tất cả</option>
-                            <option value="active">Hoạt động</option>
-                            <option value="maintenance">Bảo trì</option>
-                            <option value="offline">Offline</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Tìm kiếm:</label>
-                        <input type="text" id="stationSearch" placeholder="Tên trạm, địa chỉ...">
-                    </div>
-                </div>
-                
-                <div class="table-responsive">
-                    <table class="stations-table">
-                        <thead>
-                            <tr>
-                                <th>Tên trạm</th>
-                                <th>Địa chỉ</th>
-                                <th>Trạng thái</th>
-                                <th>Pin có sẵn</th>
-                                <th>Đang sạc</th>
-                                <th>Bảo trì</th>
-                                <th>Đánh giá</th>
-                                <th>Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stationsTableBody">
-                            <!-- Stations data will be loaded here -->
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </section>
@@ -331,28 +211,67 @@
                     <button class="btn btn-outline">
                         <i class="fas fa-download"></i> Xuất Excel
                     </button>
-                    <button class="btn btn-primary">
+                    <button class="btn btn-primary" onclick="showAddUserModal()">
                         <i class="fas fa-plus"></i> Thêm người dùng
                     </button>
                 </div>
             </div>
             
-            <div class="users-stats">
+            <!-- Tabs để phân loại driver và staff -->
+            <div class="user-tabs">
+                <button class="user-tab active" onclick="switchUserTab('driver')" id="tab-driver">
+                    Người dùng (Driver)
+                </button>
+                <button class="user-tab" onclick="switchUserTab('staff')" id="tab-staff">
+                    Nhân viên (Staff)
+                </button>
+            </div>
+            
+            <style>
+                .user-tabs {
+                    margin-bottom: 20px;
+                    border-bottom: 2px solid #e2e8f0;
+                    display: flex;
+                    gap: 0;
+                }
+                .user-tab {
+                    padding: 12px 24px;
+                    background: none;
+                    border: none;
+                    border-bottom: 3px solid transparent;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #64748b;
+                    transition: all 0.2s;
+                }
+                .user-tab:hover {
+                    color: #1e293b;
+                    background: #f1f5f9;
+                }
+                .user-tab.active {
+                    color: #3b82f6;
+                    border-bottom-color: #3b82f6;
+                    font-weight: 600;
+                }
+            </style>
+            
+            <div class="users-stats" id="usersStats">
                 <div class="user-stat-card">
                     <h4>Tổng người dùng</h4>
-                    <p class="stat-number">1,247</p>
+                    <p class="stat-number" id="totalUsers">0</p>
                 </div>
                 <div class="user-stat-card">
                     <h4>Người dùng mới</h4>
-                    <p class="stat-number">45</p>
+                    <p class="stat-number" id="newUsers">0</p>
                 </div>
                 <div class="user-stat-card">
                     <h4>Gói tháng</h4>
-                    <p class="stat-number">892</p>
+                    <p class="stat-number" id="monthlyPackages">0</p>
                 </div>
                 <div class="user-stat-card">
                     <h4>Gói năm</h4>
-                    <p class="stat-number">156</p>
+                    <p class="stat-number" id="yearlyPackages">0</p>
                 </div>
             </div>
             
@@ -364,14 +283,17 @@
                             <th>Tên</th>
                             <th>Email</th>
                             <th>Số điện thoại</th>
-                            <th>Gói thuê</th>
-                            <th>Lượt đổi</th>
-                            <th>Trạng thái</th>
+                            <th>Role</th>
+                            <th class="goi-thue-column">Gói thuê</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <!-- Users data will be loaded here -->
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
+                                <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -386,69 +308,9 @@
                 </button>
             </div>
             
-            <div class="packages-grid">
-                <div class="package-card">
-                    <div class="package-header">
-                        <h3>Gói cơ bản</h3>
-                        <div class="package-price">50,000đ/lần</div>
-                    </div>
-                    <div class="package-stats">
-                        <div class="stat">
-                            <span class="label">Người dùng:</span>
-                            <span class="value">199</span>
-                        </div>
-                        <div class="stat">
-                            <span class="label">Doanh thu:</span>
-                            <span class="value">₫9.95M</span>
-                        </div>
-                    </div>
-                    <div class="package-actions">
-                        <button class="btn btn-outline">Chỉnh sửa</button>
-                        <button class="btn btn-danger">Xóa</button>
-                    </div>
-                </div>
-                
-                <div class="package-card featured">
-                    <div class="package-badge">Phổ biến</div>
-                    <div class="package-header">
-                        <h3>Gói tháng</h3>
-                        <div class="package-price">800,000đ/tháng</div>
-                    </div>
-                    <div class="package-stats">
-                        <div class="stat">
-                            <span class="label">Người dùng:</span>
-                            <span class="value">892</span>
-                        </div>
-                        <div class="stat">
-                            <span class="label">Doanh thu:</span>
-                            <span class="value">₫713.6M</span>
-                        </div>
-                    </div>
-                    <div class="package-actions">
-                        <button class="btn btn-outline">Chỉnh sửa</button>
-                        <button class="btn btn-danger">Xóa</button>
-                    </div>
-                </div>
-                
-                <div class="package-card">
-                    <div class="package-header">
-                        <h3>Gói năm</h3>
-                        <div class="package-price">8,000,000đ/năm</div>
-                    </div>
-                    <div class="package-stats">
-                        <div class="stat">
-                            <span class="label">Người dùng:</span>
-                            <span class="value">156</span>
-                        </div>
-                        <div class="stat">
-                            <span class="label">Doanh thu:</span>
-                            <span class="value">₫1.25B</span>
-                        </div>
-                    </div>
-                    <div class="package-actions">
-                        <button class="btn btn-outline">Chỉnh sửa</button>
-                        <button class="btn btn-danger">Xóa</button>
-                    </div>
+            <div class="packages-grid" id="packagesGrid">
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin"></i> Đang tải...
                 </div>
             </div>
         </section>
@@ -687,113 +549,6 @@
             </div>
         </section>
 
-        <!-- Settings Section -->
-        <section id="settings" class="content-section">
-            <div class="section-header">
-                <h2>Cài đặt hệ thống</h2>
-            </div>
-            
-            <div class="settings-grid">
-                <div class="settings-card">
-                    <h4>Cài đặt chung</h4>
-                    <form class="settings-form">
-                        <div class="form-group">
-                            <label>Tên hệ thống:</label>
-                            <input type="text" value="EV Battery Swap System">
-                        </div>
-                        <div class="form-group">
-                            <label>Email hỗ trợ:</label>
-                            <input type="email" value="support@evswap.vn">
-                        </div>
-                        <div class="form-group">
-                            <label>Số điện thoại:</label>
-                            <input type="tel" value="1900-1234">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Lưu cài đặt</button>
-                    </form>
-                </div>
-                
-                <div class="settings-card">
-                    <h4>Cài đặt thông báo</h4>
-                    <form class="settings-form">
-                        <div class="form-group">
-                            <label class="checkbox">
-                                <input type="checkbox" checked>
-                                <span>Thông báo trạm offline</span>
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label class="checkbox">
-                                <input type="checkbox" checked>
-                                <span>Thông báo pin cần bảo trì</span>
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label class="checkbox">
-                                <input type="checkbox">
-                                <span>Thông báo doanh thu hàng ngày</span>
-                            </label>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Lưu cài đặt</button>
-                    </form>
-                </div>
-                
-                <div class="settings-card">
-                    <h4>Bảo mật</h4>
-                    <form class="settings-form">
-                        <div class="form-group">
-                            <label>Mật khẩu hiện tại:</label>
-                            <input type="password">
-                        </div>
-                        <div class="form-group">
-                            <label>Mật khẩu mới:</label>
-                            <input type="password">
-                        </div>
-                        <div class="form-group">
-                            <label>Xác nhận mật khẩu:</label>
-                            <input type="password">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Đổi mật khẩu</button>
-                    </form>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- Add Station Modal -->
-    <div id="addStationModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Thêm trạm mới</h2>
-                <span class="close" onclick="closeModal('addStationModal')">&times;</span>
-            </div>
-            <form class="modal-form">
-                <div class="form-group">
-                    <label for="stationName">Tên trạm:</label>
-                    <input type="text" id="stationName" required>
-                </div>
-                <div class="form-group">
-                    <label for="stationAddress">Địa chỉ:</label>
-                    <input type="text" id="stationAddress" required>
-                </div>
-                <div class="form-group">
-                    <label for="stationPhone">Số điện thoại:</label>
-                    <input type="tel" id="stationPhone" required>
-                </div>
-                <div class="form-group">
-                    <label for="stationCapacity">Số lượng pin tối đa:</label>
-                    <input type="number" id="stationCapacity" required>
-                </div>
-                <div class="form-group">
-                    <label for="stationManager">Người quản lý:</label>
-                    <input type="text" id="stationManager" required>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('addStationModal')">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Thêm trạm</button>
-                </div>
-            </form>
-        </div>
     </div>
 
     <!-- Add Package Modal -->
@@ -803,30 +558,172 @@
                 <h2>Tạo gói thuê mới</h2>
                 <span class="close" onclick="closeModal('addPackageModal')">&times;</span>
             </div>
-            <form class="modal-form">
+            <form class="modal-form" id="addPackageForm" onsubmit="handleCreatePackage(event); return false;">
                 <div class="form-group">
-                    <label for="packageName">Tên gói:</label>
-                    <input type="text" id="packageName" required>
+                    <label for="packageName">Tên gói dịch vụ:</label>
+                    <input type="text" id="packageName" name="tendichvu" required>
                 </div>
                 <div class="form-group">
-                    <label for="packagePrice">Giá:</label>
-                    <input type="number" id="packagePrice" required>
+                    <label for="packageMota">Mô tả:</label>
+                    <textarea id="packageMota" name="mota" rows="3"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="packageType">Loại gói:</label>
-                    <select id="packageType" required>
-                        <option value="per_swap">Theo lượt</option>
-                        <option value="monthly">Hàng tháng</option>
-                        <option value="yearly">Hàng năm</option>
-                    </select>
+                    <label for="packageThoihan">Thời hạn (tháng):</label>
+                    <input type="number" id="packageThoihan" name="thoihan" min="0" placeholder="0 = không giới hạn">
                 </div>
                 <div class="form-group">
-                    <label for="packageFeatures">Tính năng:</label>
-                    <textarea id="packageFeatures" rows="4"></textarea>
+                    <label for="packagePrice">Phí (VNĐ):</label>
+                    <input type="number" id="packagePrice" name="phi" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="packageSolandoipin">Số lần đổi pin:</label>
+                    <input type="text" id="packageSolandoipin" name="solandoipin" placeholder="không giới hạn, hoặc số cụ thể">
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-outline" onclick="closeModal('addPackageModal')">Hủy</button>
                     <button type="submit" class="btn btn-primary">Tạo gói</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Package Modal -->
+    <div id="editPackageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Chỉnh sửa gói thuê</h2>
+                <span class="close" onclick="closeModal('editPackageModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="editPackageForm" onsubmit="handleUpdatePackage(event); return false;">
+                <input type="hidden" id="editPackageId">
+                <div class="form-group">
+                    <label for="editPackageName">Tên gói dịch vụ:</label>
+                    <input type="text" id="editPackageName" name="tendichvu" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPackageMota">Mô tả:</label>
+                    <textarea id="editPackageMota" name="mota" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editPackageThoihan">Thời hạn (tháng):</label>
+                    <input type="number" id="editPackageThoihan" name="thoihan" min="0" placeholder="0 = không giới hạn">
+                </div>
+                <div class="form-group">
+                    <label for="editPackagePrice">Phí (VNĐ):</label>
+                    <input type="number" id="editPackagePrice" name="phi" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPackageSolandoipin">Số lần đổi pin:</label>
+                    <input type="text" id="editPackageSolandoipin" name="solandoipin" placeholder="không giới hạn, hoặc số cụ thể">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editPackageModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Thêm người dùng mới</h2>
+                <span class="close" onclick="closeModal('addUserModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="addUserForm" onsubmit="handleCreateUser(event); return false;">
+                <div class="form-group">
+                    <label for="userName">Tên:</label>
+                    <input type="text" id="userName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">Email:</label>
+                    <input type="email" id="userEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="userPassword">Mật khẩu:</label>
+                    <input type="password" id="userPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="userRole">Vai trò:</label>
+                    <select id="userRole" name="role" required>
+                        <option value="driver">Người dùng (Driver)</option>
+                        <option value="staff">Nhân viên (Staff)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="userPhone">Số điện thoại:</label>
+                    <input type="text" id="userPhone" name="sodienthoai">
+                </div>
+                <div class="form-group">
+                    <label for="userAge">Tuổi:</label>
+                    <input type="number" id="userAge" name="age" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="userGender">Giới tính:</label>
+                    <select id="userGender" name="gioitinh">
+                        <option value="">-- Chọn --</option>
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addUserModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Tạo người dùng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Chỉnh sửa người dùng</h2>
+                <span class="close" onclick="closeModal('editUserModal')">&times;</span>
+            </div>
+            <form class="modal-form" id="editUserForm" onsubmit="handleUpdateUser(event); return false;">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label for="editUserName">Tên:</label>
+                    <input type="text" id="editUserName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="editUserEmail">Email:</label>
+                    <input type="email" id="editUserEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="editUserPassword">Mật khẩu mới (để trống nếu không đổi):</label>
+                    <input type="password" id="editUserPassword" name="password">
+                </div>
+                <div class="form-group">
+                    <label for="editUserRole">Vai trò:</label>
+                    <select id="editUserRole" name="role" required>
+                        <option value="driver">Người dùng (Driver)</option>
+                        <option value="staff">Nhân viên (Staff)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editUserPhone">Số điện thoại:</label>
+                    <input type="text" id="editUserPhone" name="sodienthoai">
+                </div>
+                <div class="form-group">
+                    <label for="editUserAge">Tuổi:</label>
+                    <input type="number" id="editUserAge" name="age" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="editUserGender">Giới tính:</label>
+                    <select id="editUserGender" name="gioitinh">
+                        <option value="">-- Chọn --</option>
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editUserModal')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
                 </div>
             </form>
         </div>

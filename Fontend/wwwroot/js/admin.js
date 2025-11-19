@@ -2,6 +2,10 @@
 let currentSection = 'dashboard';
 let charts = {};
 
+// Track last loaded date for auto-refresh when date changes
+let lastLoadedDate = new Date().toDateString();
+let dateCheckInterval = null; // Store interval ID to avoid creating multiple intervals
+
 // Initialize the admin dashboard
 document.addEventListener('DOMContentLoaded', function() {
     // Kiểm tra authentication một lần nữa (backup check)
@@ -66,7 +70,13 @@ function initializeDashboard() {
     
     // Load initial data
     loadStationsData();
-    loadUsersData();
+    // Mặc định load tab "Người dùng" (driver)
+    currentUserRoleFilter = 'driver';
+    const driverTab = document.getElementById('tab-driver');
+    if (driverTab) {
+        driverTab.classList.add('active');
+    }
+    loadUsersData('driver');
     loadBatteriesData();
 }
 
@@ -92,6 +102,14 @@ function setupEventListeners() {
     if (sidebarToggle && sidebar) {
         sidebarToggle.addEventListener('click', function() {
             sidebar.classList.toggle('open');
+        });
+    }
+
+    // Chart period selector
+    const periodSelect = document.querySelector('.chart-period');
+    if (periodSelect) {
+        periodSelect.addEventListener('change', function() {
+            loadSwapsChartData();
         });
     }
 
@@ -154,6 +172,24 @@ function showSection(sectionId) {
             loadStationsList(); // Load danh sách trạm trước
         }
         
+        // Load data khi vào section packages
+        if (sectionId === 'packages') {
+            loadPackagesData();
+        }
+        
+        // Load data khi vào section users - mặc định load tab "Người dùng"
+        if (sectionId === 'users') {
+            currentUserRoleFilter = 'driver';
+            document.querySelectorAll('.user-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            const driverTab = document.getElementById('tab-driver');
+            if (driverTab) {
+                driverTab.classList.add('active');
+            }
+            loadUsersData('driver');
+        }
+        
         // Load data khi vào section complaints
         if (sectionId === 'complaints') {
             loadComplaints();
@@ -176,77 +212,149 @@ function getSectionTitle(sectionId) {
     return titles[sectionId] || 'Dashboard';
 }
 
+// Check if date changed and reload dashboard data
+function checkDateChange() {
+    const currentDate = new Date().toDateString();
+    if (currentDate !== lastLoadedDate) {
+        lastLoadedDate = currentDate;
+        // Date changed, reload dashboard data
+        console.log('Ngày mới phát hiện, đang tải lại dữ liệu dashboard...');
+        updateDashboardStats();
+        loadChartsData();
+    }
+}
+
 // Load dashboard data
 function loadDashboardData() {
-    // Simulate loading dashboard stats
+    // Set initial loaded date
+    lastLoadedDate = new Date().toDateString();
+    // Load dashboard stats
     updateDashboardStats();
-    loadRecentActivity();
+    // Load charts data
+    loadChartsData();
+    
+    // Check for date change every minute (only create interval once)
+    if (!dateCheckInterval) {
+        dateCheckInterval = setInterval(checkDateChange, 60 * 1000); // Check every 1 minute
+    }
 }
 
 // Update dashboard stats
-function updateDashboardStats() {
-    // This would typically fetch from API
-    const stats = {
-        totalStations: 25,
-        activeUsers: 1247,
-        todaySwaps: 3456,
-        todayRevenue: 2400000
-    };
-
-    // Update stat cards
-    const statCards = document.querySelectorAll('.stat-card');
-    statCards.forEach((card, index) => {
-        const valueElement = card.querySelector('h3');
-        if (valueElement) {
-            const values = [stats.totalStations, stats.activeUsers, stats.todaySwaps, stats.todayRevenue];
-            valueElement.textContent = values[index] || '0';
+async function updateDashboardStats() {
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            console.error('Không có token admin');
+            return;
         }
-    });
+
+        const response = await fetch('http://localhost:5000/gateway/batteryadmin/dashboard/stats', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Không thể tải thống kê dashboard');
+        }
+
+        const stats = await response.json();
+
+        // Update stat cards
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            const valueElement = card.querySelector('h3');
+            if (valueElement) {
+                const values = [
+                    stats.totalStations || 0,
+                    stats.activeUsers || 0,
+                    stats.todaySwaps || 0,
+                    formatCurrency(stats.todayRevenue || 0)
+                ];
+                valueElement.textContent = values[index] || '0';
+            }
+        });
+    } catch (error) {
+        console.error('Lỗi khi tải thống kê dashboard:', error);
+        // Fallback to default values if API fails
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            const valueElement = card.querySelector('h3');
+            if (valueElement) {
+                const values = [0, 0, 0, '₫0'];
+                valueElement.textContent = values[index] || '0';
+            }
+        });
+    }
 }
 
-// Load recent activity
-function loadRecentActivity() {
-    const activities = [
-        {
-            type: 'success',
-            icon: 'fas fa-check',
-            message: 'Trạm Quận 1 đã hoàn thành bảo trì',
-            time: '2 phút trước'
-        },
-        {
-            type: 'warning',
-            icon: 'fas fa-exclamation-triangle',
-            message: 'Trạm Quận 3 cần thay thế pin',
-            time: '15 phút trước'
-        },
-        {
-            type: 'info',
-            icon: 'fas fa-info',
-            message: 'Người dùng mới đăng ký gói tháng',
-            time: '1 giờ trước'
-        }
-    ];
+// Format currency helper
+function formatCurrency(amount) {
+    if (amount >= 1000000) {
+        return `₫${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+        return `₫${(amount / 1000).toFixed(0)}K`;
+    }
+    return `₫${amount}`;
+}
 
-    const activityList = document.querySelector('.activity-list');
-    if (activityList) {
-        activityList.innerHTML = activities.map(activity => `
-            <div class="activity-item">
-                <div class="activity-icon ${activity.type}">
-                    <i class="${activity.icon}"></i>
-                </div>
-                <div class="activity-content">
-                    <p><strong>${activity.message}</strong></p>
-                    <span class="activity-time">${activity.time}</span>
-                </div>
-            </div>
-        `).join('');
+// Load charts data from API
+async function loadChartsData() {
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            console.error('Không có token admin');
+            return;
+        }
+
+        // Load swaps chart data
+        await loadSwapsChartData();
+    } catch (error) {
+        console.error('Lỗi khi tải dữ liệu biểu đồ:', error);
+    }
+}
+
+// Load swaps chart data
+async function loadSwapsChartData() {
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        
+        // Get selected period from dropdown (default 30 days)
+        const periodSelect = document.querySelector('.chart-period');
+        const days = periodSelect ? parseInt(periodSelect.value) || 30 : 30;
+        
+        const response = await fetch(`http://localhost:5000/gateway/driver/bookings/chart?days=${days}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Không thể tải dữ liệu biểu đồ');
+        }
+
+        const chartData = await response.json();
+
+        // Update chart if it exists
+        if (charts.swaps && chartData.labels && chartData.data) {
+            charts.swaps.data.labels = chartData.labels;
+            charts.swaps.data.datasets[0].data = chartData.data;
+            charts.swaps.update();
+        }
+    } catch (error) {
+        console.error('Lỗi khi tải dữ liệu biểu đồ lượt đổi pin:', error);
     }
 }
 
 // Initialize charts
 function initializeCharts() {
     initializeSwapsChart();
-    initializeStationsStatusChart();
     initializeBatteryHealthChart();
     initializeReportsCharts();
 }
@@ -256,13 +364,14 @@ function initializeSwapsChart() {
     const ctx = document.getElementById('swapsChart');
     if (!ctx) return;
 
+    // Initialize with empty data, will be updated by loadChartsData
     charts.swaps = new Chart(ctx, {
         type: 'line',
         data: {
             labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
             datasets: [{
                 label: 'Lượt đổi pin',
-                data: [1200, 1900, 3000, 5000, 2000, 3000, 4500],
+                data: [0, 0, 0, 0, 0, 0, 0],
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 tension: 0.4,
@@ -288,33 +397,6 @@ function initializeSwapsChart() {
                     grid: {
                         color: '#f1f5f9'
                     }
-                }
-            }
-        }
-    });
-}
-
-// Initialize stations status chart
-function initializeStationsStatusChart() {
-    const ctx = document.getElementById('stationsStatusChart');
-    if (!ctx) return;
-
-    charts.stationsStatus = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Hoạt động', 'Bảo trì', 'Offline'],
-            datasets: [{
-                data: [20, 3, 2],
-                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
                 }
             }
         }
@@ -544,63 +626,368 @@ function loadStationsData() {
     }
 }
 
-// Load users data
-function loadUsersData() {
-    const usersData = [
-        {
-            id: 1,
-            name: 'Nguyễn Văn A',
-            email: 'nguyenvana@email.com',
-            phone: '0901234567',
-            package: 'Gói tháng',
-            swaps: 45,
-            status: 'active'
-        },
-        {
-            id: 2,
-            name: 'Trần Thị B',
-            email: 'tranthib@email.com',
-            phone: '0907654321',
-            package: 'Gói năm',
-            swaps: 120,
-            status: 'active'
-        },
-        {
-            id: 3,
-            name: 'Lê Văn C',
-            email: 'levanc@email.com',
-            phone: '0909876543',
-            package: 'Gói cơ bản',
-            swaps: 8,
-            status: 'inactive'
-        }
-    ];
+// Biến global để lưu filter role hiện tại
+let currentUserRoleFilter = 'driver'; // Mặc định là driver
+let allUsersData = [];
 
-    const tableBody = document.getElementById('usersTableBody');
-    if (tableBody) {
-        tableBody.innerHTML = usersData.map(user => `
+// Load users data từ API
+async function loadUsersData(role = 'driver') {
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const tableBody = document.getElementById('usersTableBody');
+        if (!tableBody) return;
+
+        // Hiển thị loading
+        tableBody.innerHTML = `
             <tr>
-                <td>${user.id}</td>
-                <td>${user.name}</td>
-                <td>${user.email}</td>
-                <td>${user.phone}</td>
-                <td>${user.package}</td>
-                <td>${user.swaps}</td>
-                <td>
-                    <span class="status-badge status-${user.status}">
-                        ${getStatusText(user.status)}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-outline btn-sm" onclick="editUser(${user.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin"></i> Đang tải...
                 </td>
             </tr>
-        `).join('');
+        `;
+
+        let url = 'http://localhost:5000/gateway/batteryadmin/users';
+        if (role) {
+            url += `?role=${role}`;
+        }
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Không thể tải danh sách người dùng');
+        }
+
+        const users = await response.json();
+        
+        // Lưu vào biến global
+        if (!role || role === 'all') {
+            allUsersData = users;
+        }
+
+        // Tính toán stats
+        const totalUsers = users.length;
+        const drivers = users.filter(u => u.role === 'driver' || u.role === 'Driver');
+        const staffs = users.filter(u => u.role === 'staff' || u.role === 'Staff');
+        
+        // Phân loại gói thuê theo thời hạn
+        // Cần lấy thông tin chi tiết gói để biết thoihan
+        let monthlyPackagesCount = 0;
+        let yearlyPackagesCount = 0;
+        
+        // Lấy danh sách gói từ API để biết thời hạn
+        try {
+            const packagesResponse = await fetch('http://localhost:5000/gateway/batteryadmin/goi-thue', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+            
+            if (packagesResponse.ok) {
+                const packages = await packagesResponse.json();
+                const packagesMap = new Map();
+                packages.forEach(pkg => {
+                    packagesMap.set(pkg.tendichvu || pkg.Tendichvu, pkg.thoihan || pkg.Thoihan || 0);
+                });
+                
+                // Đếm users có gói tháng (thoihan < 12) và gói năm (thoihan >= 12)
+                // Gói 12 tháng = 1 năm nên tính là gói năm
+                users.forEach(user => {
+                    if (user.goi_thue && user.goi_thue !== null && user.goi_thue !== 'Chưa đăng ký' && user.goi_thue !== '--') {
+                        const thoihan = packagesMap.get(user.goi_thue);
+                        if (thoihan !== undefined && thoihan > 0) {
+                            if (thoihan < 12) {
+                                monthlyPackagesCount++;
+                            } else {
+                                // >= 12 tháng = gói năm
+                                yearlyPackagesCount++;
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách gói:', error);
+            // Fallback: đếm tất cả gói là gói tháng nếu không lấy được thông tin
+            const withPackage = users.filter(u => u.goi_thue && u.goi_thue !== null && u.goi_thue !== 'Chưa đăng ký' && u.goi_thue !== '--');
+            monthlyPackagesCount = withPackage.length;
+        }
+
+        // Cập nhật stats
+        document.getElementById('totalUsers').textContent = totalUsers.toLocaleString('vi-VN');
+        document.getElementById('newUsers').textContent = drivers.length.toLocaleString('vi-VN');
+        document.getElementById('monthlyPackages').textContent = monthlyPackagesCount.toLocaleString('vi-VN');
+        document.getElementById('yearlyPackages').textContent = yearlyPackagesCount.toLocaleString('vi-VN');
+
+        // Render table
+        if (users.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
+                        Không có dữ liệu
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Ẩn/hiện cột "Gói thuê" dựa trên role filter
+        const isStaffTab = currentUserRoleFilter === 'staff';
+        const goiThueColumn = document.querySelector('.goi-thue-column');
+        if (goiThueColumn) {
+            goiThueColumn.style.display = isStaffTab ? 'none' : '';
+        }
+        
+        tableBody.innerHTML = users.map(user => {
+            const isStaff = user.role === 'staff' || user.role === 'Staff';
+            const goiThue = isStaff ? '--' : (user.goi_thue || 'Chưa đăng ký');
+            const roleText = isStaff ? 'Nhân viên' : 'Người dùng';
+            const roleBadge = isStaff
+                ? '<span class="status-badge" style="background: #3b82f6; color: white;">Nhân viên</span>'
+                : '<span class="status-badge" style="background: #10b981; color: white;">Người dùng</span>';
+
+            return `
+                <tr>
+                    <td>${user.id || user.Id}</td>
+                    <td>${user.name || user.Name || '--'}</td>
+                    <td>${user.email || user.Email || '--'}</td>
+                    <td>${user.sodienthoai || user.SoDienThoai || '--'}</td>
+                    <td>${roleBadge}</td>
+                    <td class="goi-thue-cell" style="display: ${isStaffTab ? 'none' : ''};">${goiThue}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id || user.Id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        // Ẩn/hiện các cell "Gói thuê" trong tbody
+        document.querySelectorAll('.goi-thue-cell').forEach(cell => {
+            cell.style.display = isStaffTab ? 'none' : '';
+        });
+
+    } catch (error) {
+        console.error('Lỗi khi load dữ liệu users:', error);
+        const tableBody = document.getElementById('usersTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle"></i> Lỗi tải dữ liệu: ${error.message}
+                    </td>
+                </tr>
+            `;
+        }
+        showNotification('Không thể tải danh sách người dùng', 'error');
+    }
+}
+
+// Switch user tab
+function switchUserTab(role) {
+    currentUserRoleFilter = role;
+    
+    // Update tab active state
+    document.querySelectorAll('.user-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.getElementById(`tab-${role}`).classList.add('active');
+    
+    // Load data với filter
+    loadUsersData(role);
+}
+
+// Show add user modal
+function showAddUserModal() {
+    const form = document.getElementById('addUserForm');
+    if (form) {
+        form.reset();
+    }
+    const modal = document.getElementById('addUserModal');
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// Handle create user
+async function handleCreateUser(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const userData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        role: formData.get('role') || 'driver',
+        sodienthoai: formData.get('sodienthoai') || null,
+        age: formData.get('age') || null,
+        gioitinh: formData.get('gioitinh') || null
+    };
+
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo...';
+
+        const response = await fetch('http://localhost:5000/gateway/batteryadmin/users', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(userData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Không thể tạo người dùng');
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        showNotification('Tạo người dùng thành công!', 'success');
+        closeModal('addUserModal');
+        
+        // Reload danh sách
+        await loadUsersData(currentUserRoleFilter || 'driver');
+    } catch (error) {
+        console.error('Lỗi khi tạo user:', error);
+        showNotification(error.message || 'Không thể tạo người dùng', 'error');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Tạo người dùng';
+        }
+    }
+}
+
+// Edit user - Load dữ liệu và hiển thị modal
+async function editUser(id) {
+    try {
+        // Tìm user trong danh sách đã load
+        const user = allUsersData.find(u => (u.id || u.Id) === id);
+        
+        if (!user) {
+            showNotification('Không tìm thấy thông tin người dùng', 'error');
+            return;
+        }
+
+        // Điền dữ liệu vào form
+        document.getElementById('editUserId').value = user.id || user.Id;
+        document.getElementById('editUserName').value = user.name || user.Name || '';
+        document.getElementById('editUserEmail').value = user.email || user.Email || '';
+        document.getElementById('editUserRole').value = user.role || user.Role || 'driver';
+        document.getElementById('editUserPhone').value = user.sodienthoai || user.SoDienThoai || '';
+        document.getElementById('editUserAge').value = user.age || user.Age || '';
+        document.getElementById('editUserGender').value = user.gioitinh || user.GioiTinh || '';
+        document.getElementById('editUserPassword').value = '';
+
+        // Hiển thị modal
+        const modal = document.getElementById('editUserModal');
+        if (modal) {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    } catch (error) {
+        console.error('Lỗi khi load thông tin user:', error);
+        showNotification('Không thể tải thông tin người dùng', 'error');
+    }
+}
+
+// Handle update user
+async function handleUpdateUser(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const userId = document.getElementById('editUserId').value;
+    const formData = new FormData(form);
+    
+    const userData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        role: formData.get('role') || 'driver',
+        sodienthoai: formData.get('sodienthoai') || null,
+        age: formData.get('age') || null,
+        gioitinh: formData.get('gioitinh') || null
+    };
+
+    // Chỉ thêm password nếu có nhập
+    const password = formData.get('password');
+    if (password && password.trim() !== '') {
+        userData.password = password;
+    }
+
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang cập nhật...';
+
+        const response = await fetch(`http://localhost:5000/gateway/batteryadmin/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(userData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Không thể cập nhật người dùng');
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        showNotification('Cập nhật người dùng thành công!', 'success');
+        closeModal('editUserModal');
+        
+        // Reload danh sách
+        await loadUsersData(currentUserRoleFilter || 'driver');
+    } catch (error) {
+        console.error('Lỗi khi cập nhật user:', error);
+        showNotification(error.message || 'Không thể cập nhật người dùng', 'error');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Cập nhật';
+        }
     }
 }
 
@@ -1103,7 +1490,16 @@ function handleFilterChange(filter) {
     if (currentSection === 'stations') {
         loadStationsData();
     } else if (currentSection === 'users') {
-        loadUsersData();
+        // Đảm bảo tab driver được active và load data
+        currentUserRoleFilter = currentUserRoleFilter || 'driver';
+        document.querySelectorAll('.user-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        const activeTab = document.getElementById(`tab-${currentUserRoleFilter}`);
+        if (activeTab) {
+            activeTab.classList.add('active');
+        }
+        loadUsersData(currentUserRoleFilter);
     } else if (currentSection === 'batteries') {
         loadBatteriesData();
     }
@@ -1118,12 +1514,312 @@ function showAddStationModal() {
     }
 }
 
+// Load packages data from AdminService
+async function loadPackagesData() {
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            console.error('Không có token admin');
+            return;
+        }
+
+        const response = await fetch('http://localhost:5000/gateway/batteryadmin/goi-thue', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            console.error('Lỗi khi lấy danh sách gói:', response.status);
+            const packagesGrid = document.getElementById('packagesGrid');
+            if (packagesGrid) {
+                packagesGrid.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle"></i> Không thể tải danh sách gói
+                    </div>
+                `;
+            }
+            return;
+        }
+
+        const packages = await response.json();
+        const packagesGrid = document.getElementById('packagesGrid');
+        
+        if (!packagesGrid) return;
+
+        if (!packages || packages.length === 0) {
+            packagesGrid.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-inbox"></i> Chưa có gói thuê nào
+                </div>
+            `;
+            return;
+        }
+
+        // Lưu packages vào biến global để dùng khi edit
+        window.packagesData = packages;
+
+        // Render packages
+        packagesGrid.innerHTML = packages.map(pkg => {
+            const price = (pkg.phi || 0).toLocaleString('vi-VN');
+            const thoihan = pkg.thoihan ? `${pkg.thoihan} tháng` : 'Không giới hạn';
+            const solandoipin = (pkg.solandoipin === '-1' || pkg.solandoipin === -1) ? 'Không giới hạn' : (pkg.solandoipin || '--');
+            
+            return `
+                <div class="package-card">
+                    <div class="package-header">
+                        <h3>${pkg.tendichvu || 'Gói dịch vụ'}</h3>
+                        <div class="package-price">${price}đ</div>
+                    </div>
+                    <div class="package-stats">
+                        <div class="stat">
+                            <span class="label">Thời hạn:</span>
+                            <span class="value">${thoihan}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">Số lần đổi:</span>
+                            <span class="value">${solandoipin}</span>
+                        </div>
+                    </div>
+                    ${pkg.mota ? `<div style="padding: 10px; color: #64748b; font-size: 13px;">${pkg.mota}</div>` : ''}
+                    <div class="package-actions">
+                        <button class="btn btn-outline" onclick="editPackage(${pkg.id})">Chỉnh sửa</button>
+                        <button class="btn btn-danger" onclick="deletePackage(${pkg.id})">Xóa</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Lỗi khi load dữ liệu gói:', error);
+        const packagesGrid = document.getElementById('packagesGrid');
+        if (packagesGrid) {
+            packagesGrid.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: red;">
+                    <i class="fas fa-exclamation-triangle"></i> Lỗi khi tải dữ liệu gói
+                </div>
+            `;
+        }
+    }
+}
+
 // Show add package modal
 function showAddPackageModal() {
     const modal = document.getElementById('addPackageModal');
     if (modal) {
+        // Reset form
+        const form = document.getElementById('addPackageForm');
+        if (form) {
+            form.reset();
+        }
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
+    }
+}
+
+// Handle create package
+async function handleCreatePackage(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const packageData = {
+        tendichvu: formData.get('tendichvu'),
+        mota: formData.get('mota') || null,
+        thoihan: formData.get('thoihan') ? parseInt(formData.get('thoihan')) : null,
+        phi: parseFloat(formData.get('phi')),
+        solandoipin: formData.get('solandoipin') || null
+    };
+
+    // Validate
+    if (!packageData.tendichvu || !packageData.phi) {
+        showNotification('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+        return;
+    }
+
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo...';
+
+        const response = await fetch('http://localhost:5000/gateway/batteryadmin/goi-thue', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(packageData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Không thể tạo gói');
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        showNotification('Tạo gói thành công!', 'success');
+        closeModal('addPackageModal');
+        
+        // Reload danh sách gói
+        await loadPackagesData();
+    } catch (error) {
+        console.error('Lỗi khi tạo gói:', error);
+        showNotification(error.message || 'Không thể tạo gói', 'error');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Tạo gói';
+        }
+    }
+}
+
+// Edit package - Load dữ liệu và hiển thị modal
+async function editPackage(id) {
+    try {
+        // Tìm gói trong danh sách đã load
+        const pkg = window.packagesData?.find(p => p.id === id || p.Id === id);
+        
+        if (!pkg) {
+            showNotification('Không tìm thấy thông tin gói', 'error');
+            return;
+        }
+
+        // Điền dữ liệu vào form
+        document.getElementById('editPackageId').value = pkg.id || pkg.Id;
+        document.getElementById('editPackageName').value = pkg.tendichvu || pkg.Tendichvu || '';
+        document.getElementById('editPackageMota').value = pkg.mota || pkg.Mota || '';
+        document.getElementById('editPackageThoihan').value = pkg.thoihan || pkg.Thoihan || '';
+        document.getElementById('editPackagePrice').value = pkg.phi || pkg.Phi || '';
+        document.getElementById('editPackageSolandoipin').value = pkg.solandoipin || pkg.Solandoipin || '';
+
+        // Hiển thị modal
+        const modal = document.getElementById('editPackageModal');
+        if (modal) {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    } catch (error) {
+        console.error('Lỗi khi load thông tin gói:', error);
+        showNotification('Không thể tải thông tin gói', 'error');
+    }
+}
+
+// Handle update package
+async function handleUpdatePackage(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const packageId = document.getElementById('editPackageId').value;
+    const formData = new FormData(form);
+    const packageData = {
+        tendichvu: formData.get('tendichvu'),
+        mota: formData.get('mota') || null,
+        thoihan: formData.get('thoihan') ? parseInt(formData.get('thoihan')) : null,
+        phi: parseFloat(formData.get('phi')),
+        solandoipin: formData.get('solandoipin') || null
+    };
+
+    // Validate
+    if (!packageData.tendichvu || !packageData.phi) {
+        showNotification('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+        return;
+    }
+
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang cập nhật...';
+
+        const response = await fetch(`http://localhost:5000/gateway/batteryadmin/goi-thue/${packageId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(packageData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Không thể cập nhật gói');
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        showNotification('Cập nhật gói thành công!', 'success');
+        closeModal('editPackageModal');
+        
+        // Reload danh sách gói
+        await loadPackagesData();
+    } catch (error) {
+        console.error('Lỗi khi cập nhật gói:', error);
+        showNotification(error.message || 'Không thể cập nhật gói', 'error');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Cập nhật';
+        }
+    }
+}
+
+// Delete package
+async function deletePackage(id) {
+    if (!confirm('Bạn có chắc chắn muốn xóa gói này? Hành động này không thể hoàn tác.')) {
+        return;
+    }
+
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const response = await fetch(`http://localhost:5000/gateway/batteryadmin/goi-thue/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Không thể xóa gói');
+        }
+
+        showNotification('Xóa gói thành công!', 'success');
+        
+        // Reload danh sách gói
+        await loadPackagesData();
+    } catch (error) {
+        console.error('Lỗi khi xóa gói:', error);
+        showNotification(error.message || 'Không thể xóa gói', 'error');
     }
 }
 
@@ -1333,10 +2029,41 @@ function deleteStation(id) {
     }
 }
 
-function deleteUser(id) {
-    if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-        showNotification(`Đã xóa người dùng ${id}`, 'success');
-        loadUsersData();
+// Delete user
+async function deleteUser(id) {
+    if (!confirm('Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.')) {
+        return;
+    }
+
+    try {
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            showNotification('Không có quyền truy cập', 'error');
+            return;
+        }
+
+        const response = await fetch(`http://localhost:5000/gateway/batteryadmin/users/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Không thể xóa người dùng');
+        }
+
+        showNotification('Xóa người dùng thành công!', 'success');
+        
+        // Reload danh sách
+        await loadUsersData(currentUserRoleFilter || 'driver');
+    } catch (error) {
+        console.error('Lỗi khi xóa user:', error);
+        showNotification(error.message || 'Không thể xóa người dùng', 'error');
     }
 }
 
