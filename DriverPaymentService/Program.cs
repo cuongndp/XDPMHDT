@@ -45,7 +45,7 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuerSigningKey = true,
 
             ValidIssuer = "ApiGateway",     // phải trùng với issuer ở DriverService
-            ValidAudience = "DriveService",     // phải trùng với audience lúc phát token
+            ValidAudiences = new[] { "DriveService", "BatteryAdminService" },     // Chấp nhận cả token từ DriverService và AdminService
             IssuerSigningKey = new SymmetricSecurityKey(key),
             NameClaimType = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.UniqueName,
             RoleClaimType = "role",
@@ -88,6 +88,11 @@ builder.Services
     {
         policy.RequireAuthenticatedUser();
         policy.RequireRole("staff"); // policy cho nhân viên
+    })
+    .AddPolicy("admin", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("admin"); // policy cho admin
     });
 
 var app = builder.Build();
